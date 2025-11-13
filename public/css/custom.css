@@ -1,0 +1,11 @@
+.dropdown-menu {
+    max-height: 300px;
+    /* Altura máxima del menú */
+    overflow-y: auto;
+    /* Activar scroll */
+}
+
+.font-weight-bold {
+    font-weight: bold;
+    /* Resaltar las no leídas */
+}

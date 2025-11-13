@@ -1,0 +1,95 @@
+@page {
+    margin: 50px 25px;
+    size: A4 landscape;
+
+    @top-right {
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    @bottom-right {
+        content: "Página " counter(page) " de " counter(pages);
+        font-size: 10px;
+    }
+}
+
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+}
+
+.title-header {
+    background: #0D47A1; /* Azul oscuro */
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 12px;
+    text-align: center;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.header img {
+    width: 250px;
+    position: absolute;
+    left: 10px;
+    top: 10px;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+p {
+    text-align: center;
+    font-size: 12px;
+    margin: 5px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 50px;
+}
+
+th,
+td {
+    border: 1px solid #333;
+    padding: 6px;
+    text-align: center;
+    font-size: 11px;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+th {
+    background: #abcaed; /* Azul más claro */
+    color: rgb(0, 0, 0);
+    text-transform: uppercase;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.json-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+
+.json-table th, .json-table td {
+    border: 1px solid #aaa;
+    padding: 5px;
+    text-align: left;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.json-container {
+    text-align: left;
+}
