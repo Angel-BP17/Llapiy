@@ -38,10 +38,26 @@ class HomeService
             ];
         });
 
-        $documentosPorMes = Document::selectRaw('YEAR(created_at) as anio, MONTH(created_at) as mes, COUNT(*) as cantidad')
-            ->groupBy('anio', 'mes')
-            ->orderByRaw('anio ASC, mes ASC')
-            ->get();
+        // 🔥 Parte compatible con MySQL y PostgreSQL
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            $documentosPorMes = Document::selectRaw("
+        DATE_TRUNC('month', created_at) as fecha,
+        COUNT(*) as cantidad
+    ")
+                ->groupBy(DB::raw("DATE_TRUNC('month', created_at)"))
+                ->orderBy('fecha')
+                ->get();
+        } else {
+            $documentosPorMes = Document::selectRaw("
+        DATE_FORMAT(created_at, '%Y-%m-01') as fecha,
+        COUNT(*) as cantidad
+    ")
+                ->groupBy(DB::raw("DATE_FORMAT(created_at, '%Y-%m-01')"))
+                ->orderBy('fecha')
+                ->get();
+        }
 
         return compact(
             'userCount',
