@@ -11,7 +11,7 @@ class CreateSubgroupRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('subgroups.create') ?? false;
     }
 
     /**

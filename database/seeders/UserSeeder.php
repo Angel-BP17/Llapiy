@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use DB;
-use Hash;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
@@ -14,22 +14,22 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('users')->insert([
+        $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR']);
+
+        $adminUser = User::updateOrCreate(
+            ['user_name' => 'ADMIN'],
             [
                 'name' => 'ADMIN',
                 'last_name' => 'ADMIN',
-                'user_name' => 'ADMIN',
                 'dni' => '00000000',
                 'email' => 'admin@admin.com',
                 'foto_perfil' => null,
                 'email_verified_at' => now(),
                 'password' => Hash::make('12345678'),
-                'user_type_id' => 1,
                 'group_id' => null,
                 'subgroup_id' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+            ]
+        );
+        $adminUser->syncRoles([$adminRole->name]);
     }
 }

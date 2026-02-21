@@ -57,12 +57,12 @@
                                 <form action="{{ route('login') }}" method="post" class="form-validate">
                                     @csrf
                                     <div class="form-group">
-                                        <input id="username" type="text" name="username" required
+                                        <input id="user_name" type="text" name="user_name" required
                                             data-msg="Please enter your username" class="input-material"
                                             style="text-transform: uppercase;"
                                             oninput="this.value = this.value.toUpperCase();" autocomplete="off">
-                                        <label for="username" class="label-material">Nombre de usuario</label>
-                                        @error('username')
+                                        <label for="user_name" class="label-material">Nombre de usuario</label>
+                                        @error('user_name')
                                             <span class="invalid-feedback" role="alert">
                                                 <strong>{{ $message }}</strong>
                                             </span>

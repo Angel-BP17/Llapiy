@@ -2,71 +2,44 @@
 
 namespace App\Http\Controllers\Areas;
 
-use App\Http\Middleware\AuthMiddlewareFactory;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Subgroup\CreateSubgroupRequest;
 use App\Http\Requests\Subgroup\UpdateSubgroupRequest;
-use App\Models\DocumentType;
-use App\Models\Subgroup;
-use App\Models\SubgroupDocumentType;
-use App\Http\Controllers\Controller;
+use App\Services\Areas\SubgroupService;
 
 class SubgroupController extends Controller
 {
-    public function __construct()
+    public function __construct(protected SubgroupService $service)
     {
-        $this->middleware(function ($request, $next) {
-            $middleware = AuthMiddlewareFactory::make('admin');
-            return $middleware->handle($request, $next);
-        })->except('getByGroup');
     }
+
     public function store(CreateSubgroupRequest $request)
     {
-        // Crear el subgrupo
-        $subgroup = Subgroup::create([
-            'group_id' => $request->group_id,
-            'descripcion' => $request->descripcion ?? 'Nuevo Subgrupo',
-            'abreviacion' => $request->abreviacion,
-            'parent_subgroup_id' => $request->parent_subgroup_id,
-        ]);
+        $this->service->create($request);
 
-        $bloque = DocumentType::where('name', 'Bloque')->first();
-
-        SubgroupDocumentType::create([
-            'subgroup_id' => $subgroup->id,
-            'document_type_id' => $bloque->id,
-        ]);
-
-        return redirect()->back()->with('success', 'Subgrupo creado exitosamente.');
+        return $this->apiSuccess('Subgrupo creado correctamente.', null, 201);
     }
 
-    /**
-     * Editar un subgrupo existente.
-     */
     public function edit($id)
     {
-        $subgroup = Subgroup::findOrFail($id);
-        return view('subgroups.edit', compact('subgroup'));
+        $subgroup = $this->service->find((int) $id);
+
+        return $this->apiSuccess('Subgrupo obtenido correctamente.', ['subgroup' => $subgroup]);
     }
 
-    /**
-     * Actualizar un subgrupo existente.
-     */
     public function update(UpdateSubgroupRequest $request, $id)
     {
-        $subgroup = Subgroup::findOrFail($id);
-        $subgroup->update($request->all());
+        $subgroup = $this->service->find((int) $id);
+        $this->service->update($subgroup, $request->all());
 
-        return redirect()->route('areas.show', $subgroup->group->areaGroupType->area->id)->with('success', 'Subgrupo actualizado exitosamente.');
+        return $this->apiSuccess('Subgrupo actualizado correctamente.', ['subgroup' => $subgroup->fresh()]);
     }
 
-    /**
-     * Eliminar un subgrupo.
-     */
     public function destroy($id)
     {
-        $subgroup = Subgroup::findOrFail($id);
-        $subgroup->delete();
+        $subgroup = $this->service->find((int) $id);
+        $this->service->delete($subgroup);
 
-        return redirect()->back()->with('success', 'Subgrupo eliminado exitosamente.');
+        return $this->apiSuccess('Subgrupo eliminado correctamente.');
     }
 }

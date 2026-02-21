@@ -9,3 +9,129 @@
     font-weight: bold;
     /* Resaltar las no leídas */
 }
+
+/* Shared UI pattern for index modules */
+.module-ui {
+    --module-primary: #0f4c81;
+    --module-primary-soft: #e8f2fb;
+    --module-success-soft: #e7f6ee;
+    --module-warning-soft: #fff4df;
+    --module-neutral-soft: #f4f6f9;
+}
+
+.module-ui .module-hero {
+    background: linear-gradient(135deg, #0f4c81 0%, #1c6aa8 100%);
+    color: #fff;
+    border: 0;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.module-ui .module-hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.module-ui .module-hero-text {
+    opacity: .9;
+}
+
+.module-ui .module-stat-card {
+    border: 0;
+    border-radius: 12px;
+}
+
+.module-ui .module-stat-card .icon,
+.module-ui .module-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.module-ui .module-stat-card .icon.text-blue,
+.module-ui .module-stat-icon.primary {
+    background: var(--module-primary-soft);
+    color: var(--module-primary) !important;
+}
+
+.module-ui .module-stat-card .icon.text-green,
+.module-ui .module-stat-icon.success {
+    background: var(--module-success-soft);
+    color: #20874f !important;
+}
+
+.module-ui .module-stat-card .icon.text-orange,
+.module-ui .module-stat-icon.warning {
+    background: var(--module-warning-soft);
+    color: #b77b0a !important;
+}
+
+.module-ui .module-stat-card .icon.text-violet,
+.module-ui .module-stat-icon.violet {
+    background: #efeafe;
+    color: #6236cc !important;
+}
+
+.module-ui .module-filter-card,
+.module-ui .module-table-card,
+.module-ui .module-panel {
+    border: 0;
+    border-radius: 12px;
+}
+
+.module-ui .module-filter-card .form-control {
+    min-height: 42px;
+    border-radius: 9px;
+}
+
+.module-ui .module-table {
+    margin-bottom: 0;
+}
+
+.module-ui .module-table thead th {
+    border-top: 0;
+    background: #f8fafc;
+    color: #4c5a67;
+    font-size: 12px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.module-ui .module-table tbody tr {
+    transition: background-color .18s ease;
+}
+
+.module-ui .module-table tbody tr:hover {
+    background-color: #fbfdff;
+}
+
+.module-ui .module-empty {
+    min-height: 220px;
+    border: 0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.module-ui .module-empty-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--module-neutral-soft);
+    color: #6d7b88;
+    font-size: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}

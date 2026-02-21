@@ -7,21 +7,19 @@ use Illuminate\Validation\Rule;
 
 class UpdateUserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('users.update') ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
+        $targetUser = $this->route('user');
+        $selectedRoles = collect(
+            $this->input('roles', $targetUser?->roles?->pluck('name')->all() ?? [])
+        )->map(fn($role) => mb_strtoupper((string) $role));
+        $isAdmin = $selectedRoles->contains('ADMINISTRADOR');
+
         return [
             'name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -30,9 +28,10 @@ class UpdateUserRequest extends FormRequest
             'email' => ['required', 'email', Rule::unique('users')->ignore($this->user)],
             'password' => 'nullable|string',
             'foto_perfil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'user_type_id' => 'required|exists:user_types,id',
-            'group' => 'required|exists:groups,id',
+            'group' => [Rule::requiredIf(!$isAdmin), 'nullable', 'exists:groups,id'],
             'subgroup' => 'nullable|exists:subgroups,id',
+            'roles' => 'nullable|array',
+            'roles.*' => 'string|exists:roles,name',
         ];
     }
 }

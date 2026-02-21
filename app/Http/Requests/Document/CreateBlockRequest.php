@@ -13,7 +13,7 @@ class CreateBlockRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('blocks.create') ?? false;
     }
 
     /**

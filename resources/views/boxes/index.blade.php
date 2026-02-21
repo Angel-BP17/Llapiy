@@ -2,7 +2,7 @@
 
 @section('title', 'Cajas')
 @section('content')
-    <!-- Page Header-->
+    @vite('resources/js/boxes/index.js')
     <header class="page-header">
         <div class="container-fluid">
             <h2 class="no-margin-bottom">Cajas</h2>
@@ -16,19 +16,9 @@
             <li class="breadcrumb-item active">Cajas</li>
         </ul>
     </div>
-    <!-- Forms Section-->
-    <section class="forms">
-        <div class="container-fluid">
-            <!-- Botón para volver -->
-            <div class="mb-3 mt-4">
-                <a href="{{ route('sections.andamios.index', ['section' => $section->id, 'andamio' => $andamio->id]) }}"
-                    class="btn btn-secondary btn-sm">
-                    <i class="fa-solid fa-arrow-left-long"></i> Volver
-                </a>
-            </div>
-            <h1 class="mt-2 mb-3">Cajas del Andamio {{ $andamio->n_andamio }}</h1>
 
-            {{-- Mensajes de éxito y error --}}
+    <section class="forms module-ui">
+        <div class="container-fluid">
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
@@ -36,20 +26,79 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
-            {{-- Formulario para registrar un nueva caja --}}
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">Registrar Nueva Caja</div>
+            <div class="card module-hero has-shadow mb-4">
+                <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+                    <div>
+                        <div class="module-hero-chip mb-2">
+                            <i class="fa-solid fa-box-open"></i> Gestion por andamio
+                        </div>
+                        <h4 class="mb-1 text-white">Cajas del andamio {{ $andamio->n_andamio }}</h4>
+                        <p class="mb-0 module-hero-text text-white-50">Administra cajas y accede a los archivos almacenados
+                            en cada una.</p>
+                    </div>
+                    <div class="mt-3 mt-lg-0">
+                        <span class="module-hero-chip">
+                            <i class="fa-solid fa-list"></i> {{ $boxes->count() }} registros
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4 align-items-center">
+                <div class="col-md-4 mb-3">
+                    <div class="card module-stat-card bg-white has-shadow h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="icon mr-3 text-orange"><i class="fa-solid fa-box-open"></i></div>
+                            <div>
+                                <div class="text-muted small">Cajas registradas</div>
+                                <div class="h4 mb-0">{{ $boxes->count() }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 mb-3">
+                    <a href="{{ route('sections.andamios.index', ['section' => $section->id, 'andamio' => $andamio->id]) }}"
+                        class="btn btn-secondary btn-sm">
+                        <i class="fa-solid fa-arrow-left-long"></i> Volver
+                    </a>
+                </div>
+            </div>
+
+            <div class="card module-filter-card bg-white has-shadow mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Buscar</h5>
+                    <form id="box-search-form" method="GET"
+                        action="{{ route('sections.andamios.boxes.index', ['section' => $section->id, 'andamio' => $andamio->id]) }}"
+                        class="row align-items-end">
+                        <div class="col-12 col-md-6 mb-3">
+                            <label for="box-search" class="sr-only">Buscar caja</label>
+                            <input type="text" name="search" id="box-search" class="form-control"
+                                value="{{ request('search') }}" placeholder="Número de caja">
+                        </div>
+                        <div class="col-12 col-md-auto mb-3">
+                            <button type="button" id="box-search-clear" class="btn btn-secondary">
+                                <i class="fa-solid fa-x"></i> Limpiar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card module-panel bg-white has-shadow mb-4">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-0">Registrar nueva caja</h5>
+                </div>
                 <div class="card-body">
                     <form class="form-inline"
                         action="{{ route('sections.andamios.boxes.store', ['section' => $section->id, 'andamio' => $andamio->id]) }}"
                         method="POST">
                         @csrf
-                        <div class="form-group">
-                            <label for="n_box" class="sr-only">Número de Caja</label>
-                            <input type="number" name="n_box" id="n_box" class="mr-3 form-control" required
-                                placeholder="Número de Caja">
+                        <div class="form-group mr-2 mb-2">
+                            <label for="n_box" class="sr-only">Numero de caja</label>
+                            <input type="number" name="n_box" id="n_box" class="form-control" required
+                                placeholder="Numero de caja">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-2">
                             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i>
                                 Guardar</button>
                         </div>
@@ -57,36 +106,32 @@
                 </div>
             </div>
 
-            {{-- Listado de cajas --}}
-            <div class="row">
+            <div class="row" id="boxes-list">
                 @foreach ($boxes as $box)
-                    <div class="col-md-6">
-                        <div class="card mb-4">
-                            <div class="card-header bg-primary text-white">
+                    <div class="col-md-6 js-storage-item">
+                        <div class="card module-panel bg-white has-shadow mb-4">
+                            <div class="card-header">
                                 <strong>Caja: {{ $box->n_box }}</strong>
                             </div>
                             <div class="card-body">
                                 <a href="{{ route('sections.andamios.boxes.archivos.index', ['section' => $section->id, 'andamio' => $andamio->id, 'box' => $box->id]) }}"
-                                    class="btn btn-info btn-sm mb-2"><i class="fa-solid fa-file"></i> Ver
-                                    Archivos</a>
-                                <p>{{ $box->descripcion }}</p>
+                                    class="btn btn-info btn-sm mb-2"><i class="fa-solid fa-file"></i> Ver archivos</a>
+                                <p class="mb-0">{{ $box->descripcion }}</p>
                             </div>
-                            <div class="card-footer">
-                                {{-- Botón para editar caja --}}
+                            <div class="card-footer bg-white border-0">
                                 <button type="button" class="btn btn-warning btn-sm" data-toggle="modal"
                                     data-target="#editBoxModal{{ $box->id }}"><i class="fa-solid fa-pen"></i>
-                                    Editar Caja
+                                    Editar caja
                                 </button>
 
-                                {{-- Botón para eliminar caja --}}
                                 <form
                                     action="{{ route('sections.andamios.boxes.destroy', ['section' => $section->id, 'andamio' => $andamio->id, 'box' => $box->id]) }}"
                                     method="POST" style="display: inline-block;"
-                                    onsubmit="return confirm('¿Está seguro de eliminar esta caja?')">
+                                    onsubmit="return confirm('Seguro de eliminar esta caja?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm"
-                                        @if ($box->blocks->count() > 0) disabled data-toggle="tooltip" data-placement="top" title="No se puede eliminar porque tiene cajas asociadas" @endif><i
+                                        @if ($box->blocks_count > 0) disabled data-toggle="tooltip" data-placement="top" title="No se puede eliminar porque tiene cajas asociadas" @endif><i
                                             class="fa-solid fa-trash"></i>
                                         Eliminar</button>
                                 </form>
@@ -94,14 +139,12 @@
                         </div>
                     </div>
 
-                    {{-- Modal para editar caja --}}
                     <div class="modal fade" id="editBoxModal{{ $box->id }}" tabindex="-1" role="dialog"
                         aria-labelledby="editBoxModalLabel{{ $box->id }}" aria-hidden="true">
                         <div class="modal-dialog" role="document">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="editBoxModalLabel{{ $box->id }}">Editar
-                                        Caja</h5>
+                                    <h5 class="modal-title" id="editBoxModalLabel{{ $box->id }}">Editar caja</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -113,7 +156,7 @@
                                     @method('PUT')
                                     <div class="modal-body">
                                         <div class="form-group">
-                                            <label for="n_box">Número de Caja</label>
+                                            <label for="n_box">Numero de caja</label>
                                             <input type="number" name="n_box" class="form-control"
                                                 value="{{ $box->n_box }}" required>
                                         </div>
@@ -129,6 +172,16 @@
                         </div>
                     </div>
                 @endforeach
+                @if ($boxes->count() > 0)
+                    <div class="col-12" id="boxes-dynamic-empty" style="display:none;">
+                        <div class="module-empty has-shadow d-flex align-items-center justify-content-center text-center">
+                            <div>
+                                <span class="module-empty-icon"><i class="fa-solid fa-folder-open"></i></span>
+                                <p class="mb-0">No se encontraron cajas con ese criterio.</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </section>

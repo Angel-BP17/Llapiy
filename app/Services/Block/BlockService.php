@@ -15,11 +15,7 @@ class BlockService
 {
     public function getAll($data)
     {
-        $query = Block::query()->with(['group.areaGroupType.area', 'subgroup', 'user'])
-            ->when(
-                !Auth::user()->isAdminOrManager(),
-                fn($q) => $q->when('group_id', fn($q) => $q->when('subgroup_id', fn($q) => $q->where('group_id', Auth::user()->group_id)))->when('subgroup_id', fn($q) => $q->where('subgroup_id', Auth::user()->subgroup_id))
-            )
+        $query = Block::query()->with(['group.areaGroupType.area', 'subgroup', 'user', 'box.andamio.section'])
             ->when(
                 $data->asunto,
                 fn($q, $asunto) => $q->where('asunto', 'LIKE', "%{$asunto}%")
@@ -40,6 +36,12 @@ class BlockService
                 $data->subgroup_id,
                 fn($q, $subgroupId) => $q->whereHas('documentType.subgroups', function ($q) use ($subgroupId) {
                     $q->where('subgroups.id', $subgroupId);
+                })
+            )
+            ->when(
+                $data->role_id,
+                fn($q, $roleId) => $q->whereHas('user.roles', function ($q) use ($roleId) {
+                    $q->where('roles.id', $roleId);
                 })
             )
             ->when(
@@ -66,7 +68,7 @@ class BlockService
     {
         return DB::transaction(function () use ($data, $file) {
 
-            $filePath = $this->storeBlockFile($file, $data['asunto']);
+            $filePath = $file ? $this->storeBlockFile($file, $data['asunto']) : null;
 
             $block = Block::create([
                 'n_bloque' => $data['n_bloque'],
@@ -90,7 +92,9 @@ class BlockService
     {
         return DB::transaction(function () use ($data, $file, $hasFile, $block) {
             if ($hasFile) {
-                Storage::delete("public/{$data['root']}");
+                if ($block->root) {
+                    Storage::delete("public/{$block->root}");
+                }
                 $data['root'] = $this->storeBlockFile($file, $data['asunto']);
             }
 
@@ -102,7 +106,7 @@ class BlockService
                 'root' => $data['root'] ?? $block->root,
                 'periodo' => Carbon::parse($data['fecha'])->year ?? $block->periodo,
                 'group_id' => Auth::user()->group_id,
-                'subgroup' => Auth::user()->subgroup_id,
+                'subgroup_id' => Auth::user()->subgroup_id,
             ]);
 
             return $block;
@@ -114,17 +118,32 @@ class BlockService
         return DB::transaction(function () use ($block) {
             $filePath = $block->root;
             $block->delete();
-            Storage::delete("public/{$filePath}");
+            if ($filePath) {
+                Storage::delete("public/{$filePath}");
+            }
+        });
+    }
+
+    public function uploadFile(Block $model, $file): Block
+    {
+        return DB::transaction(function () use ($model, $file) {
+            $block = Block::lockForUpdate()->findOrFail($model->id);
+
+            if ($block->root) {
+                Storage::delete("public/{$block->root}");
+            }
+
+            $block->update([
+                'root' => $this->storeBlockFile($file, $block->asunto),
+            ]);
+
+            return $block;
         });
     }
 
     public function report($data)
     {
         return Block::query()->with(['group.areaGroupType.area', 'subgroup', 'user'])
-            ->when(
-                !Auth::user()->isAdminOrManager(),
-                fn($q) => $q->when('group_id', fn($q) => $q->when('sugroup_id', fn($q) => $q->where('group_id', Auth::user()->group_id)))->when('subgroup_id', fn($q) => $q->where('subgroup_id', Auth::user()->subgroup_id))
-            )
             ->when(
                 $data->asunto,
                 fn($q, $asunto) => $q->where('asunto', 'like', "%{$asunto}%")
@@ -145,6 +164,12 @@ class BlockService
                 $data->subgroup_id,
                 fn($q, $subgroupId) => $q->whereHas('documentType.subgroups', function ($q) use ($subgroupId) {
                     $q->where('subgroups.id', $subgroupId);
+                })
+            )
+            ->when(
+                $data->role_id,
+                fn($q, $roleId) => $q->whereHas('user.roles', function ($q) use ($roleId) {
+                    $q->where('roles.id', $roleId);
                 })
             )
             ->when(

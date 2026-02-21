@@ -20,7 +20,6 @@ return new class extends Migration {
             $table->string('foto_perfil')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->foreignId('user_type_id')->constrained('user_types')->onDelete('cascade');
             $table->foreignId('group_id')->nullable()->constrained('groups')->onDelete('cascade');
             $table->foreignId('subgroup_id')->nullable()->constrained('subgroups')->onDelete('cascade');
             $table->rememberToken();

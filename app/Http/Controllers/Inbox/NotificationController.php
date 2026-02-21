@@ -2,37 +2,37 @@
 
 namespace App\Http\Controllers\Inbox;
 
-use Auth;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Notification\IndexNotificationRequest;
+use App\Services\Inbox\NotificationService;
 
 class NotificationController extends Controller
 {
-    /**
-     * Muestra todas las notificaciones del usuario autenticado.
-     */
-    public function index()
+    public function __construct(protected NotificationService $service)
     {
-        $notifications = Auth::user()->notifications;
+    }
 
-        return view('notifications.index', compact('notifications'));
+    public function index(IndexNotificationRequest $request)
+    {
+        return $this->apiSuccess('Notificaciones obtenidas correctamente.', [
+            'notifications' => $this->service->getNotifications(),
+        ]);
     }
 
     public function redirectAndMarkAsRead($notificationId)
     {
-        // Buscar la notificación
-        $notification = Auth::user()->notifications()->findOrFail($notificationId);
+        $notification = $this->service->findNotificationOrFail($notificationId);
 
-        // Verificar que la notificación pertenece al usuario autenticado
-        if ($notification->notifiable_id !== Auth::id()) {
-            return redirect()->route('index')->with('error', 'Acceso no autorizado.');
+        if (!$this->service->isNotificationOwner($notification)) {
+            return $this->apiError('Acceso no autorizado.', 403);
         }
 
-        // Marcar la notificación como leída
         if ($notification->read_at === null) {
             $notification->markAsRead();
         }
 
-        // Redirigir al documento relacionado (u otro destino configurado)
-        return redirect()->route('inbox.index');
+        return $this->apiSuccess('Notificacion marcada como leida.', [
+            'notification' => $notification,
+        ]);
     }
 }

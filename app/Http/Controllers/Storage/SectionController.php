@@ -2,68 +2,53 @@
 
 namespace App\Http\Controllers\Storage;
 
-use App\Http\Middleware\AuthMiddlewareFactory;
-use App\Models\Section;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Storage\IndexSectionRequest;
+use App\Models\Section;
+use App\Services\Storage\SectionService;
 use Illuminate\Http\Request;
 
 class SectionController extends Controller
 {
-    public function __construct()
+    public function __construct(protected SectionService $service)
     {
-        $this->middleware(function ($request, $next) {
-            $middleware = AuthMiddlewareFactory::make('encargado');
-            return $middleware->handle($request, $next);
-        });
-    }
-    public function index()
-    {
-        $sections = Section::all();
-        return view('sections.index', compact('sections'));
     }
 
-    /**
-     * Crea una nueva sección.
-     */
+    public function index(IndexSectionRequest $request)
+    {
+        $sections = $this->service->getAll($request->input('search'));
+
+        return $this->apiSuccess('Secciones obtenidas correctamente.', ['sections' => $sections]);
+    }
+
     public function store(Request $request)
     {
-
-        // Validar los datos del formulario
-        $request->validate([
+        $validated = $request->validate([
             'n_section' => 'required|string|unique:sections,n_section',
             'descripcion' => 'required|string|max:255',
         ]);
 
-        // Crear una nueva sección
-        Section::create($request->all());
-        return redirect()->route('sections.index')->with('success', 'Sección creada con éxito');
+        $this->service->create($validated);
+
+        return $this->apiSuccess('Seccion creada correctamente.', null, 201);
     }
 
-    /**
-     * Actualiza una sección existente.
-     */
     public function update(Request $request, Section $section)
     {
-
-        // Validar los datos
-        $request->validate([
+        $validated = $request->validate([
             'n_section' => 'required|string|unique:sections,n_section,' . $section->id,
             'descripcion' => 'required|string|max:255',
         ]);
 
-        // Actualizar la sección
-        $section->update($request->all());
-        return redirect()->route('sections.index')->with('success', 'Sección actualizada con éxito');
+        $this->service->update($section, $validated);
+
+        return $this->apiSuccess('Seccion actualizada correctamente.', ['section' => $section->fresh()]);
     }
 
-    /**
-     * Elimina una sección.
-     */
     public function destroy(Section $section)
     {
+        $this->service->delete($section);
 
-        // Eliminar la sección
-        $section->delete();
-        return redirect()->route('sections.index')->with('success', 'Sección eliminada con éxito');
+        return $this->apiSuccess('Seccion eliminada correctamente.');
     }
 }

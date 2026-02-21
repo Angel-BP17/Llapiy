@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->string('folios');
             $table->string('rango_inicial');
             $table->string('rango_final');
-            $table->string('root');
+            $table->string('root')->nullable();
             $table->date('fecha');
             $table->year('periodo');
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();

@@ -13,19 +13,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            UserTypeSeeder::class,
             AreaSeeder::class,
             GroupTypeSeeder::class,
             AreaGroupTypeSeeder::class,
             GroupSeeder::class,
             SubgroupSeeder::class,
+            RolePermissionSeeder::class,
             UserSeeder::class,
-            DocumentTypeSeeder::class,
             SectionSeeder::class,
             AndamioSeeder::class,
             BoxSeeder::class,
-            GroupDocumentTypeSeeder::class,
-            SubgroupDocumentTypeSeeder::class,
         ]);
     }
 }

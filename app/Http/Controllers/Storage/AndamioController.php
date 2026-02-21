@@ -2,82 +2,61 @@
 
 namespace App\Http\Controllers\Storage;
 
-use App\Http\Middleware\AuthMiddlewareFactory;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Storage\IndexAndamioRequest;
 use App\Models\Andamio;
 use App\Models\Section;
-use App\Http\Controllers\Controller;
+use App\Services\Storage\AndamioService;
 use Illuminate\Http\Request;
 
 class AndamioController extends Controller
 {
-    public function __construct()
+    public function __construct(protected AndamioService $service)
     {
-        $this->middleware(function ($request, $next) {
-            $middleware = AuthMiddlewareFactory::make('encargado');
-            return $middleware->handle($request, $next);
-        });
-    }
-    public function index(Section $section)
-    {
-        // Obtener los andamios asociados a la sección
-        $andamios = $section->andamios;
-
-        return view('andamios.index', compact('section', 'andamios'));
     }
 
-    /**
-     * Almacena un nuevo andamio en la sección especificada.
-     */
+    public function index(IndexAndamioRequest $request, Section $section)
+    {
+        $andamios = $this->service->getBySection($section, $request->input('search'));
+
+        return $this->apiSuccess('Andamios obtenidos correctamente.', [
+            'section' => $section,
+            'andamios' => $andamios,
+        ]);
+    }
+
     public function store(Request $request, Section $section)
     {
-
-        // Validar los datos del formulario
-        $request->validate([
+        $validated = $request->validate([
             'n_andamio' => 'required|integer|unique:andamios,n_andamio,NULL,id,section_id,' . $section->id,
             'descripcion' => 'required|string|max:255',
         ]);
 
-        // Crear un nuevo andamio asociado a la sección
-        $section->andamios()->create($request->all());
+        $this->service->create($section, $validated);
 
-        return redirect()->route('sections.andamios.index', ['section' => $section->id])
-            ->with('success', 'Andamio creado con éxito');
+        return $this->apiSuccess('Andamio creado correctamente.', null, 201);
     }
 
-    /**
-     * Actualiza un andamio existente.
-     */
     public function update(Request $request, Section $section, Andamio $andamio)
     {
-
-        // Validar los datos del formulario
-        $request->validate([
+        $validated = $request->validate([
             'n_andamio' => 'required|integer|unique:andamios,n_andamio,' . $andamio->id . ',id,section_id,' . $section->id,
             'descripcion' => 'required|string|max:255',
         ]);
 
-        // Actualizar el andamio
-        $andamio->update($request->all());
+        $this->service->update($andamio, $validated);
 
-        return redirect()->route('sections.andamios.index', ['section' => $section->id])
-            ->with('success', 'Andamio actualizado con éxito');
+        return $this->apiSuccess('Andamio actualizado correctamente.', ['andamio' => $andamio->fresh()]);
     }
 
-    /**
-     * Elimina un andamio si no contiene cajas.
-     */
     public function destroy(Section $section, Andamio $andamio)
     {
-        // Verificar si el andamio contiene cajas
         if ($andamio->boxes()->exists()) {
-            return redirect()->route('sections.andamios.index', ['section' => $section->id])
-                ->withErrors('El andamio no puede ser eliminado porque contiene cajas.');
+            return $this->apiError('El andamio no puede ser eliminado porque contiene cajas.', 422);
         }
 
-        // Eliminar el andamio
-        $andamio->delete();
+        $this->service->delete($andamio);
 
-        return redirect()->route('sections.andamios.index', ['section' => $section->id])
-            ->with('success', 'Andamio eliminado con éxito');
+        return $this->apiSuccess('Andamio eliminado correctamente.');
     }
 }

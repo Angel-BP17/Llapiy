@@ -3,7 +3,6 @@ namespace App\Services\User;
 
 use App\Models\Area;
 use App\Models\User;
-use App\Models\UserType;
 use Hash;
 use Storage;
 
@@ -11,7 +10,12 @@ class UserService
 {
     public function getAll($data)
     {
-        $users = User::when($data->search, function ($query, $search) {
+        $users = User::with([
+            'group.areaGroupType.area',
+            'group.areaGroupType.groupType',
+            'subgroup',
+            'roles',
+        ])->when($data->search, function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('last_name', 'LIKE', "%{$search}%")
@@ -21,27 +25,34 @@ class UserService
                     ->orWhereRaw("CONCAT(last_name, ' ', name) LIKE ?", ["%{$search}%"]);
             });
         })
-            ->when($data->user_type_id, fn($q, $id) => $q->where('user_type_id', $id))
             ->paginate(10);
 
-        $userTypes = UserType::all();
-        $areas = Area::all();
+        $areas = Area::with('areaGroupTypes.groupType', 'areaGroupTypes.groups.subgroups')->get();
 
-        return ['users' => $users, 'userTypes' => $userTypes, 'areas' => $areas];
+        return ['users' => $users, 'areas' => $areas];
     }
-    public function create($data)
+    public function create(array $data, $fotoPerfil = null)
     {
-        $dataValidated = $data->validated();
+        $dataValidated = $data;
+
+        $roles = $dataValidated['roles'] ?? [];
+        unset($dataValidated['roles']);
 
         $dataValidated['password'] = Hash::make($dataValidated['password']);
-        $dataValidated['foto_perfil'] = $data->file('foto_perfil')?->store('usuarios/perfiles', 'public');
+        $dataValidated['foto_perfil'] = $fotoPerfil?->store('usuarios/perfiles', 'public');
 
-        return User::create($dataValidated);
+        $user = User::create($dataValidated);
+        $user->syncRoles($roles);
+
+        return $user;
     }
 
     public function update($data, $user)
     {
         $dataValidated = $data->validated();
+
+        $roles = $dataValidated['roles'] ?? null;
+        unset($dataValidated['roles']);
 
         if ($data->filled('password')) {
             $dataValidated['password'] = Hash::make($data['password']);
@@ -61,6 +72,10 @@ class UserService
         unset($dataValidated['subgroup']);
 
         $user->update($dataValidated);
+
+        if (is_array($roles)) {
+            $user->syncRoles($roles);
+        }
     }
 
     public function delete($data)

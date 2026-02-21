@@ -2,78 +2,62 @@
 
 namespace App\Http\Controllers\Areas;
 
-use App\Http\Middleware\AuthMiddlewareFactory;
-use App\Http\Requests\GroupType\CreateGroupTypeRequest;
-use App\Http\Requests\GroupType\UpdateGroupTypeRequest;
-use App\Models\GroupType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GroupType\CreateGroupTypeRequest;
+use App\Http\Requests\GroupType\IndexGroupTypeRequest;
+use App\Http\Requests\GroupType\UpdateGroupTypeRequest;
+use App\Services\Areas\GroupTypeService;
 
 class GroupTypeController extends Controller
 {
-    public function __construct()
+    public function __construct(protected GroupTypeService $service)
     {
-        $this->middleware(function ($request, $next) {
-            $middleware = AuthMiddlewareFactory::make('admin');
-            return $middleware->handle($request, $next);
-        })->except('getByArea');
-    }
-    public function index()
-    {
-        $groupTypes = GroupType::all();
-        return view('group_types.index', compact('groupTypes'));
     }
 
-    /**
-     * Mostrar el formulario para crear un nuevo tipo de grupo.
-     */
+    public function index(IndexGroupTypeRequest $request)
+    {
+        $groupTypes = $this->service->getAll($request->input('search'));
+
+        return $this->apiSuccess('Tipos de grupo obtenidos correctamente.', ['groupTypes' => $groupTypes]);
+    }
+
     public function create()
     {
-        return view('group_types.create');
+        return $this->apiError('Metodo no soportado en API.', 405);
     }
 
-    /**
-     * Guardar un nuevo tipo de grupo en la base de datos.
-     */
     public function store(CreateGroupTypeRequest $request)
     {
-        GroupType::create($request->all());
+        $this->service->create($request->all());
 
-        return redirect()->route('group_types.index')->with('success', 'Tipo de grupo creado exitosamente.');
+        return $this->apiSuccess('Tipo de grupo creado correctamente.', null, 201);
     }
 
-    /**
-     * Mostrar el formulario para editar un tipo de grupo existente.
-     */
     public function edit($id)
     {
-        $groupType = GroupType::findOrFail($id);
-        return view('group_types.edit', compact('groupType'));
+        $groupType = $this->service->find((int) $id);
+
+        return $this->apiSuccess('Tipo de grupo obtenido correctamente.', ['groupType' => $groupType]);
     }
 
-    /**
-     * Actualizar un tipo de grupo existente en la base de datos.
-     */
     public function update(UpdateGroupTypeRequest $request, $id)
     {
-        $groupType = GroupType::findOrFail($id);
-        $groupType->update($request->all());
+        $groupType = $this->service->find((int) $id);
+        $this->service->update($groupType, $request->all());
 
-        return redirect()->route('group_types.index')->with('success', 'Tipo de grupo actualizado exitosamente.');
+        return $this->apiSuccess('Tipo de grupo actualizado correctamente.', ['groupType' => $groupType->fresh()]);
     }
 
-    /**
-     * Eliminar un tipo de grupo existente.
-     */
     public function destroy($id)
     {
-        $groupType = GroupType::findOrFail($id);
+        $groupType = $this->service->find((int) $id);
 
         if (!$groupType->canBeDeleted()) {
-            return redirect()->back()->with('error', 'No se puede eliminar este tipo de grupo porque tiene grupos asociados.');
+            return $this->apiError('No se puede eliminar este tipo de grupo porque tiene grupos asociados.', 422);
         }
 
-        $groupType->delete();
+        $this->service->delete($groupType);
 
-        return redirect()->route('group_types.index')->with('success', 'Tipo de grupo eliminado exitosamente.');
+        return $this->apiSuccess('Tipo de grupo eliminado correctamente.');
     }
 }

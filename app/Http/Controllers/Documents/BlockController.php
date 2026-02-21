@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Documents;
 
-use App\Http\Middleware\AuthMiddlewareFactory;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Document\CreateBlockRequest;
+use App\Http\Requests\Document\IndexBlockRequest;
 use App\Http\Requests\Document\UpdateBlockRequest;
+use App\Http\Requests\Document\UploadBlockFileRequest;
 use App\Models\Area;
 use App\Models\Block;
 use App\Models\Document;
@@ -12,39 +14,42 @@ use App\Models\User;
 use App\Notifications\NewBlockNotification;
 use App\Services\Block\BlockService;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Cache;
-use Carbon\Carbon;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class BlockController extends Controller
 {
     public function __construct(protected BlockService $service)
     {
-        $this->middleware(function ($request, $next) {
-            $middleware = AuthMiddlewareFactory::make('user');
-            return $middleware->handle($request, $next);
-        });
-
     }
-    public function index(Request $request)
+
+    public function index(IndexBlockRequest $request)
     {
         $resources = $this->service->getAll($request);
+        $totalBlocks = Block::count();
+        $attendedBlocksCount = Block::query()
+            ->whereNotNull('root')
+            ->where('root', '!=', '')
+            ->whereNotNull('box_id')
+            ->whereHas('box.andamio')
+            ->count();
+        $unattendedBlocksCount = max($totalBlocks - $attendedBlocksCount, 0);
 
-        return view('blocks.index', [
+        return $this->apiSuccess('Bloques obtenidos correctamente.', [
             'blocks' => $resources['blocks']->paginate(10),
             'areas' => $resources['areas'],
             'groups' => $resources['groups'],
             'subgroups' => $resources['subgroups'],
-            'years' => $resources['years']
-        ]);
-    }
-
-    public function create()
-    {
-        return view('blocks.create', [
-            'areas' => Area::all(),
+            'years' => $resources['years'],
+            'roles' => Role::query()->orderBy('name')->get(['id', 'name']),
+            'totalBlocks' => $totalBlocks,
+            'totalAreas' => Area::count(),
+            'attendedBlocksCount' => $attendedBlocksCount,
+            'unattendedBlocksCount' => $unattendedBlocksCount,
         ]);
     }
 
@@ -53,69 +58,60 @@ class BlockController extends Controller
         try {
             $block = $this->service->create($request->validated(), $request->file('root'));
 
-            retry(3, function () use ($block) {
-                $this->notifyManagers($block);
-            }, 100);
+            $notificationPermission = 'notifications.receive';
+            if (Permission::query()->where('name', $notificationPermission)->exists()) {
+                $receivers = User::permission($notificationPermission)->get();
+                if ($receivers->isNotEmpty()) {
+                    Notification::send($receivers, new NewBlockNotification($block));
+                }
+            }
 
             $this->clearDocumentCache();
 
-            return redirect()->route('blocks.index')->with('success', 'Documento subido exitosamente');
+            return $this->apiSuccess('Bloque creado correctamente.', ['block' => $block], 201);
         } catch (\Throwable $e) {
             Log::error('Error al registrar el bloque: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
 
-            return back()
-                ->withErrors('Ocurrió un error al registrar el documento. Intenta nuevamente.')
-                ->withInput();
+            return $this->apiError('Ocurrio un error al registrar el bloque. Intenta nuevamente.', 500);
         }
-    }
-
-    public function show(Block $block)
-    {
-        Carbon::setLocale('es');
-        $fecha = $block->fecha;
-
-        return view('blocks.show', [
-            'block' => $block,
-            'year' => $fecha->year,
-            'month' => $fecha->translatedFormat('F'),
-            'day' => $fecha->day,
-            'daySem' => $fecha->translatedFormat('l'),
-        ]);
-    }
-
-    public function edit(Block $block)
-    {
-        return view('blocks.edit', [
-            'block' => $block,
-        ]);
     }
 
     public function update(UpdateBlockRequest $request, Block $block)
     {
         try {
-            $newBlock = $this->service->update($request->validated(), $request->file('root'), $request->hasFile('root'), $block);
-
-            retry(3, function () use ($newBlock) {
-                $this->notifyManagers($newBlock, true);
-            }, 100);
+            $updated = $this->service->update($request->validated(), $request->file('root'), $request->hasFile('root'), $block);
 
             $this->clearDocumentCache();
 
-            return redirect()->route('blocks.index')->with('success', 'Bloque actualizado correctamente.');
+            return $this->apiSuccess('Bloque actualizado correctamente.', ['block' => $updated]);
         } catch (\Throwable $e) {
             Log::error('Error al editar el bloque: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
 
-            return back()
-                ->withErrors('Ocurrió un error al editar el bloque. Intenta nuevamente.')
-                ->withInput();
+            return $this->apiError('Ocurrio un error al editar el bloque. Intenta nuevamente.', 500);
         }
+    }
 
+    public function uploadFile(UploadBlockFileRequest $request, Block $block)
+    {
+        try {
+            $updated = $this->service->uploadFile($block, $request->file('root'));
+            $this->clearDocumentCache();
+
+            return $this->apiSuccess('Archivo del bloque actualizado correctamente.', ['block' => $updated]);
+        } catch (\Throwable $e) {
+            Log::error('Error al subir archivo del bloque: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return $this->apiError('Ocurrio un error al subir el archivo del bloque. Intenta nuevamente.', 500);
+        }
     }
 
     public function destroy(Block $block)
@@ -123,16 +119,15 @@ class BlockController extends Controller
         try {
             $this->service->delete($block);
             $this->clearDocumentCache();
-            return redirect()->route('blocks.index')->with('success', 'Documento eliminado exitosamente');
+
+            return $this->apiSuccess('Bloque eliminado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al editar el bloque: ' . $e->getMessage(), [
+            Log::error('Error al eliminar el bloque: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
 
-            return back()
-                ->withErrors('Ocurrió un error al eliminar el documento. Intenta nuevamente.')
-                ->withInput();
+            return $this->apiError('Ocurrio un error al eliminar el bloque. Intenta nuevamente.', 500);
         }
     }
 
@@ -145,12 +140,12 @@ class BlockController extends Controller
             ->stream('reporte_bloques.pdf');
     }
 
-    protected function clearDocumentCache(Document $document = null)
+    protected function clearDocumentCache(?Document $document = null): void
     {
         $keys = [
             'admin_block_count',
             'document_types_list',
-            'areas_list'
+            'areas_list',
         ];
 
         if ($document) {
@@ -159,19 +154,6 @@ class BlockController extends Controller
 
         foreach ($keys as $key) {
             Cache::forget($key);
-        }
-    }
-
-    private function notifyManagers(Block $block, bool $isCreate = true)
-    {
-        if ($isCreate) {
-            // Implementación con chunk para evitar memory issues
-            User::whereHas('userType', fn($q) => $q->where('name', 'Revisor/Aprobador'))
-                ->chunkById(100, function ($users) use ($block) {
-                    foreach ($users as $user) {
-                        $user->notify(new NewBlockNotification($block));
-                    }
-                });
         }
     }
 }

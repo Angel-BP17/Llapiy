@@ -1,9 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
     const areas = window.areas;
+    if (!Array.isArray(areas)) return;
 
     const areaSelect = document.getElementById("area_id");
     const groupSelect = document.getElementById("group_id");
     const subgroupSelect = document.getElementById("subgroup_id");
+    if (!areaSelect || !groupSelect || !subgroupSelect) return;
 
     const selectedAreaId = window.selectedAreaId || null;
     const selectedGroupId = window.selectedGroupId || null;

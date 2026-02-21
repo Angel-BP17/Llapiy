@@ -12,7 +12,7 @@ class UpdateBlockRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('blocks.update') ?? false;
     }
 
     /**
@@ -22,6 +22,8 @@ class UpdateBlockRequest extends FormRequest
      */
     public function rules(): array
     {
+        $canUploadFile = $this->user()?->can('blocks.upload') ?? false;
+
         return [
             'n_bloque' => [
                 'required',
@@ -33,7 +35,9 @@ class UpdateBlockRequest extends FormRequest
             'fecha' => 'required|date',
             'asunto' => 'required|string|max:255',
             'folios' => 'required|string|max:255',
-            'root' => 'nullable|file|mimes:pdf|max:' . (50 * 1024),
+            'root' => $canUploadFile
+                ? 'nullable|file|mimes:pdf|max:' . (50 * 1024)
+                : 'prohibited',
             'rango_inicial' => 'required|integer',
             'rango_final' => 'required|integer',
         ];

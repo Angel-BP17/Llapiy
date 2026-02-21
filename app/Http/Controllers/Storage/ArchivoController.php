@@ -2,48 +2,36 @@
 
 namespace App\Http\Controllers\Storage;
 
-use App\Http\Middleware\AuthMiddlewareFactory;
-use App\Models\Block;
-use App\Models\Box;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Storage\IndexArchivoRequest;
+use App\Services\Storage\ArchivoService;
 
 class ArchivoController extends Controller
 {
-    public function __construct()
+    public function __construct(protected ArchivoService $service)
     {
-        $this->middleware(function ($request, $next) {
-            $middleware = AuthMiddlewareFactory::make('encargado');
-            return $middleware->handle($request, $next);
-        });
-    }
-    public function index($section, $andamio, $box)
-    {
-
-        // Obtener el paquete con sus archivos relacionados
-        $box = Box::with('blocks')->findOrFail($box);
-
-        // Retornar la vista con los archivos
-        return view('archivos.index', compact('section', 'andamio', 'box'));
     }
 
-    /**
-     * Mueve un archivo al contenedor default.
-     */
+    public function index(IndexArchivoRequest $request, $section, $andamio, $box)
+    {
+        $resources = $this->service->getBoxWithBlocks((int) $box, $request->input('search'));
+
+        return $this->apiSuccess('Archivos obtenidos correctamente.', [
+            'section' => (int) $section,
+            'andamio' => (int) $andamio,
+            'box' => $resources['box'],
+            'blocks' => $resources['blocks'],
+        ]);
+    }
+
     public function moveToDefault($section, $andamio, $box, $block)
     {
+        try {
+            $this->service->moveToDefault((int) $box, (int) $block);
 
-        // Obtener el archivo
-        $block = Block::findOrFail($block);
-
-        // Verificar que el archivo pertenece al paquete especificado
-        if ($block->box_id != $box) {
-            return back()->with('error', 'El archivo no pertenece ala caja especificada.');
+            return $this->apiSuccess('Archivo movido al contenedor default.');
+        } catch (\RuntimeException $e) {
+            return $this->apiError($e->getMessage(), 422);
         }
-
-        // Asignar el archivo al contenedor default
-        $block->update(['box_id' => null]); // Null representa el contenedor default
-
-        // Redirigir con éxito
-        return back()->with('success', 'Archivo movido al contenedor default.');
     }
 }

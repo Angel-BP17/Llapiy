@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     const areas = window.areas;
+    if (!Array.isArray(areas)) return;
     const user = window.user || null;
 
     // Buscar los selects existentes en el DOM, sin depender de nombres exactos
@@ -7,6 +8,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const groupTypeSelect = window.selectedGroupType;
     const groupSelect = window.selectedGroupId;
     const subgroupSelect = window.selectedSubgroupId;
+    const isSelectElement = (el) => el instanceof HTMLSelectElement;
+    if (
+        !isSelectElement(areaSelect) ||
+        !isSelectElement(groupTypeSelect) ||
+        !isSelectElement(groupSelect) ||
+        !isSelectElement(subgroupSelect)
+    ) {
+        return;
+    }
 
     function clearSelect(select, placeholder) {
         if (!select) return;

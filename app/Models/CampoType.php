@@ -8,7 +8,46 @@ use Illuminate\Database\Eloquent\Model;
 class CampoType extends Model
 {
     use HasFactory;
-    protected $fillable = ['name'];
+    public const DATA_TYPES = [
+        'string',
+        'text',
+        'char',
+        'boolean',
+        'int',
+        'double',
+        'float',
+        'enum',
+    ];
+
+    protected $fillable = [
+        'name',
+        'data_type',
+        'is_nullable',
+        'length',
+        'allow_negative',
+        'allow_zero',
+        'enum_values',
+    ];
+
+    protected $casts = [
+        'is_nullable' => 'boolean',
+        'allow_negative' => 'boolean',
+        'allow_zero' => 'boolean',
+        'enum_values' => 'array',
+        'length' => 'integer',
+    ];
+
+    protected $attributes = [
+        'data_type' => 'string',
+        'is_nullable' => true,
+        'allow_negative' => false,
+        'allow_zero' => true,
+    ];
+
+    public static function dataTypes(): array
+    {
+        return self::DATA_TYPES;
+    }
 
     public function campos()
     {

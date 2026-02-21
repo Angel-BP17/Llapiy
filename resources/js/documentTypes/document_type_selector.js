@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     const areas = window.areas;
+    if (!Array.isArray(areas)) return;
 
     const selectedGroups = new Set(window.preselectedGroups || []);
     const selectedSubgroups = new Set(window.preselectedSubgroups || []);
@@ -8,10 +9,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectedList = document.getElementById("selectedItemsList");
     const groupInput = document.getElementById("selectedGroupsInput");
     const subgroupInput = document.getElementById("selectedSubgroupsInput");
+    if (!treeContainer || !selectedList || !groupInput || !subgroupInput) return;
 
     function renderTree() {
-        if (!treeContainer) return;
-
         treeContainer.innerHTML = "";
         treeContainer.classList.add("bg-white");
 

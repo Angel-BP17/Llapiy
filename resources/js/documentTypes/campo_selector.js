@@ -11,6 +11,15 @@ document.addEventListener("DOMContentLoaded", function () {
         "camposSeleccionados"
     );
     const camposInput = document.getElementById("camposInput");
+    if (
+        !campoSearch ||
+        !campoResults ||
+        !camposSeleccionadosUl ||
+        !camposInput ||
+        !Array.isArray(campoTypes)
+    ) {
+        return;
+    }
 
     // 3. Filtrar por nombre
     function filterCampoTypes(query) {
@@ -68,9 +77,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // 7. Asegurar el envío correcto
-    document.querySelector("form").addEventListener("submit", function () {
-        camposInput.value = JSON.stringify(selectedCampoTypes);
-    });
+    const form = camposInput.closest("form");
+    if (form) {
+        form.addEventListener("submit", function () {
+            camposInput.value = JSON.stringify(selectedCampoTypes);
+        });
+    }
 
     // 8. Mostrar todos los campos al iniciar
     renderResults(campoTypes);

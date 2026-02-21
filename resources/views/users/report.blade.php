@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -17,7 +17,7 @@
     <table>
         <thead>
             <tr>
-                <th colspan="7" class="title-header">USUARIOS DETALLE</th>
+                <th colspan="6" class="title-header">USUARIOS DETALLE</th>
             </tr>
             <tr>
                 <th>ID</th>
@@ -25,7 +25,6 @@
                 <th>Apellidos</th>
                 <th>DNI</th>
                 <th>Email</th>
-                <th>Rol</th>
                 <th>Fecha de Registro</th>
             </tr>
         </thead>
@@ -37,12 +36,11 @@
                     <td>{{ $user->last_name }}</td>
                     <td>{{ $user->dni }}</td>
                     <td>{{ $user->email }}</td>
-                    <td>{{ optional($user->userType)->name ?? '-' }}</td>
                     <td>{{ $user->created_at->format('d/m/Y') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">No hay usuarios registrados.</td>
+                    <td colspan="6">No hay usuarios registrados.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -51,3 +49,4 @@
 </body>
 
 </html>
+

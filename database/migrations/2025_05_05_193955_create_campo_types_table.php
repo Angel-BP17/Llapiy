@@ -13,6 +13,12 @@ return new class extends Migration {
         Schema::create('campo_types', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('data_type')->default('string');
+            $table->boolean('is_nullable')->default(true);
+            $table->unsignedInteger('length')->nullable();
+            $table->boolean('allow_negative')->default(false);
+            $table->boolean('allow_zero')->default(true);
+            $table->json('enum_values')->nullable();
             $table->timestamps();
         });
     }

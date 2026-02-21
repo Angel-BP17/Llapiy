@@ -3,7 +3,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-6">
-                <p>UGEL Santa &copy; 2025</p>
+                <p>UGEL Santa &copy; @php echo date('Y'); @endphp</p>
             </div>
             <!--
             <div class="col-sm-6 text-right">

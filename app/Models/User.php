@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -25,7 +26,6 @@ class User extends Authenticatable
         'email',
         'password',
         'foto_perfil',
-        'user_type_id',
         'group_id',
         'subgroup_id',
     ];
@@ -50,10 +50,6 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function userType()
-    {
-        return $this->belongsTo(UserType::class, 'user_type_id');
-    }
     public function group()
     {
         return $this->belongsTo(Group::class, 'group_id');
@@ -68,20 +64,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Document::class, 'user_id');
     }
-
-    public function isAdmin(): bool
-    {
-        return $this->userType->name === 'Administrador';
-    }
-
-    public function isManager(): bool
-    {
-        return $this->userType->name === 'Revisor/Aprobador';
-    }
-
-    public function isAdminOrManager(): bool
-    {
-        return $this->isAdmin() || $this->isManager();
-    }
-
 }

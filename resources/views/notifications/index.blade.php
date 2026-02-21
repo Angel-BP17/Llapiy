@@ -27,13 +27,16 @@
                     <ul class="list-group">
                         @foreach ($notifications as $notification)
                             <li class="list-group-item {{ $notification->read_at ? 'text-muted' : 'font-weight-bold' }}">
-                                <p href="{{ route('documents.show', $notification->data['block_id']) }}">
+                                <p href="{{ route('documents.index') }}">
                                     {{ $notification->data['message'] }}
                                 </p><small
                                     class="text-muted">{{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}</small>
                             </li>
                         @endforeach
                     </ul>
+                    <div class="p-3">
+                        {{ $notifications->links() }}
+                    </div>
                 @endif
             </div>
         </div>

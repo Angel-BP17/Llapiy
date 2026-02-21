@@ -2,64 +2,61 @@
 
 namespace App\Http\Controllers\Storage;
 
-use App\Http\Middleware\AuthMiddlewareFactory;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Storage\IndexBoxRequest;
 use App\Models\Andamio;
 use App\Models\Box;
 use App\Models\Section;
-use App\Http\Controllers\Controller;
+use App\Services\Storage\BoxService;
 use Illuminate\Http\Request;
 
 class BoxController extends Controller
 {
-    public function __construct()
+    public function __construct(protected BoxService $service)
     {
-        $this->middleware(function ($request, $next) {
-            $middleware = AuthMiddlewareFactory::make('encargado');
-            return $middleware->handle($request, $next);
-        });
     }
-    public function index(Section $section, Andamio $andamio)
-    {
 
-        $boxes = $andamio->boxes;
-        return view('boxes.index', compact('section', 'andamio', 'boxes'));
+    public function index(IndexBoxRequest $request, Section $section, Andamio $andamio)
+    {
+        $boxes = $this->service->getByAndamio($andamio, $request->input('search'));
+
+        return $this->apiSuccess('Cajas obtenidas correctamente.', [
+            'section' => $section,
+            'andamio' => $andamio,
+            'boxes' => $boxes,
+        ]);
     }
 
     public function store(Request $request, Section $section, Andamio $andamio)
     {
-
-        $request->validate([
+        $validated = $request->validate([
             'n_box' => 'required|string|unique:boxes,n_box,NULL,id,andamio_id,' . $andamio->id,
         ]);
 
-        $andamio->boxes()->create($request->only('n_box'));
-        return redirect()->route('sections.andamios.boxes.index', ['section' => $section->id, 'andamio' => $andamio->id])
-            ->with('success', 'Caja registrada correctamente.');
+        $this->service->create($andamio, $validated);
+
+        return $this->apiSuccess('Caja creada correctamente.', null, 201);
     }
 
     public function update(Request $request, Section $section, Andamio $andamio, Box $box)
     {
-
-        $request->validate([
-            'n_box' => 'required|string|unique:boxes,n_box,' . $box->id . ',id,andamio_id,' . $andamio->id
+        $validated = $request->validate([
+            'n_box' => 'required|string|unique:boxes,n_box,' . $box->id . ',id,andamio_id,' . $andamio->id,
         ]);
 
-        $box->update($request->only('n_box'));
-        return redirect()->route('sections.andamios.boxes.index', ['section' => $section->id, 'andamio' => $andamio->id])
-            ->with('success', 'Caja actualizada correctamente.');
+        $this->service->update($box, $validated);
+
+        return $this->apiSuccess('Caja actualizada correctamente.', ['box' => $box->fresh()]);
     }
 
     public function destroy(Section $section, Andamio $andamio, Box $box)
     {
-
-        if ($box->boxes()->exists()) {
-            return redirect()->route('sections.andamios.boxes.index', ['section' => $section->id, 'andamio' => $andamio->id])
-                ->withErrors('No se puede eliminar un estante con paquetes asociados.');
+        if ($box->blocks()->exists()) {
+            return $this->apiError('No se puede eliminar una caja con paquetes asociados.', 422);
         }
 
-        $box->delete();
-        return redirect()->route('sections.andamios.boxes.index', ['section' => $section->id, 'andamio' => $andamio->id])
-            ->with('success', 'Caja eliminada correctamente.');
-    }
+        $this->service->delete($box);
 
+        return $this->apiSuccess('Caja eliminada correctamente.');
+    }
 }
