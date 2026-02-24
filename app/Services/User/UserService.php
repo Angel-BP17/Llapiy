@@ -89,9 +89,19 @@ class UserService
 
     public function getUsersForDpf($data)
     {
-        return User::when($data->name, fn($q, $name) => $q->where('name', 'like', "%{$name}%"))
+        return User::query()
+            ->when($data->search, function ($q, $search) {
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('dni', 'like', "%{$search}%")
+                        ->orWhere('user_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($data->name, fn($q, $name) => $q->where('name', 'like', "%{$name}%"))
             ->when($data->last_name, fn($q, $lastName) => $q->where('last_name', 'like', "%{$lastName}%"))
-            ->when($data->role_id, fn($q, $roleId) => $q->where('role_id', $roleId))
+            ->when($data->role_id, fn($q, $roleId) => $q->whereHas('roles', fn($roles) => $roles->where('roles.id', $roleId)))
             ->when($data->status, fn($q, $status) => $q->where('status', $status))
             ->when(
                 $data->filled('from_date') && $data->filled('to_date'),

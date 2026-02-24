@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Reporte de Documentos</title>
-    <link rel="stylesheet" href="file://{{ base_path('public/css/reporte.css') }}">
+    @include('reports.partials.styles')
 </head>
 
 <body>
     <div class="header">
-        <img src="{{ public_path('img/logo-ugel.png') }}" alt="Logo">
+        @include('reports.partials.header_logo')
         <div class="title">Reporte de Documentos</div>
         <p>Generado el: {{ now()->format('d/m/Y H:i:s') }}</p>
     </div>
@@ -40,12 +40,13 @@
                     <td>{{ $document->asunto }}</td>
                     <td>{{ $document->folios }}</td>
                     <td>{{ optional($document->documentType)->name ?? '-' }}</td>
-                    <td>{{ optional($document->group->areaGroupType->area)->descripcion ?? '-' }}</td>
+                    <td>{{ data_get($document, 'group.areaGroupType.area.descripcion', '-') }}</td>
 
                     @if ($document->box)
                         <td>{{ optional($document->box->andamio->section)->n_section ?? '-' }}</td>
                         <td>{{ optional($document->box->andamio)->n_andamio ?? '-' }}</td>
                         <td>{{ optional($document->box)->n_box ?? '-' }}</td>
+                        <td>-</td>
                     @else
                         <td colspan="4">-</td>
                     @endif

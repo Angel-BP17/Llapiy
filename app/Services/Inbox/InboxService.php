@@ -20,11 +20,13 @@ class InboxService
         }
 
         if ($request->has('area_id') && !empty($request->area_id)) {
-            $query->where('area_id', $request->area_id);
+            $query->whereHas('group.areaGroupType', function ($inner) use ($request) {
+                $inner->where('area_id', $request->area_id);
+            });
         }
 
         if ($request->has('fecha') && !empty($request->fecha)) {
-            $query->where('fecha', $request->fecha);
+            $query->whereYear('fecha', (int) $request->fecha);
         }
 
         $documents = $query->latest()->paginate(10);

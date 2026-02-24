@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Reporte de Bloques</title>
-    <link rel="stylesheet" href="file://{{ base_path('public/css/reporte.css') }}">
+    @include('reports.partials.styles')
 </head>
 
 <body>
     <div class="header">
-        <img src="{{ public_path('img/logo-ugel.png') }}" alt="Logo">
+        @include('reports.partials.header_logo')
         <div class="title">Reporte de Bloques</div>
         <p>Generado el: {{ now()->format('d/m/Y H:i:s') }}</p>
     </div>

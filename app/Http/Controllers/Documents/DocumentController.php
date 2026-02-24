@@ -135,11 +135,17 @@ class DocumentController extends Controller
 
     public function generatePDFReport(Request $request)
     {
-        $documents = $this->service->report($request)->get();
+        try {
+            $documents = $this->service->report($request)->get();
 
-        return Pdf::loadView('documents.report', compact('documents'))
-            ->setPaper('a4', 'landscape')
-            ->stream('reporte_documentos.pdf');
+            return Pdf::loadView('documents.report', compact('documents'))
+                ->setPaper('a4', 'landscape')
+                ->stream('reporte_documentos.pdf');
+        } catch (\Throwable) {
+            return response()->json([
+                'message' => 'No se pudo generar el reporte de documentos.',
+            ], 500);
+        }
     }
 
     protected function clearDocumentCache(?Document $document = null): void

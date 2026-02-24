@@ -1,11 +1,11 @@
 # ==============================
-# 1️⃣ Build stage
+# 1) Build stage
 # ==============================
 FROM composer:2 AS builder
 
 WORKDIR /app
 
-# Copiar TODO el proyecto primero
+# Copiar todo el proyecto
 COPY . .
 
 # Instalar dependencias sin dev
@@ -17,29 +17,32 @@ RUN composer install \
 
 
 # ==============================
-# 2️⃣ Production image
+# 2) Production image
 # ==============================
 FROM php:8.3-fpm-alpine
 
-# Instalar dependencias del sistema
+# Dependencias del sistema
 RUN apk add --no-cache \
     nginx \
-    curl \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
     libzip-dev \
     postgresql-dev \
-    oniguruma-dev \
-    bash
+    oniguruma-dev
 
-# Instalar extensiones necesarias
+# Extensiones PHP
+RUN docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg
+
 RUN docker-php-ext-install \
     pdo \
     pdo_pgsql \
     mbstring \
     zip \
     exif \
+    gd \
     pcntl
 
 WORKDIR /var/www
@@ -50,9 +53,10 @@ COPY --from=builder /app /var/www
 # Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Copiar config nginx
+# Nginx config
 COPY nginx.conf /etc/nginx/http.d/default.conf
 
 EXPOSE 8080
 
-CMD sh -c "php-fpm -D && nginx -g 'daemon off;'"
+# php-fpm escucha en 9000 dentro del contenedor
+CMD sh -c "nginx -t && php-fpm -D && nginx -g 'daemon off;'"

@@ -255,6 +255,7 @@ class DocumentService
 
         if ($user && $user->hasRole('ADMINISTRADOR')) {
             return DocumentType::with([
+                'campoTypes',
                 'groups.areaGroupType',
                 'subgroups.group.areaGroupType',
             ])->whereNot('name', 'Bloque')->get();
@@ -269,6 +270,7 @@ class DocumentService
                 $documentTypesFromGroup = DocumentType::whereHas('groups', function ($q) use ($user) {
                     $q->where('groups.id', $user->group_id);
                 })->with([
+                    'campoTypes',
                     'groups.areaGroupType',
                     'subgroups.group.areaGroupType',
                 ])->whereNot('name', 'Bloque')->get();
@@ -280,6 +282,7 @@ class DocumentService
             $documentTypesFromSubgroup = DocumentType::whereHas('subgroups', function ($q) use ($user) {
                 $q->where('subgroups.id', $user->subgroup_id);
             })->with([
+                'campoTypes',
                 'groups.areaGroupType',
                 'subgroups.group.areaGroupType',
             ])->whereNot('name', 'Bloque')->get();

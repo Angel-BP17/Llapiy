@@ -133,11 +133,17 @@ class BlockController extends Controller
 
     public function generatePDFReport(Request $request)
     {
-        $blocks = $this->service->report($request)->with('box.andamio.section')->get();
+        try {
+            $blocks = $this->service->report($request)->with('box.andamio.section')->get();
 
-        return Pdf::loadView('blocks.report', compact('blocks'))
-            ->setPaper('a4', 'landscape')
-            ->stream('reporte_bloques.pdf');
+            return Pdf::loadView('blocks.report', compact('blocks'))
+                ->setPaper('a4', 'landscape')
+                ->stream('reporte_bloques.pdf');
+        } catch (\Throwable) {
+            return response()->json([
+                'message' => 'No se pudo generar el reporte de bloques.',
+            ], 500);
+        }
     }
 
     protected function clearDocumentCache(?Document $document = null): void

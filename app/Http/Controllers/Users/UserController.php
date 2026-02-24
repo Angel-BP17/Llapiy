@@ -56,10 +56,16 @@ class UserController extends Controller
 
     public function generatePDF(Request $request)
     {
-        $users = $this->service->getUsersForDpf($request);
+        try {
+            $users = $this->service->getUsersForDpf($request);
 
-        return Pdf::loadView('users.report', compact('users'))
-            ->setPaper('a4', 'landscape')
-            ->stream('reporte_usuarios.pdf');
+            return Pdf::loadView('users.report', compact('users'))
+                ->setPaper('a4', 'landscape')
+                ->stream('reporte_usuarios.pdf');
+        } catch (\Throwable) {
+            return response()->json([
+                'message' => 'No se pudo generar el reporte de usuarios.',
+            ], 500);
+        }
     }
 }

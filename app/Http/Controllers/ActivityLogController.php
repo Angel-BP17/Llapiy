@@ -20,11 +20,17 @@ class ActivityLogController extends Controller
 
     public function generatePDF(Request $request)
     {
-        $logs = $this->service->getReportLogs($request);
+        try {
+            $logs = $this->service->getReportLogs($request);
 
-        $pdf = Pdf::loadView('activity_logs.report', compact('logs'))
-            ->setPaper('a4', 'landscape');
+            $pdf = Pdf::loadView('activity_logs.report', compact('logs'))
+                ->setPaper('a4', 'landscape');
 
-        return $pdf->stream('Reporte_Actividades.pdf');
+            return $pdf->stream('Reporte_Actividades.pdf');
+        } catch (\Throwable) {
+            return response()->json([
+                'message' => 'No se pudo generar el reporte de actividades.',
+            ], 500);
+        }
     }
 }
