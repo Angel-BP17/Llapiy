@@ -43,11 +43,11 @@ class HomeService
 
         if ($driver === 'pgsql') {
             $documentosPorMes = Document::selectRaw("
-        DATE_TRUNC('month', created_at) as fecha,
+        TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM-01') as fecha,
         COUNT(*) as cantidad
     ")
                 ->groupBy(DB::raw("DATE_TRUNC('month', created_at)"))
-                ->orderBy('fecha')
+                ->orderBy(DB::raw("DATE_TRUNC('month', created_at)"))
                 ->get();
         } else {
             $documentosPorMes = Document::selectRaw("
@@ -75,4 +75,3 @@ class HomeService
         Artisan::call('db:seed', ['--force' => true]);
     }
 }
-

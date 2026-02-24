@@ -66,7 +66,16 @@ class DocumentService
                 fn($q, $month) => $q->whereMonth('fecha', $month)
             );
 
-        $years = Document::selectRaw('YEAR(fecha) as year')->distinct()->pluck('year');
+        $driver = DB::connection()->getDriverName();
+        $yearExpression = $driver === 'pgsql'
+            ? 'EXTRACT(YEAR FROM fecha)::int as year'
+            : 'YEAR(fecha) as year';
+
+        $years = Document::selectRaw($yearExpression)
+            ->whereNotNull('fecha')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
 
         return [
             'documents' => $query,
