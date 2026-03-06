@@ -8,11 +8,15 @@ class IndexActivityLogRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('activity-logs.view') ?? false;
+        return true;
     }
 
     public function rules(): array
     {
-        return [];
+        return [
+            'date' => 'nullable|date_format:Y-m-d',
+            'user_id' => 'nullable|integer|exists:users,id',
+            'module' => 'nullable|string|max:255',
+        ];
     }
 }

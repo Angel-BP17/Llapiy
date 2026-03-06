@@ -13,7 +13,12 @@ class InboxService
 {
     public function getIndexData(Request $request): array
     {
-        $query = Block::withoutBox()->with(['user.group.areaGroupType.area']);
+        $query = Block::withoutBox()->with([
+            'user:id,name,last_name,group_id', 
+            'user.group:id,area_group_type_id,descripcion', 
+            'user.group.areaGroupType:id,area_id', 
+            'user.group.areaGroupType.area:id,descripcion'
+        ]);
 
         if ($request->has('search') && !empty($request->search)) {
             $query->where('asunto', 'like', '%' . $request->search . '%');
@@ -40,16 +45,23 @@ class InboxService
             ->count();
         $unattendedBlocksCount = max($totalBlocks - $attendedBlocksCount, 0);
 
-        $areas = Area::all();
-        $fechas = Block::select('fecha')->distinct()->pluck('fecha');
+        $areas = \Illuminate\Support\Facades\Cache::remember('areas_list_simple', now()->addDay(), function() {
+            return Area::select('id', 'descripcion')->get();
+        });
+        
+        $fechas = \Illuminate\Support\Facades\Cache::remember('inbox_fechas', now()->addHours(24), function() {
+            return Block::select('fecha')->distinct()->pluck('fecha');
+        });
 
         $periodos = $fechas->map(function ($fecha) {
             return \Carbon\Carbon::parse($fecha)->year;
         })->unique()->values();
 
-        $sections = Section::all();
-        $andamios = Andamio::all();
-        $boxes = Box::all();
+        // Estas listas pueden ser pesadas, se aconseja al front pedirlas asíncronamente
+        // pero por ahora las cacheamos para aliviar la base de datos
+        $sections = \Illuminate\Support\Facades\Cache::remember('sections_list_all', now()->addDay(), fn() => Section::select('id', 'n_section', 'descripcion')->get());
+        $andamios = \Illuminate\Support\Facades\Cache::remember('andamios_list_all', now()->addDay(), fn() => Andamio::select('id', 'n_andamio', 'section_id')->get());
+        $boxes = \Illuminate\Support\Facades\Cache::remember('boxes_list_all', now()->addDay(), fn() => Box::select('id', 'n_box', 'andamio_id')->get());
 
         return compact(
             'documents',

@@ -33,9 +33,9 @@ class BoxController extends Controller
             'n_box' => 'required|string|unique:boxes,n_box,NULL,id,andamio_id,' . $andamio->id,
         ]);
 
-        $this->service->create($andamio, $validated);
+        $box = $this->service->create($andamio, $validated);
 
-        return $this->apiSuccess('Caja creada correctamente.', null, 201);
+        return $this->apiSuccess('Caja creada correctamente.', ['box' => $box], 201);
     }
 
     public function update(Request $request, Section $section, Andamio $andamio, Box $box)

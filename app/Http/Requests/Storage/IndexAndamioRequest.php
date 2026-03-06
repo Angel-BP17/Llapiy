@@ -8,7 +8,7 @@ class IndexAndamioRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('andamios.view') ?? false;
+        return true;
     }
 
     public function rules(): array

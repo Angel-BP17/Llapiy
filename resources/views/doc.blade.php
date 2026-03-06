@@ -1,438 +1,296 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LlapiyAPI - Documentacion API detallada</title>
+    <title>LlapiyAPI - Documentación Profesional</title>
+    @vite(['resources/css/app.css'])
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
     <style>
         :root {
-            --bg: #f4f7fc;
-            --panel: #ffffff;
-            --line: #d9e2ef;
-            --text: #182438;
-            --muted: #5d6c86;
-            --get: #0f766e;
-            --post: #1d4ed8;
-            --put: #7c3aed;
-            --delete: #b91c1c;
+            --primary: #4f46e5;
+            --get: #10b981;
+            --post: #3b82f6;
+            --put: #f59e0b;
+            --delete: #ef4444;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { @apply bg-indigo-200 dark:bg-slate-800 rounded-full hover:bg-indigo-300 dark:hover:bg-slate-700; }
+
+        /* Typography Contrast */
+        .doc-title { @apply text-slate-900 dark:text-slate-50 transition-colors duration-300; }
+        .doc-text { @apply text-slate-600 dark:text-slate-400 transition-colors duration-300; }
+
+        /* Endpoint Cards - Definidos en Light Mode */
+        .endpoint-card { 
+            @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl overflow-hidden 
+                    shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-none backdrop-blur-sm
+                    hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all duration-300 mb-8 sm:mb-12; 
+        }
+        
+        /* Method Badges */
+        .method-label { 
+            @apply px-2.5 py-1 sm:px-3 sm:py-1.5 text-[9px] sm:text-[10px] font-black rounded-lg sm:rounded-xl uppercase tracking-widest text-white shadow-sm ring-1 ring-inset ring-black/5; 
+        }
+        
+        .get-bg { @apply border-l-[4px] sm:border-l-[6px] border-emerald-500 bg-gradient-to-r from-emerald-50/60 to-transparent dark:from-emerald-500/5; }
+        .post-bg { @apply border-l-[4px] sm:border-l-[6px] border-blue-500 bg-gradient-to-r from-blue-50/60 to-transparent dark:from-blue-500/5; }
+        .put-bg { @apply border-l-[4px] sm:border-l-[6px] border-amber-500 bg-gradient-to-r from-amber-50/60 to-transparent dark:from-amber-500/5; }
+        .delete-bg { @apply border-l-[4px] sm:border-l-[6px] border-rose-500 bg-gradient-to-r from-rose-50/60 to-transparent dark:from-rose-500/5; }
+
+        /* JSON Code Cards - Terminal Style */
+        .json-card { 
+            @apply mt-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl shadow-indigo-500/5 overflow-hidden transition-all duration-300; 
+        }
+        .json-header {
+            @apply px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50 flex items-center justify-between;
+        }
+        .json-label { 
+            @apply text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2.5; 
+        }
+        .label-req { @apply text-blue-600 dark:text-blue-400; }
+        .label-res { @apply text-emerald-600 dark:text-emerald-400; }
+        
+        .json-body {
+            @apply p-3 sm:p-4 bg-slate-50/50 dark:bg-slate-900/20 overflow-hidden;
+        }
+        .json-body pre { 
+            @apply p-5 sm:p-8 bg-slate-950 text-indigo-100 font-medium leading-relaxed text-xs sm:text-sm overflow-x-auto rounded-xl shadow-inner selection:bg-indigo-500/30; 
         }
 
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text);
-            background: linear-gradient(180deg, #eaf0ff 0%, var(--bg) 24%);
-        }
-
-        .page {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .hero,
-        .sidebar,
-        .module,
-        .footer-card {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 14px;
-        }
-
-        .hero {
-            padding: 18px;
-            margin-bottom: 14px;
-        }
-
-        .hero h1 {
-            margin: 0 0 8px;
-            font-size: 30px;
-        }
-
-        .hero p {
-            margin: 5px 0;
-            color: var(--muted);
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 14px;
-            align-items: start;
-        }
-
-        .sidebar {
-            position: sticky;
-            top: 12px;
-            padding: 14px;
-        }
-
-        .sidebar h2 {
-            margin: 0 0 10px;
-            font-size: 18px;
-        }
-
-        .sidebar a {
-            display: block;
-            text-decoration: none;
-            color: #1e3a8a;
-            padding: 7px 8px;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .sidebar a:hover {
-            background: #eef3ff;
-        }
-
-        .content {
-            display: grid;
-            gap: 14px;
-        }
-
-        .module {
-            padding: 14px;
-        }
-
-        .module h2 {
-            margin: 0 0 8px;
-            font-size: 21px;
-        }
-
-        .module > p {
-            margin: 0 0 10px;
-            color: var(--muted);
-        }
-
-        .endpoint {
-            border: 1px solid var(--line);
-            border-radius: 11px;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: #fff;
-        }
-
-        .ep-head {
-            margin-bottom: 8px;
+        /* Sidebar Styling */
+        .sidebar-link {
             display: flex;
             align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 1rem;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            @apply text-slate-500 dark:text-slate-400;
+        }
+        .sidebar-link:hover {
+            @apply text-indigo-600 bg-white border-slate-200 shadow-sm dark:text-indigo-300 dark:bg-indigo-500/10 dark:border-transparent dark:shadow-none;
+        }
+        .sidebar-icon {
+            width: 20px !important;
+            height: 20px !important;
+            flex-shrink: 0;
+            display: block;
+            @apply text-slate-400 transition-colors;
+        }
+        .sidebar-link:hover .sidebar-icon {
+            @apply text-indigo-500;
         }
 
-        .method {
-            display: inline-block;
-            min-width: 62px;
-            text-align: center;
-            color: #fff;
-            font-weight: 700;
-            font-size: 12px;
-            border-radius: 8px;
-            padding: 4px 8px;
+        #mobile-menu-overlay {
+            @apply fixed inset-0 bg-indigo-950/40 backdrop-blur-sm z-[60] opacity-0 pointer-events-none transition-opacity duration-300;
         }
-
-        .get { background: var(--get); }
-        .post { background: var(--post); }
-        .put { background: var(--put); }
-        .delete { background: var(--delete); }
-
-        .path {
-            font-family: Consolas, Monaco, "Courier New", monospace;
-            font-size: 13px;
-        }
-
-        .hint {
-            color: var(--muted);
-            font-size: 13px;
-            margin: 4px 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-        }
-
-        th,
-        td {
-            border: 1px solid var(--line);
-            padding: 7px;
-            text-align: left;
-            vertical-align: top;
-            font-size: 13px;
-        }
-
-        th {
-            background: #f5f8ff;
-        }
-
-        code,
-        pre {
-            font-family: Consolas, Monaco, "Courier New", monospace;
-            background: #f4f6fb;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-        }
-
-        code { padding: 2px 6px; }
-
-        pre {
-            padding: 9px;
-            overflow-x: auto;
-            font-size: 12px;
-        }
-
-        .footer-card {
-            padding: 14px;
-            margin-top: 14px;
-        }
-
-        @media (max-width: 1024px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar {
-                position: static;
-            }
-        }
+        #mobile-menu-overlay.active { @apply opacity-100 pointer-events-auto; }
     </style>
 </head>
-<body>
-<div class="page">
-    <section class="hero">
-        <h1>LlapiyAPI - Documentacion detallada por modulo</h1>
-        <p>Base API: <code>{{ url('/api') }}</code> | Documentacion: <code>{{ url('/doc') }}</code></p>
-        <p>Autenticacion por Bearer Token (Sanctum). Excepto <code>POST /api/auth/login</code>, las rutas API requieren token.</p>
-        <p>Formato comun: <code>{"message":"...","data":...}</code>. En validacion: <code>{"message":"...","errors":{...}}</code>.</p>
-    </section>
-
-    <div class="layout">
-        <aside class="sidebar">
-            <h2>Sidebar de modulos</h2>
-            <a href="#mod-auth">1. Auth y sesion</a>
-            <a href="#mod-dashboard">2. Dashboard y usuario</a>
-            <a href="#mod-docs">3. Documentos</a>
-            <a href="#mod-blocks">4. Bloques</a>
-            <a href="#mod-types">5. Tipos y campos</a>
-            <a href="#mod-org">6. Areas, grupos, subgrupos</a>
-            <a href="#mod-storage">7. Almacenamiento</a>
-            <a href="#mod-users">8. Usuarios, roles, permisos</a>
-            <a href="#mod-inbox">9. Inbox y notificaciones</a>
-            <a href="#mod-system">10. Sistema</a>
-            <a href="#mod-pdf">11. Reportes PDF (web)</a>
-            <a href="#mod-errors">12. Errores y ejemplos</a>
-        </aside>
-
-        <main class="content">
-            <section id="mod-auth" class="module">
-                <h2>1) Auth y sesion</h2>
-                <div class="endpoint">
-                    <div class="ep-head"><span class="method post">POST</span><span class="path">/api/auth/login</span></div>
-                    <p class="hint">Inicia sesion y genera token Sanctum.</p>
-                    <table>
-                        <thead><tr><th>Campo</th><th>Tipo</th><th>Req.</th><th>Regla</th></tr></thead>
-                        <tbody>
-                        <tr><td>user_name</td><td>string</td><td>Si</td><td>required|string</td></tr>
-                        <tr><td>password</td><td>string</td><td>Si</td><td>required|string</td></tr>
-                        </tbody>
-                    </table>
-                    <pre>{
-  "user_name": "admin",
-  "password": "secret"
-}</pre>
+<body class="bg-slate-50 dark:bg-[#0b0f1a] text-slate-900 dark:text-slate-100 antialiased transition-colors duration-300">
+    <div id="mobile-menu-overlay"></div>
+    <div class="min-h-screen flex flex-col">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/80 dark:bg-[#0b0f1a]/70 border-b border-slate-200 dark:border-slate-800/50 shadow-sm">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <button id="mobile-menu-toggle" class="lg:hidden p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-indigo-400 border border-slate-200 dark:border-slate-800">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-black shadow-lg">L</div>
+                        <div class="hidden xs:block">
+                            <span class="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white block leading-none">Llapiy<span class="text-indigo-600">API</span></span>
+                            <span class="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-indigo-500 uppercase tracking-[0.2em]">Documentation Hub</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="endpoint">
-                    <div class="ep-head"><span class="method post">POST</span><span class="path">/api/auth/logout</span></div>
-                    <p class="hint">Revoca el token actual del usuario autenticado.</p>
+                
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <div class="hidden md:flex items-center px-4 py-1.5 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>v1.0.0 Stable
+                    </div>
+                    <button id="theme-toggle" class="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800 shadow-sm hover:scale-105 transition-transform">
+                        <svg id="theme-toggle-dark-icon" class="hidden w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon" class="hidden w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 14.95a1 1 0 01-1.414 0l-.707-.707a1 1 0 011.414-1.414l.707.707a1 1 0 010 1.414zm2.12-10.607a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path></svg>
+                    </button>
                 </div>
-            </section>
+            </div>
+        </header>
 
-            <section id="mod-dashboard" class="module">
-                <h2>2) Dashboard y usuario</h2>
-                <div class="endpoint">
-                    <div class="ep-head"><span class="method get">GET</span><span class="path">/api/user</span></div>
-                    <p class="hint">Retorna el usuario autenticado en <code>data</code>.</p>
+        <div class="flex-1 max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="lg:flex lg:gap-12 xl:gap-16">
+                
+                <!-- Sidebar -->
+                <aside id="sidebar" class="fixed inset-y-0 left-0 z-[70] w-72 bg-white dark:bg-[#0b0f1a] transform -translate-x-full transition-transform duration-300 lg:translate-x-0 lg:static lg:block lg:w-64 xl:w-72 lg:shrink-0 lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)] overflow-y-auto border-r border-slate-200 dark:border-slate-800/50 shadow-2xl lg:shadow-none">
+                    <div class="flex lg:hidden items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 mb-6">
+                        <span class="font-black text-indigo-600 uppercase tracking-widest text-xs">Menú Principal</span>
+                        <button id="mobile-menu-close" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <nav class="space-y-10 px-6 lg:pl-0 lg:pr-6 xl:pr-8 lg:pt-4">
+                        @php
+                            $menu = [
+                                'Core Services' => [
+                                    '#mod-auth' => ['Autenticación', '<path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>'],
+                                    '#mod-profile' => ['Perfil & Sesión', '<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>'],
+                                    '#mod-dashboard' => ['Métricas Globales', '<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>']
+                                ],
+                                'Contenido' => [
+                                    '#mod-docs' => ['Documentos', '<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>'],
+                                    '#mod-blocks' => ['Bloques Físicos', '<path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>']
+                                ],
+                                'Estructura' => [
+                                    '#mod-areas' => ['Organización', '<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>']
+                                ],
+                                'Gestión' => [
+                                    '#mod-users' => ['Usuarios', '<path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>'],
+                                    '#mod-inbox' => ['Bandeja', '<path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>'],
+                                    '#mod-activity' => ['Bitácora', '<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>']
+                                ],
+                                'Control Central' => [
+                                    '#mod-system' => ['Mantenimiento', '<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>']
+                                ]
+                            ];
+                        @endphp
+                        @foreach($menu as $title => $links)
+                        <div class="mb-10">
+                            <h5 class="mb-4 text-[10px] font-black tracking-[0.3em] text-indigo-400 dark:text-slate-600 uppercase leading-none">{{ $title }}</h5>
+                            <ul class="space-y-1">
+                                @foreach($links as $href => $data)
+                                <li>
+                                    <a href="{{ $href }}" class="sidebar-link group">
+                                        <svg class="sidebar-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            {!! $data[1] !!}
+                                        </svg>
+                                        {{ $data[0] }}
+                                    </a>
+                                </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endforeach
+                    </nav>
+                </aside>
+
+                <!-- Main -->
+                <main class="flex-1 pt-8 sm:pt-12 pb-16 sm:pb-24 min-w-0">
+                    <section id="intro" class="mb-12 sm:mb-20 scroll-mt-32 relative">
+                        <div class="absolute -top-12 sm:-top-24 -left-12 sm:-left-24 w-64 sm:w-96 h-64 sm:h-96 bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[80px] sm:blur-[120px] -z-10"></div>
+                        <span class="inline-flex items-center px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase mb-4 sm:mb-6 ring-1 ring-emerald-200 dark:ring-emerald-800">
+                            API Certificada - 8 Etapas de Calidad
+                        </span>
+                        <h1 class="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-black tracking-tight doc-title mb-6 sm:mb-8 leading-[1.1] sm:leading-[0.95]">
+                            High Performance<br class="hidden sm:block"><span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600">Document Engine</span>
+                        </h1>
+                        <p class="text-base sm:text-lg md:text-xl xl:text-2xl doc-text leading-relaxed max-w-3xl font-medium">
+                            Infraestructura documental optimizada para alta concurrencia. Implementa un contrato estricto de respuesta <code class="text-indigo-500">{message, data}</code>, seguridad RBAC de tres capas y carga asíncrona de metadatos.
+                        </p>
+                    </section>
+
+                    <div class="space-y-16 sm:space-y-24 md:space-y-32">
+                        @include('docs.partials.core')
+                        @include('docs.partials.documents')
+                        @include('docs.partials.organization')
+                        @include('docs.partials.control')
+                        @include('docs.partials.system')
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <footer class="bg-slate-950 text-white py-12 sm:py-20 border-t border-slate-900 mt-auto">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-10 sm:gap-12">
+                    <div class="flex items-center gap-3 sm:gap-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20 text-white font-black">L</div>
+                        <div class="text-left">
+                            <span class="text-xl sm:text-2xl font-black">LlapiyAPI</span>
+                            <p class="text-[10px] sm:text-xs text-slate-500 font-bold tracking-widest uppercase">The Document Engine</p>
+                        </div>
+                    </div>
+                    <div class="text-center md:text-right">
+                        <p class="text-sm sm:text-base text-slate-400 font-medium mb-2">Construido con pasión para desarrolladores modernos.</p>
+                        <div class="text-[9px] sm:text-[10px] text-slate-600 uppercase tracking-[0.4em] font-black">
+                            &copy; {{ date('Y') }} LlapiyAPI Hub • All Rights Reserved
+                        </div>
+                    </div>
                 </div>
-                <div class="endpoint">
-                    <div class="ep-head"><span class="method get">GET</span><span class="path">/api/dashboard</span></div>
-                    <p class="hint">Retorna metricas agregadas: conteos, series por fecha y distribucion por tipo.</p>
-                </div>
-            </section>
-
-            <section id="mod-docs" class="module">
-                <h2>3) Documentos</h2>
-                <p>Permisos: <code>documents.view/create/update/upload/delete</code>.</p>
-                <div class="endpoint">
-                    <div class="ep-head"><span class="method get">GET</span><span class="path">/api/documents</span></div>
-                    <p class="hint">Lista paginada + datos auxiliares para filtros y formularios.</p>
-                    <table>
-                        <thead><tr><th>Query param</th><th>Regla</th></tr></thead>
-                        <tbody>
-                        <tr><td>asunto</td><td>nullable|string|max:255</td></tr>
-                        <tr><td>document_type_id</td><td>nullable|exists:document_types,id</td></tr>
-                        <tr><td>area_id / group_id / subgroup_id</td><td>nullable|exists:tabla,id</td></tr>
-                        <tr><td>role_id / year / month</td><td>nullable (month 1..12)</td></tr>
-                        <tr><td>document_type_scope</td><td>nullable|string|max:100</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="endpoint">
-                    <div class="ep-head"><span class="method post">POST</span><span class="path">/api/documents</span></div>
-                    <p class="hint">Crea documento. Si incluye <code>root</code>, enviar multipart/form-data.</p>
-                    <table>
-                        <thead><tr><th>Campo</th><th>Regla principal</th></tr></thead>
-                        <tbody>
-                        <tr><td>n_documento</td><td>required|string, unico por periodo</td></tr>
-                        <tr><td>asunto, folios, document_type_id, fecha</td><td>required</td></tr>
-                        <tr><td>root</td><td>nullable|file|pdf|max:15MB</td></tr>
-                        <tr><td>campos[]</td><td>array opcional de <code>{id,dato}</code> con validacion dinamica por tipo de campo</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/documents/{document}</span></div><p class="hint">Actualiza metadata/campos. <code>root</code> solo si tiene permiso upload.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/documents/{document}/upload</span></div><p class="hint">Sube/reemplaza PDF: <code>root required|pdf|max:15MB</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/documents/{document}</span></div><p class="hint">Elimina documento y archivo.</p></div>
-            </section>
-
-            <section id="mod-blocks" class="module">
-                <h2>4) Bloques</h2>
-                <p>Permisos: <code>blocks.view/create/update/upload/delete</code>.</p>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/blocks</span></div><p class="hint">Listado paginado con filtros <code>asunto, area_id, group_id, subgroup_id, role_id, year, month</code>.</p></div>
-                <div class="endpoint">
-                    <div class="ep-head"><span class="method post">POST</span><span class="path">/api/blocks</span></div>
-                    <table>
-                        <thead><tr><th>Campo</th><th>Regla</th></tr></thead>
-                        <tbody>
-                        <tr><td>n_bloque</td><td>required|string, unico por periodo</td></tr>
-                        <tr><td>fecha, asunto, folios, rango_inicial, rango_final</td><td>required</td></tr>
-                        <tr><td>root</td><td>nullable|file|pdf|max:50MB</td></tr>
-                        </tbody>
-                    </table>
-                    <p class="hint">Dispara notificaciones a usuarios con permiso <code>notifications.receive</code>.</p>
-                </div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/blocks/{block}</span></div><p class="hint">Actualiza bloque.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/blocks/{block}/upload</span></div><p class="hint">Sube PDF del bloque (<code>root</code> requerido).</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/blocks/{block}</span></div><p class="hint">Elimina bloque y archivo.</p></div>
-            </section>
-
-            <section id="mod-types" class="module">
-                <h2>5) Tipos de documento y campos</h2>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/document_types</span></div><p class="hint">Filtros: <code>name, area_id, group_id, subgroup_id</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/document_types</span></div><p class="hint">Body: <code>name</code> req, <code>campos/groups/subgroups</code> como string JSON.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/document_types/{document_type}</span></div><p class="hint">Actualiza nombre y relaciones.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/document_types/{document_type}</span></div><p class="hint">Elimina tipo y pivots.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/campos</span></div><p class="hint">Query: <code>search</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/campos</span></div><p class="hint">Campo: <code>name</code> req. Si <code>data_type=enum</code>, <code>enum_values</code> es requerido.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/campos/{campo}</span></div><p class="hint">Mismas reglas de creacion con unicidad por id.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/campos/{campo}</span></div><p class="hint">Elimina tipo de campo.</p></div>
-            </section>
-
-            <section id="mod-org" class="module">
-                <h2>6) Areas, grupos y subgrupos</h2>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/areas</span></div><p class="hint">Lista areas.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/areas</span></div><p class="hint">Body: <code>descripcion</code> req, <code>abreviacion</code> opc, <code>grupos[]</code> opcional (anidado).</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/areas/{area}</span></div><p class="hint">Detalle area.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/areas/{area}</span></div><p class="hint">Actualiza area y estructura anidada.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/areas/{area}</span></div><p class="hint">Elimina area.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/groups</span></div><p class="hint">Body: <code>area_id</code>, <code>group_type_id</code> req, <code>descripcion</code> opc.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/groups/{group}</span></div><p class="hint">Obtiene grupo.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/groups/{group}</span></div><p class="hint">Campos: descripcion req, abreviacion opc.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/groups/{group}</span></div><p class="hint">Elimina grupo.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/subgroups</span></div><p class="hint">Body: <code>group_id</code> req, <code>descripcion/abreviacion/parent_subgroup_id</code> opc.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/subgroups/{subgroup}</span></div><p class="hint">Obtiene subgrupo.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/subgroups/{subgroup}</span></div><p class="hint">Actualiza subgrupo.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/subgroups/{subgroup}</span></div><p class="hint">Elimina subgrupo.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/group_types</span></div><p class="hint">Query: <code>search</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/group_types</span></div><p class="hint">Body: <code>descripcion</code> req, <code>abreviacion</code> opc.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/group_types/{group_type}</span></div><p class="hint">Actualiza tipo.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/group_types/{group_type}</span></div><p class="hint">Si tiene grupos asociados retorna 422.</p></div>
-            </section>
-
-            <section id="mod-storage" class="module">
-                <h2>7) Almacenamiento (secciones, andamios, cajas, archivos)</h2>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/sections</span></div><p class="hint">Query: <code>search</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/sections</span></div><p class="hint">Campos req: <code>n_section</code> unico, <code>descripcion</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/sections/{section}</span></div><p class="hint">Actualiza seccion.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/sections/{section}</span></div><p class="hint">Elimina seccion.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/sections/{section}/andamios</span></div><p class="hint">Query: <code>search</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/sections/{section}/andamios</span></div><p class="hint">Campos req: <code>n_andamio</code> unico por seccion, <code>descripcion</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/sections/{section}/andamios/{andamio}</span></div><p class="hint">Actualiza andamio.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/sections/{section}/andamios/{andamio}</span></div><p class="hint">Si tiene cajas => 422.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/sections/{section}/andamios/{andamio}/boxes</span></div><p class="hint">Query: <code>search</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/sections/{section}/andamios/{andamio}/boxes</span></div><p class="hint">Campo req: <code>n_box</code> unico por andamio.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/sections/{section}/andamios/{andamio}/boxes/{box}</span></div><p class="hint">Actualiza caja.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/sections/{section}/andamios/{andamio}/boxes/{box}</span></div><p class="hint">Si tiene bloques => 422.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/sections/{section}/andamios/{andamio}/boxes/{box}/archivos</span></div><p class="hint">Lista bloques de la caja. Query: <code>search</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/sections/{section}/andamios/{andamio}/boxes/{box}/archivos/{block}/move</span></div><p class="hint">Mueve bloque a default. Si no pertenece a caja => 422.</p></div>
-            </section>
-
-            <section id="mod-users" class="module">
-                <h2>8) Usuarios, roles y permisos</h2>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/users</span></div><p class="hint">Query opcional: <code>search</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/users</span></div><p class="hint">Campos req: <code>name,last_name,user_name,dni,password</code>. <code>group_id</code> es requerido salvo rol ADMINISTRADOR.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/users/{user}</span></div><p class="hint">En update se usan <code>group</code> y <code>subgroup</code> para asignaciones.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/users/{user}</span></div><p class="hint">Elimina usuario.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/roles</span></div><p class="hint">Listado roles. Query: <code>search</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">/api/roles</span></div><p class="hint">Body: <code>name</code> req, <code>permissions[]</code> opcional.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/roles/{role}</span></div><p class="hint">Actualiza nombre/permisos.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/roles/{role}</span></div><p class="hint">Elimina rol.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/roles/{role}/permissions</span></div><p class="hint">Matriz de permisos seleccionados.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/roles/{role}/permissions</span></div><p class="hint">Body: <code>permissions[]</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method post">POST</span><span class="path">(Controlador de permisos API, sin ruta expuesta actual)</span></div><p class="hint">El controlador de permisos ya responde JSON, pero no hay endpoint registrado en <code>routes/api.php</code>.</p></div>
-            </section>
-
-            <section id="mod-inbox" class="module">
-                <h2>9) Inbox, notificaciones y bitacora</h2>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/inbox</span></div><p class="hint">Filtros: <code>search, area_id, fecha</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method put">PUT</span><span class="path">/api/inbox/update-storage/{id}</span></div><p class="hint">Body req: <code>n_box</code> (int), <code>n_andamio</code>, <code>n_section</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/notifications</span></div><p class="hint">Listado de notificaciones del usuario.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/notifications/{notification}</span></div><p class="hint">Marca como leida. Si no es propietario => 403.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/activity-logs</span></div><p class="hint">Filtros de servicio: <code>date</code>, <code>user_id</code>, <code>module</code>.</p></div>
-            </section>
-
-            <section id="mod-system" class="module">
-                <h2>10) Sistema</h2>
-                <div class="endpoint"><div class="ep-head"><span class="method delete">DELETE</span><span class="path">/api/admin/clear-all</span></div><p class="hint">Requiere middleware <code>can:clear-system</code>.</p></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/api/storage-link</span></div><p class="hint">Ejecuta <code>storage:link</code> y devuelve estado.</p></div>
-            </section>
-
-            <section id="mod-pdf" class="module">
-                <h2>11) Reportes PDF (rutas web)</h2>
-                <p class="hint">Fuera de <code>/api</code>, pero protegidas por <code>auth:sanctum</code>.</p>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/documents/pdf</span></div></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/blocks/pdf</span></div></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/users/pdf</span></div></div>
-                <div class="endpoint"><div class="ep-head"><span class="method get">GET</span><span class="path">/activity-logs/pdf</span></div></div>
-            </section>
-
-            <section id="mod-errors" class="module">
-                <h2>12) Errores y ejemplos</h2>
-                <table>
-                    <thead><tr><th>Codigo</th><th>Significado</th><th>Que revisar</th></tr></thead>
-                    <tbody>
-                    <tr><td>401</td><td>Token invalido o faltante</td><td>Header Authorization</td></tr>
-                    <tr><td>403</td><td>No autorizado por permisos/politicas</td><td>Rol y permisos del usuario</td></tr>
-                    <tr><td>405</td><td>Metodo no permitido</td><td>Ver endpoint correcto en esta guia</td></tr>
-                    <tr><td>422</td><td>Error de validacion</td><td>Campo y reglas en <code>errors</code></td></tr>
-                    <tr><td>500</td><td>Error interno</td><td>Logs de Laravel</td></tr>
-                    </tbody>
-                </table>
-                <pre>{
-  "message": "The given data was invalid.",
-  "errors": {
-    "name": ["El campo name es obligatorio."]
-  }
-}</pre>
-            </section>
-        </main>
+            </div>
+        </footer>
     </div>
 
-    <section class="footer-card">
-        <p class="muted">Ultima actualizacion de esta pagina: {{ now()->format('Y-m-d H:i:s') }}</p>
-    </section>
-</div>
+    <script>
+        // Theme Toggle
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        if (document.documentElement.classList.contains('dark')) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        themeToggleBtn.addEventListener('click', function() {
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Mobile Menu Toggle
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileMenuClose = document.getElementById('mobile-menu-close');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+        function toggleMenu() {
+            sidebar.classList.toggle('-translate-x-full');
+            mobileMenuOverlay.classList.toggle('active');
+            document.body.classList.toggle('overflow-hidden');
+        }
+
+        if(mobileMenuToggle) mobileMenuToggle.addEventListener('click', toggleMenu);
+        if(mobileMenuClose) mobileMenuClose.addEventListener('click', toggleMenu);
+        if(mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', toggleMenu);
+
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 1024) {
+                    toggleMenu();
+                }
+            });
+        });
+    </script>
 </body>
 </html>

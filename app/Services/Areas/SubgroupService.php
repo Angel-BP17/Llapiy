@@ -2,27 +2,21 @@
 
 namespace App\Services\Areas;
 
-use App\Models\DocumentType;
 use App\Models\Subgroup;
-use App\Models\SubgroupDocumentType;
 use Illuminate\Http\Request;
 
 class SubgroupService
 {
-    public function create(Request $request): void
+    /**
+     * Crea un nuevo subgrupo dentro de un grupo organizacional.
+     */
+    public function create(Request $request): Subgroup
     {
-        $subgroup = Subgroup::create([
+        return Subgroup::create([
             'group_id' => $request->group_id,
             'descripcion' => $request->descripcion ?? 'Nuevo Subgrupo',
-            'abreviacion' => $request->abreviacion,
+            'abreviacion' => $request->abreviacion ?? strtoupper(substr($request->descripcion ?? 'SUB', 0, 3)),
             'parent_subgroup_id' => $request->parent_subgroup_id,
-        ]);
-
-        $bloque = DocumentType::where('name', 'Bloque')->first();
-
-        SubgroupDocumentType::create([
-            'subgroup_id' => $subgroup->id,
-            'document_type_id' => $bloque->id,
         ]);
     }
 
@@ -31,9 +25,10 @@ class SubgroupService
         return Subgroup::findOrFail($id);
     }
 
-    public function update(Subgroup $subgroup, array $data): void
+    public function update(Subgroup $subgroup, array $data): Subgroup
     {
         $subgroup->update($data);
+        return $subgroup->fresh();
     }
 
     public function delete(Subgroup $subgroup): void
@@ -41,4 +36,3 @@ class SubgroupService
         $subgroup->delete();
     }
 }
-

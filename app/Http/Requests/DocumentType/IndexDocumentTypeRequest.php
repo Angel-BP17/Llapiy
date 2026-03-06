@@ -8,7 +8,7 @@ class IndexDocumentTypeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('document-types.view') ?? false;
+        return true;
     }
 
     public function rules(): array

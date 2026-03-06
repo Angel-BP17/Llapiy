@@ -46,6 +46,12 @@ class RoleController extends Controller
         return $this->apiSuccess('Rol actualizado correctamente.', ['role' => $role->fresh('permissions')]);
     }
 
+    public function show(Role $role)
+    {
+        $role->load('permissions');
+        return $this->apiSuccess('Detalle del rol obtenido correctamente.', ['role' => $role]);
+    }
+
     public function editPermissions(Role $role)
     {
         return $this->apiSuccess('Permisos del rol obtenidos correctamente.', [

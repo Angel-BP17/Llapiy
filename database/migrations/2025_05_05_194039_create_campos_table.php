@@ -16,6 +16,10 @@ return new class extends Migration {
             $table->foreignId('campo_type_id')->constrained('campo_types')->onDelete('cascade');
             $table->foreignId('document_id')->constrained('documents')->onDelete('cascade');
             $table->timestamps();
+
+            // Índices de rendimiento integrados
+            $table->index('campo_type_id');
+            $table->index('document_id');
         });
     }
 

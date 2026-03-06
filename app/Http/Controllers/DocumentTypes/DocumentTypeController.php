@@ -57,6 +57,12 @@ class DocumentTypeController extends Controller
         }
     }
 
+    public function show(DocumentType $documentType)
+    {
+        $documentType->load(['campoTypes', 'groups', 'subgroups']);
+        return $this->apiSuccess('Detalle del tipo de documento obtenido correctamente.', ['documentType' => $documentType]);
+    }
+
     public function destroy(DocumentType $documentType)
     {
         $this->service->delete($documentType);

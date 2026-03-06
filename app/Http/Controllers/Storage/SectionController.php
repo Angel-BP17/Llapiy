@@ -28,9 +28,14 @@ class SectionController extends Controller
             'descripcion' => 'required|string|max:255',
         ]);
 
-        $this->service->create($validated);
+        $section = $this->service->create($validated);
 
-        return $this->apiSuccess('Seccion creada correctamente.', null, 201);
+        return $this->apiSuccess('Seccion creada correctamente.', ['section' => $section], 201);
+    }
+
+    public function show(Section $section)
+    {
+        return $this->apiSuccess('Detalle de seccion obtenido.', ['section' => $section]);
     }
 
     public function update(Request $request, Section $section)

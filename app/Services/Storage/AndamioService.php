@@ -7,27 +7,32 @@ use App\Models\Section;
 
 class AndamioService
 {
+    /**
+     * Obtiene los andamios de una sección específica con optimización de columnas.
+     */
     public function getBySection(Section $section, ?string $search = null)
     {
         return $section->andamios()
+            ->select(['id', 'n_andamio', 'descripcion', 'section_id', 'created_at'])
             ->withCount('boxes')
             ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('n_andamio', 'like', "%{$search}%")
-                        ->orWhere('descripcion', 'like', "%{$search}%");
-                });
+                $query->where('n_andamio', 'like', "%{$search}%")
+                      ->orWhere('descripcion', 'like', "%{$search}%");
             })
-            ->get();
+            ->orderBy('n_andamio')
+            ->paginate(10)
+            ->withQueryString();
     }
 
-    public function create(Section $section, array $data): void
+    public function create(Section $section, array $data): Andamio
     {
-        $section->andamios()->create($data);
+        return $section->andamios()->create($data);
     }
 
-    public function update(Andamio $andamio, array $data): void
+    public function update(Andamio $andamio, array $data): Andamio
     {
         $andamio->update($data);
+        return $andamio->fresh();
     }
 
     public function delete(Andamio $andamio): void

@@ -1,0 +1,29 @@
+# Dependencias de PHP y Node
+/vendor/
+/node_modules/
+
+# Archivos de sistema y caché de Laravel
+/storage/*.key
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/testing/
+/storage/framework/views/
+/storage/logs/
+/.phpunit.result.cache
+/bootstrap/cache/
+
+# Entorno y Configuración sensible
+.env
+.env.backup
+.php_cs.cache
+.phpunit.result.cache
+
+# Builds de Vite/Mix
+/public/build/
+/public/storage/
+/hot/
+
+# Otros
+.git/
+.vscode/
+**/*.sqlite

@@ -8,7 +8,7 @@ class IndexNotificationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('notifications.view') ?? false;
+        return true;
     }
 
     public function rules(): array

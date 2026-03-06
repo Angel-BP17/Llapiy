@@ -16,6 +16,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 class DocumentController extends Controller
@@ -41,8 +42,19 @@ class DocumentController extends Controller
         Cache::put('subgroups_list', $resources['subgroups'], now()->addDay());
         Cache::put('document_types_list' . Auth::id(), $documentTypes, now()->addDay());
 
+        $paginatedDocuments = $resources['documents']->paginate(10);
+        
+        $paginatedDocuments->getCollection()->transform(function ($doc) {
+            $doc->can = [
+                'update' => auth()->user()->can('update', $doc),
+                'delete' => auth()->user()->can('delete', $doc),
+                'view' => auth()->user()->can('view', $doc),
+            ];
+            return $doc;
+        });
+
         return $this->apiSuccess('Documentos obtenidos correctamente.', [
-            'documents' => $resources['documents']->paginate(10),
+            'documents' => $paginatedDocuments,
             'areas' => $resources['areas'],
             'groups' => $resources['groups'],
             'subgroups' => $resources['subgroups'],
@@ -64,6 +76,14 @@ class DocumentController extends Controller
             $document = $this->service->create($request->validated(), $request->file('root'), $request->input('campos', []));
             $this->clearDocumentCache($document);
 
+            // Eager load para Atomic Update en el frontend
+            $document->load([
+                'documentType',
+                'user',
+                'group.areaGroupType.area',
+                'campos.campoType'
+            ]);
+
             return $this->apiSuccess('Documento creado correctamente.', ['document' => $document], 201);
         } catch (\Throwable $e) {
             Log::error('Error al registrar documento: ' . $e->getMessage(), [
@@ -78,6 +98,7 @@ class DocumentController extends Controller
     public function update(UpdateDocumentRequest $request, Document $document)
     {
         try {
+            $this->authorize('update', $document);
             $updated = $this->service->update(
                 $request->validated(),
                 $document,
@@ -88,6 +109,13 @@ class DocumentController extends Controller
 
             $this->clearDocumentCache($document);
 
+            $updated->load([
+                'documentType',
+                'user',
+                'group.areaGroupType.area',
+                'campos.campoType'
+            ]);
+
             return $this->apiSuccess('Documento actualizado correctamente.', ['document' => $updated]);
         } catch (\Throwable $e) {
             Log::error('Error al editar el documento: ' . $e->getMessage(), [
@@ -97,6 +125,28 @@ class DocumentController extends Controller
 
             return $this->apiError('Ocurrio un error al editar el documento. Intenta nuevamente.', 500);
         }
+    }
+
+    public function show(Document $document)
+    {
+        $this->authorize('view', $document);
+        $document->load([
+            'documentType',
+            'user',
+            'group.areaGroupType.area',
+            'campos.campoType'
+        ]);
+        return $this->apiSuccess('Detalle del documento obtenido correctamente.', ['document' => $document]);
+    }
+
+    public function viewFile(Document $document)
+    {
+        $this->authorize('view', $document);
+        if (!$document->root || !Storage::disk('public')->exists($document->root)) {
+            return response()->json(['message' => 'El archivo no existe o no ha sido cargado.'], 404);
+        }
+
+        return Storage::disk('public')->response($document->root);
     }
 
     public function uploadFile(UploadDocumentFileRequest $request, Document $document)
@@ -119,6 +169,7 @@ class DocumentController extends Controller
     public function destroy(Document $document)
     {
         try {
+            $this->authorize('delete', $document);
             $this->service->delete($document);
             $this->clearDocumentCache($document);
 

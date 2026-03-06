@@ -11,7 +11,7 @@ class UpdateDocumentTypeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('document-types.update') ?? false;
+        return true;
     }
 
     /**

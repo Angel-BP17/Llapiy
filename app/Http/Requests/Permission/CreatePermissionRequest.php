@@ -8,7 +8,7 @@ class CreatePermissionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('permissions.create') ?? false;
+        return true;
     }
 
     public function rules(): array

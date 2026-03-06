@@ -16,15 +16,57 @@ use Str;
 
 class DocumentService
 {
-    public function getAll($data)
+    public function getShowData(Document $document): array
     {
-        $query = Document::query()->with([
+        $document->load([
             'documentType.campoTypes',
             'documentType.groups.areaGroupType.area',
             'documentType.subgroups',
-            'user',
+            'user:id,name,last_name',
             'campos.campoType',
-        ])
+        ]);
+
+        $documentTypes = $this->userDocumentTypesWithCampos();
+
+        return compact('document', 'documentTypes');
+    }
+
+    public function getAll($data)
+    {
+        $user = Auth::user();
+        $query = Document::query()
+            ->select([
+                'id', 'n_documento', 'asunto', 'folios', 'root', 'fecha', 'periodo', 
+                'user_id', 'document_type_id', 'group_id', 'subgroup_id', 'created_at'
+            ])
+            ->when(!$user->hasRole('ADMINISTRADOR'), function ($q) use ($user) {
+                if ($user->can('documents.view.all')) {
+                    return $q;
+                }
+
+                if ($user->can('documents.view.group')) {
+                    if ($user->subgroup_id) {
+                        return $q->where('subgroup_id', $user->subgroup_id);
+                    }
+                    return $q->where('group_id', $user->group_id);
+                }
+
+                if ($user->can('documents.view.own')) {
+                    return $q->where('user_id', $user->id);
+                }
+
+                // Si no tiene ninguno de los 3, no ve nada (por seguridad)
+                return $q->whereRaw('1 = 0');
+            })
+            ->with([
+                'documentType:id,name',
+                'documentType.campoTypes:id,name',
+                'documentType.groups.areaGroupType.area:id,descripcion',
+                'documentType.subgroups:id,descripcion',
+                'user:id,name,last_name',
+                'campos:id,document_id,campo_type_id,dato',
+                'campos.campoType:id,name,data_type',
+            ])
             ->when(
                 $data->asunto,
                 fn($q, $asunto) => $q->where('asunto', 'like', "%{$asunto}%")
@@ -52,12 +94,6 @@ class DocumentService
                 })
             )
             ->when(
-                $data->role_id,
-                fn($q, $roleId) => $q->whereHas('user.roles', function ($q) use ($roleId) {
-                    $q->where('roles.id', $roleId);
-                })
-            )
-            ->when(
                 $data->year,
                 fn($q, $year) => $q->whereYear('fecha', $year)
             )
@@ -71,11 +107,13 @@ class DocumentService
             ? 'EXTRACT(YEAR FROM fecha)::int as year'
             : 'YEAR(fecha) as year';
 
-        $years = Document::selectRaw($yearExpression)
-            ->whereNotNull('fecha')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year');
+        $years = \Illuminate\Support\Facades\Cache::remember('documents_available_years', now()->addHours(24), function () use ($yearExpression) {
+            return Document::selectRaw($yearExpression)
+                ->whereNotNull('fecha')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year');
+        });
 
         return [
             'documents' => $query,
@@ -107,6 +145,8 @@ class DocumentService
 
             $this->storeDocumentFields($document, $inputs ?? []);
 
+            \Illuminate\Support\Facades\Cache::forget('documents_available_years');
+
             return $document;
         });
     }
@@ -119,7 +159,7 @@ class DocumentService
 
             if ($hasFile) {
                 if ($document->root) {
-                    Storage::delete("public/{$document->root}");
+                    \App\Jobs\DeleteFileJob::dispatch($document->root);
                 }
                 $data['root'] = $this->storeDocumentFile($file, $data['asunto']);
             }
@@ -148,7 +188,7 @@ class DocumentService
             $filePath = $document->root;
             $document->delete();
             if ($filePath) {
-                Storage::delete("public/{$filePath}");
+                \App\Jobs\DeleteFileJob::dispatch($filePath);
             }
         });
     }
@@ -159,7 +199,7 @@ class DocumentService
             $document = Document::lockForUpdate()->findOrFail($model->id);
 
             if ($document->root) {
-                Storage::delete("public/{$document->root}");
+                \App\Jobs\DeleteFileJob::dispatch($document->root);
             }
 
             $document->update([
@@ -215,120 +255,80 @@ class DocumentService
             );
     }
 
-    public function userDocumentTypesWithCampos($user)
+    public function userDocumentTypesWithCampos($user = null)
     {
-        // Verifica que el usuario tenga grupo y subgrupo
-        $user = Auth::user();
-
-        if ($user && $user->hasRole('ADMINISTRADOR')) {
-            return DocumentType::with(['campoTypes'])
-                ->whereNot('name', 'Bloque')
-                ->get();
-        }
-
-        $documentTypesFromGroup = collect();
-        $documentTypesFromSubgroup = collect();
-
-        // Validar si el usuario tiene un grupo asignado
-        if ($user && $user->group_id) {
-            if (!$user->subgroup_id) {
-                $documentTypesFromGroup = DocumentType::with(['campoTypes'])->whereHas('groups', function ($q) use ($user) {
-                    $q->where('groups.id', $user->group_id);
-                })->whereNot('name', 'Bloque')->get();
-            }
-        }
-
-        // Validar si el usuario tiene un subgrupo asignado
-        if ($user && $user->subgroup_id) {
-            $documentTypesFromSubgroup = DocumentType::with(['campoTypes'])->whereHas('subgroups', function ($q) use ($user) {
-                $q->where('subgroups.id', $user->subgroup_id);
-            })->whereNot('name', 'Bloque')->get();
-        }
-
-
-        // Unir ambos conjuntos y eliminar duplicados
-        $userDocumentTypes = $documentTypesFromGroup
-            ->merge($documentTypesFromSubgroup)
-            ->unique('id')
-            ->values();
-
-        return $userDocumentTypes;
+        return $this->userDocumentTypes($user, true);
     }
 
     //-----------------------------------------------------------------------------
     //PRIVADOS
-    private function userDocumentTypes()
+    private function userDocumentTypes($user = null, $withCamposOnly = false)
     {
-        // Verifica que el usuario tenga grupo y subgrupo
-        $user = Auth::user();
+        $user = $user ?: Auth::user();
+        if (!$user)
+            return collect();
 
-        if ($user && $user->hasRole('ADMINISTRADOR')) {
-            return DocumentType::with([
-                'campoTypes',
-                'groups.areaGroupType',
-                'subgroups.group.areaGroupType',
-            ])->whereNot('name', 'Bloque')->get();
-        }
+        $cacheKey = "user_doc_types_{$user->id}_" . ($withCamposOnly ? 'campos' : 'full');
 
-        $documentTypesFromGroup = collect();
-        $documentTypesFromSubgroup = collect();
-
-        // Validar si el usuario tiene un grupo asignado
-        if ($user && $user->group_id) {
-            if (!$user->subgroup_id) {
-                $documentTypesFromGroup = DocumentType::whereHas('groups', function ($q) use ($user) {
-                    $q->where('groups.id', $user->group_id);
-                })->with([
-                    'campoTypes',
-                    'groups.areaGroupType',
-                    'subgroups.group.areaGroupType',
-                ])->whereNot('name', 'Bloque')->get();
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addMinutes(30), function () use ($user, $withCamposOnly) {
+            if ($user->hasRole('ADMINISTRADOR')) {
+                $query = DocumentType::query();
+                return $withCamposOnly
+                    ? $query->with(['campoTypes'])->get()
+                    : $query->with(['campoTypes', 'groups.areaGroupType', 'subgroups.group.areaGroupType'])->get();
             }
-        }
 
-        // Validar si el usuario tiene un subgrupo asignado
-        if ($user && $user->subgroup_id) {
-            $documentTypesFromSubgroup = DocumentType::whereHas('subgroups', function ($q) use ($user) {
-                $q->where('subgroups.id', $user->subgroup_id);
-            })->with([
-                'campoTypes',
-                'groups.areaGroupType',
-                'subgroups.group.areaGroupType',
-            ])->whereNot('name', 'Bloque')->get();
-        }
+            $relations = $withCamposOnly
+                ? ['campoTypes']
+                : ['campoTypes', 'groups.areaGroupType', 'subgroups.group.areaGroupType'];
 
+            $documentTypesFromGroup = collect();
+            $documentTypesFromSubgroup = collect();
 
-        // Unir ambos conjuntos y eliminar duplicados
-        $userDocumentTypes = $documentTypesFromGroup
-            ->merge($documentTypesFromSubgroup)
-            ->unique('id')
-            ->values();
+            if ($user->group_id && !$user->subgroup_id) {
+                $documentTypesFromGroup = DocumentType::with($relations)
+                    ->whereHas('groups', fn($q) => $q->where('groups.id', $user->group_id))
+                    ->get();
+            }
 
-        return $userDocumentTypes;
+            if ($user->subgroup_id) {
+                $documentTypesFromSubgroup = DocumentType::with($relations)
+                    ->whereHas('subgroups', fn($q) => $q->where('subgroups.id', $user->subgroup_id))
+                    ->get();
+            }
+
+            return $documentTypesFromGroup->merge($documentTypesFromSubgroup)->unique('id')->values();
+        });
     }
 
     private function storeDocumentFile($file, string $asunto): string
     {
-        $extension = $file->getClientOriginalExtension();
-        $fileName = Str::slug($asunto) . '_' . time() . '.' . $extension;
+        $extension = $file->extension() ?: $file->getClientOriginalExtension();
+        
+        $safeAsunto = Str::limit(Str::slug($asunto), 100, '');
+        $fileName = $safeAsunto . '_' . now()->getTimestampMs() . '_' . Str::random(5) . '.' . $extension;
+        
         $area = Auth::user()->group?->areaGroupType?->area?->descripcion ?? 'general';
-        $folderPath = "documents/{$area}";
+        $folderPath = "documents/" . Str::slug($area);
 
         return $file->storeAs($folderPath, $fileName, 'public');
     }
 
     private function storeDocumentFields(Document $document, array $fieldsData)
     {
-        foreach ($fieldsData as $campo) {
-            if (!isset($campo['id'])) {
-                continue;
-            }
-
-            Campo::create([
+        $now = now();
+        $dataToInsert = collect($fieldsData)
+            ->filter(fn($campo) => isset($campo['id']))
+            ->map(fn($campo) => [
                 'document_id' => $document->id,
                 'campo_type_id' => $campo['id'],
                 'dato' => $campo['dato'] ?? null,
-            ]);
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->toArray();
+
+        if (!empty($dataToInsert)) {
+            Campo::insert($dataToInsert);
         }
     }
 
@@ -336,18 +336,6 @@ class DocumentService
     {
         // Eliminar campos anteriores
         $document->campos()->delete();
-
-        // Crear nuevos campos
-        foreach ($fieldsData as $campo) {
-            if (!isset($campo['id'])) {
-                continue;
-            }
-
-            Campo::create([
-                'document_id' => $document->id,
-                'campo_type_id' => $campo['id'],
-                'dato' => $campo['dato'] ?? null,
-            ]);
-        }
+        $this->storeDocumentFields($document, $fieldsData);
     }
 }

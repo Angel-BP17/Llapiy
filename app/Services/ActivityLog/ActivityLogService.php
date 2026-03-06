@@ -15,21 +15,38 @@ class ActivityLogService
         $this->applyFilters($query, $request);
 
         $logs = $query
-            ->with('user')
+            ->with('user:id,name,last_name')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-        $users = User::all();
-        $modules = ActivityLog::selectRaw("DISTINCT REPLACE(model, 'App\\\\Models\\\\', '') AS model")->pluck('model');
+
+        // Optimización: Cargar solo usuarios que tienen logs registrados para reducir el volumen de datos
+        $users = \Illuminate\Support\Facades\Cache::remember('activity_users_list', now()->addMinutes(60), function() {
+            return User::whereHas('activityLogs')
+                ->select('id', 'name', 'last_name')
+                ->orderBy('name')
+                ->get();
+        });
+
+        // Optimización: Obtener modelos únicos y procesarlos en PHP para evitar REPLACE en SQL sobre tablas grandes
+        $modules = \Illuminate\Support\Facades\Cache::remember('activity_modules_list', now()->addHours(12), function() {
+            return ActivityLog::select('model')
+                ->distinct()
+                ->pluck('model')
+                ->map(fn($model) => str_replace('App\\Models\\', '', $model))
+                ->unique()
+                ->values();
+        });
 
         return compact('logs', 'users', 'modules');
     }
 
     public function getReportLogs(Request $request): Collection
     {
-        $query = ActivityLog::with('user');
+        $query = ActivityLog::with('user:id,name,last_name');
         $this->applyFilters($query, $request);
 
-        $logs = $query->orderBy('created_at', 'desc')->get();
+        // Prevenir Memory Exhaustion limitando el reporte a los últimos 5000 registros si no hay filtros estrictos
+        $logs = $query->orderBy('created_at', 'desc')->take(5000)->get();
 
         foreach ($logs as $log) {
             $log->before = $this->formatJsonData($log->before);

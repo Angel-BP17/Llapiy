@@ -20,21 +20,28 @@ class RolePermissionSeeder extends Seeder
             'users.create',
             'users.update',
             'users.delete',
+
             'roles.view',
             'roles.create',
             'roles.update',
             'roles.delete',
+
             'permissions.view',
             'permissions.create',
             'permissions.update',
             'permissions.delete',
 
-            'documents.view',
+            'documents.view.all',
+            'documents.view.own',
+            'documents.view.group',
             'documents.create',
             'documents.update',
             'documents.delete',
             'documents.upload',
-            'blocks.view',
+
+            'blocks.view.all',
+            'blocks.view.own',
+            'blocks.view.group',
             'blocks.create',
             'blocks.update',
             'blocks.delete',
@@ -44,14 +51,17 @@ class RolePermissionSeeder extends Seeder
             'areas.create',
             'areas.update',
             'areas.delete',
+
             'group-types.view',
             'group-types.create',
             'group-types.update',
             'group-types.delete',
+
             'groups.view',
             'groups.create',
             'groups.update',
             'groups.delete',
+
             'subgroups.view',
             'subgroups.create',
             'subgroups.update',
@@ -61,6 +71,7 @@ class RolePermissionSeeder extends Seeder
             'document-types.create',
             'document-types.update',
             'document-types.delete',
+
             'campos.view',
             'campos.create',
             'campos.update',
@@ -70,10 +81,12 @@ class RolePermissionSeeder extends Seeder
             'sections.create',
             'sections.update',
             'sections.delete',
+
             'andamios.view',
             'andamios.create',
             'andamios.update',
             'andamios.delete',
+
             'boxes.view',
             'boxes.create',
             'boxes.update',

@@ -18,12 +18,12 @@ class InboxController extends Controller
         return $this->apiSuccess('Bandeja obtenida correctamente.', $this->service->getIndexData($request));
     }
 
-    public function updateBlockStorage(Request $request, $id)
+    public function updateBlockStorage(Request $request, int $id)
     {
         $validated = $request->validate([
-            'n_box' => 'required|integer',
-            'n_andamio' => 'required|string',
-            'n_section' => 'required|string',
+            'n_box' => 'required|integer|exists:boxes,id',
+            'n_andamio' => 'required|integer|exists:andamios,id',
+            'n_section' => 'required|integer|exists:sections,id',
         ]);
 
         $this->service->updateBlockStorage($request, (int) $id);

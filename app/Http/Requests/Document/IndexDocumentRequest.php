@@ -8,7 +8,7 @@ class IndexDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('documents.view') ?? false;
+        return true;
     }
 
     public function rules(): array

@@ -1,18 +1,19 @@
 <?php
 
-namespace App\Http\Requests\Document;
+namespace App\Http\Requests\Block;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateBlockRequest extends FormRequest
+class CreateBlockRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('blocks.update') ?? false;
+        return true;
     }
 
     /**
@@ -22,22 +23,18 @@ class UpdateBlockRequest extends FormRequest
      */
     public function rules(): array
     {
-        $canUploadFile = $this->user()?->can('blocks.upload') ?? false;
-
         return [
             'n_bloque' => [
                 'required',
                 'string',
                 Rule::unique('blocks')->where(function ($query) {
-                    return $query->where('periodo', $this->periodo);
-                })->ignore($this->bloque)
+                    return $query->where('periodo', Carbon::parse($this->fecha)->year);
+                })
             ],
             'fecha' => 'required|date',
             'asunto' => 'required|string|max:255',
             'folios' => 'required|string|max:255',
-            'root' => $canUploadFile
-                ? 'nullable|file|mimes:pdf|max:' . (50 * 1024)
-                : 'prohibited',
+            'root' => 'nullable|file|mimes:pdf|max:' . (50 * 1024),
             'rango_inicial' => 'required|integer',
             'rango_final' => 'required|integer',
         ];

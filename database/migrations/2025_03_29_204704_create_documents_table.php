@@ -24,6 +24,13 @@ return new class extends Migration {
             $table->foreignId('group_id')->nullable()->constrained('groups')->nullOnDelete();
             $table->foreignId('subgroup_id')->nullable()->constrained('subgroups')->nullOnDelete();
             $table->timestamps();
+            
+            // Índices de rendimiento integrados
+            $table->index('asunto');
+            $table->index('fecha');
+            $table->index('document_type_id');
+            $table->index(['group_id', 'subgroup_id']);
+
             $table->unique(['n_documento', 'periodo']);
         });
     }

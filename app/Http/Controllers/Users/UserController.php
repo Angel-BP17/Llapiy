@@ -47,6 +47,12 @@ class UserController extends Controller
         return $this->apiSuccess('Usuario actualizado correctamente.', ['user' => $user->fresh(['roles'])]);
     }
 
+    public function show(User $user)
+    {
+        $user->load(['roles', 'group.areaGroupType.area']);
+        return $this->apiSuccess('Detalle del usuario obtenido correctamente.', ['user' => $user]);
+    }
+
     public function destroy(User $user)
     {
         $this->service->delete($user);

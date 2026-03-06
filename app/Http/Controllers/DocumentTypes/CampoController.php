@@ -44,6 +44,11 @@ class CampoController extends Controller
         ]);
     }
 
+    public function show(CampoType $campo)
+    {
+        return $this->apiSuccess('Detalle del campo obtenido correctamente.', ['campo' => $campo]);
+    }
+
     public function destroy(CampoType $campo)
     {
         $this->service->delete($campo);

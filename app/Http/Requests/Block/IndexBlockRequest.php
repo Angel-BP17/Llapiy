@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Document;
+namespace App\Http\Requests\Block;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -8,7 +8,7 @@ class IndexBlockRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('blocks.view') ?? false;
+        return true;
     }
 
     public function rules(): array

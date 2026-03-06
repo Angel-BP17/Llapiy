@@ -8,7 +8,7 @@ class UploadDocumentFileRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('documents.upload') ?? false;
+        return true;
     }
 
     public function rules(): array

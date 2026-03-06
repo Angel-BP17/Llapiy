@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Documents;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Document\CreateBlockRequest;
-use App\Http\Requests\Document\IndexBlockRequest;
-use App\Http\Requests\Document\UpdateBlockRequest;
-use App\Http\Requests\Document\UploadBlockFileRequest;
+use App\Http\Requests\Block\CreateBlockRequest;
+use App\Http\Requests\Block\IndexBlockRequest;
+use App\Http\Requests\Block\UpdateBlockRequest;
+use App\Http\Requests\Block\UploadBlockFileRequest;
 use App\Models\Area;
 use App\Models\Block;
 use App\Models\Document;
@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -39,8 +40,19 @@ class BlockController extends Controller
             ->count();
         $unattendedBlocksCount = max($totalBlocks - $attendedBlocksCount, 0);
 
+        $paginatedBlocks = $resources['blocks']->paginate(10);
+
+        $paginatedBlocks->getCollection()->transform(function ($block) {
+            $block->can = [
+                'update' => auth()->user()->can('update', $block),
+                'delete' => auth()->user()->can('delete', $block),
+                'view' => auth()->user()->can('view', $block),
+            ];
+            return $block;
+        });
+
         return $this->apiSuccess('Bloques obtenidos correctamente.', [
-            'blocks' => $resources['blocks']->paginate(10),
+            'blocks' => $paginatedBlocks,
             'areas' => $resources['areas'],
             'groups' => $resources['groups'],
             'subgroups' => $resources['subgroups'],
@@ -68,6 +80,14 @@ class BlockController extends Controller
 
             $this->clearDocumentCache();
 
+            // Eager load para Atomic Update
+            $block->load([
+                'user',
+                'group.areaGroupType.area',
+                'subgroup',
+                'box.andamio.section'
+            ]);
+
             return $this->apiSuccess('Bloque creado correctamente.', ['block' => $block], 201);
         } catch (\Throwable $e) {
             Log::error('Error al registrar el bloque: ' . $e->getMessage(), [
@@ -82,9 +102,18 @@ class BlockController extends Controller
     public function update(UpdateBlockRequest $request, Block $block)
     {
         try {
+            $this->authorize('update', $block);
             $updated = $this->service->update($request->validated(), $request->file('root'), $request->hasFile('root'), $block);
 
             $this->clearDocumentCache();
+
+            // Eager load para Atomic Update
+            $updated->load([
+                'user',
+                'group.areaGroupType.area',
+                'subgroup',
+                'box.andamio.section'
+            ]);
 
             return $this->apiSuccess('Bloque actualizado correctamente.', ['block' => $updated]);
         } catch (\Throwable $e) {
@@ -97,9 +126,32 @@ class BlockController extends Controller
         }
     }
 
+    public function show(Block $block)
+    {
+        $this->authorize('view', $block);
+        $block->load([
+            'user',
+            'group.areaGroupType.area',
+            'subgroup',
+            'box.andamio.section'
+        ]);
+        return $this->apiSuccess('Detalle del bloque obtenido correctamente.', ['block' => $block]);
+    }
+
+    public function viewFile(Block $block)
+    {
+        $this->authorize('view', $block);
+        if (!$block->root || !Storage::disk('public')->exists($block->root)) {
+            return response()->json(['message' => 'El archivo no existe o no ha sido cargado.'], 404);
+        }
+
+        return Storage::disk('public')->response($block->root);
+    }
+
     public function uploadFile(UploadBlockFileRequest $request, Block $block)
     {
         try {
+            $this->authorize('update', $block);
             $updated = $this->service->uploadFile($block, $request->file('root'));
             $this->clearDocumentCache();
 
@@ -117,6 +169,7 @@ class BlockController extends Controller
     public function destroy(Block $block)
     {
         try {
+            $this->authorize('delete', $block);
             $this->service->delete($block);
             $this->clearDocumentCache();
 

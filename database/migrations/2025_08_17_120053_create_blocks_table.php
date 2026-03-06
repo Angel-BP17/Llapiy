@@ -26,6 +26,12 @@ return new class extends Migration {
             $table->foreignId('group_id')->nullable()->constrained('groups')->onDelete('cascade');
             $table->foreignId('subgroup_id')->nullable()->constrained('subgroups')->onDelete('cascade');
             $table->timestamps();
+
+            // Índices de rendimiento integrados
+            $table->index('asunto');
+            $table->index('fecha');
+            $table->index(['group_id', 'subgroup_id']);
+
             $table->unique(['n_bloque', 'periodo']);
         });
     }

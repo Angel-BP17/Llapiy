@@ -28,9 +28,9 @@ class AreaController extends Controller
 
     public function store(CreateAreaRequest $request)
     {
-        $this->service->create($request);
+        $area = $this->service->create($request);
 
-        return $this->apiSuccess('Area, grupos y subgrupos creados correctamente.', null, 201);
+        return $this->apiSuccess('Area, grupos y subgrupos creados correctamente.', ['area' => $area], 201);
     }
 
     public function show(Area $area)
@@ -64,7 +64,7 @@ class AreaController extends Controller
 
         $this->service->update($area, $validated);
 
-        return $this->apiSuccess('Area, grupos y subgrupos actualizados correctamente.');
+        return $this->apiSuccess('Area, grupos y subgrupos actualizados correctamente.', ['area' => $area->fresh()]);
     }
 
     public function destroy(Area $area)

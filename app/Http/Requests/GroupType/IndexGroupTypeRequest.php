@@ -8,7 +8,7 @@ class IndexGroupTypeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('group-types.view') ?? false;
+        return true;
     }
 
     public function rules(): array

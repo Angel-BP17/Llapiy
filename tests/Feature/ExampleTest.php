@@ -18,6 +18,6 @@ class ExampleTest extends TestCase
         $response = $this->get('/doc');
 
         $response->assertStatus(200);
-        $response->assertSee('LlapiyAPI - Documentacion');
+        $response->assertSee('LlapiyAPI - Documentación');
     }
 }

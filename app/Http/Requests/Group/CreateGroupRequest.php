@@ -11,7 +11,7 @@ class CreateGroupRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('groups.create') ?? false;
+        return true;
     }
 
     /**

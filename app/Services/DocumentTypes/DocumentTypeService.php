@@ -20,7 +20,6 @@ class DocumentTypeService
         $areaId = $request->input('area_id');
         $groupId = $request->input('group_id');
         $subgroupId = $request->input('subgroup_id');
-        $blockDocumentTypeId = DocumentType::where('name', 'Bloque')->first()?->id;
 
         $query = DocumentType::query()
             ->with(['campoTypes', 'groups', 'subgroups'])
@@ -50,19 +49,23 @@ class DocumentTypeService
             });
         }
 
-        if ($blockDocumentTypeId) {
-            $query->whereNot('id', $blockDocumentTypeId);
-        }
-
         $documentTypes = $query->paginate(10);
 
-        $areas = Area::with('areaGroupTypes.groups.subgroups')->get();
-        $groups = Group::all();
-        $subgroups = Subgroup::all();
-
-        Cache::put('areas_list', $areas, now()->addDay());
-        Cache::put('groups_list', $groups, now()->addDay());
-        Cache::put('subgroups_list', $subgroups, now()->addDay());
+        $areas = Cache::remember('areas_list_full', now()->addDay(), function () {
+            return Area::with([
+                'areaGroupTypes:id,area_id,group_type_id',
+                'areaGroupTypes.groups:groups.id,groups.area_group_type_id,groups.descripcion',
+                'areaGroupTypes.groups.subgroups:subgroups.id,subgroups.group_id,subgroups.descripcion'
+            ])->get(['id', 'descripcion']);
+        });
+        
+        $groups = Cache::remember('groups_list_all', now()->addDay(), function () {
+            return Group::all();
+        });
+        
+        $subgroups = Cache::remember('subgroups_list_all', now()->addDay(), function () {
+            return Subgroup::all();
+        });
 
         return compact('documentTypes', 'areas', 'groups', 'subgroups');
     }
@@ -107,6 +110,7 @@ class DocumentTypeService
         }
 
         DB::commit();
+        $this->clearDocumentTypeCache();
     }
 
     public function getEditData(DocumentType $documentType): array
@@ -140,11 +144,25 @@ class DocumentTypeService
         $documentType->subgroups()->sync($validSubgroupIds);
 
         DB::commit();
+        $this->clearDocumentTypeCache();
     }
 
     public function delete(DocumentType $documentType): void
     {
         CampoDocumentType::where('document_type_id', $documentType->id)->delete();
         $documentType->delete();
+        $this->clearDocumentTypeCache();
+    }
+
+    private function clearDocumentTypeCache(): void
+    {
+        Cache::forget('areas_list_full');
+        Cache::forget('groups_list_all');
+        Cache::forget('subgroups_list_all');
+        // También debemos limpiar el caché de tipos permitidos del usuario actual
+        if (auth()->check()) {
+            Cache::forget("user_doc_types_" . auth()->id() . "_campos");
+            Cache::forget("user_doc_types_" . auth()->id() . "_full");
+        }
     }
 }

@@ -8,7 +8,7 @@ class IndexAreaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('areas.view') ?? false;
+        return true;
     }
 
     public function rules(): array

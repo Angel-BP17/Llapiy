@@ -5,108 +5,96 @@ use App\Models\Area;
 use App\Models\User;
 use Hash;
 use Storage;
+use DB;
 
 class UserService
 {
-    public function getAll($data)
+    /**
+     * Obtiene el listado de usuarios con sus roles y ubicación organizacional.
+     * Optimizado con Column Limiting y Caché para catálogos.
+     */
+    public function getAll($data): array
     {
         $users = User::with([
-            'group.areaGroupType.area',
-            'group.areaGroupType.groupType',
-            'subgroup',
-            'roles',
-        ])->when($data->search, function ($query, $search) {
+            'group:id,area_group_type_id,descripcion',
+            'group.areaGroupType:id,area_id,group_type_id',
+            'group.areaGroupType.area:id,descripcion',
+            'group.areaGroupType.groupType:id,descripcion',
+            'subgroup:id,descripcion',
+            'roles:id,name',
+        ])
+        ->select(['id', 'name', 'last_name', 'dni', 'user_name', 'email', 'foto_perfil', 'group_id', 'subgroup_id', 'created_at'])
+        ->when($data->search, function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('last_name', 'LIKE', "%{$search}%")
                     ->orWhere('dni', 'LIKE', "%{$search}%")
                     ->orWhere('user_name', 'LIKE', "%{$search}%")
-                    ->orWhereRaw("CONCAT(name, ' ', last_name) LIKE ?", ["%{$search}%"])
-                    ->orWhereRaw("CONCAT(last_name, ' ', name) LIKE ?", ["%{$search}%"]);
+                    ->orWhereRaw("CONCAT(name, ' ', last_name) LIKE ?", ["%{$search}%"]);
             });
         })
-            ->paginate(10);
+        ->paginate(10);
 
-        $areas = Area::with('areaGroupTypes.groupType', 'areaGroupTypes.groups.subgroups')->get();
+        $areas = \Illuminate\Support\Facades\Cache::remember('areas_groups_subgroups_tree', now()->addHours(12), function() {
+            return Area::with('areaGroupTypes.groupType', 'areaGroupTypes.groups.subgroups')->get();
+        });
 
-        return ['users' => $users, 'areas' => $areas];
-    }
-    public function create(array $data, $fotoPerfil = null)
-    {
-        $dataValidated = $data;
-
-        $roles = $dataValidated['roles'] ?? [];
-        unset($dataValidated['roles']);
-
-        $dataValidated['password'] = Hash::make($dataValidated['password']);
-        $dataValidated['foto_perfil'] = $fotoPerfil?->store('usuarios/perfiles', 'public');
-
-        $user = User::create($dataValidated);
-        $user->syncRoles($roles);
-
-        return $user;
+        return compact('users', 'areas');
     }
 
-    public function update($data, $user)
+    public function create(array $data, $fotoPerfil = null): User
     {
-        $dataValidated = $data->validated();
+        return DB::transaction(function () use ($data, $fotoPerfil) {
+            $roles = $data['roles'] ?? [];
+            unset($data['roles']);
 
-        $roles = $dataValidated['roles'] ?? null;
-        unset($dataValidated['roles']);
+            $data['password'] = Hash::make($data['password']);
+            if ($fotoPerfil) {
+                $data['foto_perfil'] = $fotoPerfil->store('usuarios/perfiles', 'public');
+            }
 
-        if ($data->filled('password')) {
-            $dataValidated['password'] = Hash::make($data['password']);
-        } else {
-            unset($dataValidated['password']);
-        }
-
-        if ($data->hasFile('foto_perfil')) {
-            Storage::disk('public')->delete($user->foto_perfil);
-            $dataValidated['foto_perfil'] = $data->file('foto_perfil')->store('usuarios/perfiles', 'public');
-        }
-
-        $dataValidated['group_id'] = $data['group'];
-        unset($dataValidated['group']);
-
-        $dataValidated['subgroup_id'] = $data['subgroup'];
-        unset($dataValidated['subgroup']);
-
-        $user->update($dataValidated);
-
-        if (is_array($roles)) {
+            $user = User::create($data);
             $user->syncRoles($roles);
-        }
+
+            return $user;
+        });
     }
 
-    public function delete($data)
+    public function update($request, User $user): User
     {
-        if ($data->foto_perfil) {
-            Storage::disk('public')->delete($data->foto_perfil);
-        }
+        return DB::transaction(function () use ($request, $user) {
+            $data = $request->validated();
+            $roles = $data['roles'] ?? null;
+            unset($data['roles']);
 
-        $data->delete();
+            if ($request->filled('password')) {
+                $data['password'] = Hash::make($request->password);
+            } else {
+                unset($data['password']);
+            }
+
+            if ($request->hasFile('foto_perfil')) {
+                if ($user->foto_perfil) {
+                    Storage::disk('public')->delete($user->foto_perfil);
+                }
+                $data['foto_perfil'] = $request->file('foto_perfil')->store('usuarios/perfiles', 'public');
+            }
+
+            $user->update($data);
+
+            if (is_array($roles)) {
+                $user->syncRoles($roles);
+            }
+
+            return $user->fresh(['roles', 'group', 'subgroup']);
+        });
     }
 
-    public function getUsersForDpf($data)
+    public function delete(User $user): void
     {
-        return User::query()
-            ->when($data->search, function ($q, $search) {
-                $q->where(function ($inner) use ($search) {
-                    $inner->where('name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('dni', 'like', "%{$search}%")
-                        ->orWhere('user_name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            })
-            ->when($data->name, fn($q, $name) => $q->where('name', 'like', "%{$name}%"))
-            ->when($data->last_name, fn($q, $lastName) => $q->where('last_name', 'like', "%{$lastName}%"))
-            ->when($data->role_id, fn($q, $roleId) => $q->whereHas('roles', fn($roles) => $roles->where('roles.id', $roleId)))
-            ->when($data->status, fn($q, $status) => $q->where('status', $status))
-            ->when(
-                $data->filled('from_date') && $data->filled('to_date'),
-                fn($q) => $q->whereBetween('created_at', [$data->from_date, $data->to_date])
-            )
-            ->get();
+        if ($user->foto_perfil) {
+            Storage::disk('public')->delete($user->foto_perfil);
+        }
+        $user->delete();
     }
 }

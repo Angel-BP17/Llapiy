@@ -40,6 +40,13 @@ class GroupTypeController extends Controller
         return $this->apiSuccess('Tipo de grupo obtenido correctamente.', ['groupType' => $groupType]);
     }
 
+    public function show($id)
+    {
+        $groupType = $this->service->find((int) $id);
+
+        return $this->apiSuccess('Detalle del tipo de grupo obtenido correctamente.', ['groupType' => $groupType]);
+    }
+
     public function update(UpdateGroupTypeRequest $request, $id)
     {
         $groupType = $this->service->find((int) $id);

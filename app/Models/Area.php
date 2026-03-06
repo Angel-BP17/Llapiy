@@ -32,9 +32,9 @@ class Area extends Model
     protected static function booted()
     {
         static::created(function ($area) {
-            // Crear carpeta en el almacenamiento con el nombre del área
+            // Crear carpeta en el almacenamiento con el nombre del área en el disco público
             $folderName = 'documents/' . $area->descripcion;
-            Storage::makeDirectory($folderName);
+            Storage::disk('public')->makeDirectory($folderName);
 
             // Opcional: Mensaje en logs para depuración
             \Log::info("Carpeta creada: {$folderName}");

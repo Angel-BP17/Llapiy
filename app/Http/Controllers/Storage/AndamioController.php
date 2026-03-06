@@ -32,9 +32,9 @@ class AndamioController extends Controller
             'descripcion' => 'required|string|max:255',
         ]);
 
-        $this->service->create($section, $validated);
+        $andamio = $this->service->create($section, $validated);
 
-        return $this->apiSuccess('Andamio creado correctamente.', null, 201);
+        return $this->apiSuccess('Andamio creado correctamente.', ['andamio' => $andamio], 201);
     }
 
     public function update(Request $request, Section $section, Andamio $andamio)

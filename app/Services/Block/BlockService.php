@@ -13,9 +13,54 @@ use Str;
 
 class BlockService
 {
+    public function getShowData(Block $block): array
+    {
+        $block->load([
+            'group.areaGroupType.area',
+            'subgroup',
+            'user:id,name,last_name',
+            'box.andamio.section',
+        ]);
+
+        return compact('block');
+    }
+
     public function getAll($data)
     {
-        $query = Block::query()->with(['group.areaGroupType.area', 'subgroup', 'user', 'box.andamio.section'])
+        $user = Auth::user();
+        $query = Block::query()
+            ->select([
+                'id', 'n_bloque', 'asunto', 'folios', 'root', 'rango_inicial', 'rango_final', 
+                'user_id', 'group_id', 'subgroup_id', 'box_id', 'fecha', 'periodo', 'created_at'
+            ])
+            ->when(!$user->hasRole('ADMINISTRADOR'), function ($q) use ($user) {
+                if ($user->can('blocks.view.all')) {
+                    return $q;
+                }
+
+                if ($user->can('blocks.view.group')) {
+                    if ($user->subgroup_id) {
+                        return $q->where('subgroup_id', $user->subgroup_id);
+                    }
+                    return $q->where('group_id', $user->group_id);
+                }
+
+                if ($user->can('blocks.view.own')) {
+                    return $q->where('user_id', $user->id);
+                }
+
+                return $q->whereRaw('1 = 0');
+            })
+            ->with([
+                'group:id,area_group_type_id,descripcion',
+                'group.areaGroupType:id,area_id',
+                'group.areaGroupType.area:id,descripcion',
+                'subgroup:id,descripcion',
+                'user:id,name,last_name',
+                'box:id,n_box,andamio_id',
+                'box.andamio:id,n_andamio,section_id',
+                'box.andamio.section:id,n_section'
+            ])
             ->when(
                 $data->asunto,
                 fn($q, $asunto) => $q->where('asunto', 'LIKE', "%{$asunto}%")
@@ -58,11 +103,13 @@ class BlockService
             ? 'EXTRACT(YEAR FROM fecha)::int as year'
             : 'YEAR(fecha) as year';
 
-        $years = Block::selectRaw($yearExpression)
-            ->whereNotNull('fecha')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year');
+        $years = \Illuminate\Support\Facades\Cache::remember('blocks_available_years', now()->addHours(24), function () use ($yearExpression) {
+            return Block::selectRaw($yearExpression)
+                ->whereNotNull('fecha')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year');
+        });
 
         return [
             'blocks' => $query,
@@ -93,6 +140,8 @@ class BlockService
                 'periodo' => Carbon::parse($data['fecha'])->year,
             ]);
 
+            \Illuminate\Support\Facades\Cache::forget('blocks_available_years');
+
             return $block;
         });
     }
@@ -102,7 +151,7 @@ class BlockService
         return DB::transaction(function () use ($data, $file, $hasFile, $block) {
             if ($hasFile) {
                 if ($block->root) {
-                    Storage::delete("public/{$block->root}");
+                    \App\Jobs\DeleteFileJob::dispatch($block->root);
                 }
                 $data['root'] = $this->storeBlockFile($file, $data['asunto']);
             }
@@ -128,7 +177,7 @@ class BlockService
             $filePath = $block->root;
             $block->delete();
             if ($filePath) {
-                Storage::delete("public/{$filePath}");
+                \App\Jobs\DeleteFileJob::dispatch($filePath);
             }
         });
     }
@@ -139,7 +188,7 @@ class BlockService
             $block = Block::lockForUpdate()->findOrFail($model->id);
 
             if ($block->root) {
-                Storage::delete("public/{$block->root}");
+                \App\Jobs\DeleteFileJob::dispatch($block->root);
             }
 
             $block->update([
@@ -193,10 +242,16 @@ class BlockService
 
     private function storeBlockFile($file, string $asunto): string
     {
-        $extension = $file->getClientOriginalExtension();
-        $fileName = Str::slug($asunto) . '_' . time() . '.' . $extension;
-        $area = Auth::user()->group->areaGroupType->area->descripcion ?? "Sin_area";
-        $folderPath = "blocks/{$area}";
+        // Usar extension() es más seguro que getClientOriginalExtension()
+        $extension = $file->extension() ?: $file->getClientOriginalExtension();
+        
+        // Añadir milisegundos y un string aleatorio para evitar colisiones en alta concurrencia
+        $safeAsunto = Str::limit(Str::slug($asunto), 100, '');
+        $fileName = $safeAsunto . '_' . now()->getTimestampMs() . '_' . Str::random(5) . '.' . $extension;
+        
+        $user = Auth::user();
+        $areaName = $user?->group?->areaGroupType?->area?->descripcion ?? "Sin_area";
+        $folderPath = "blocks/" . Str::slug($areaName);
 
         return $file->storeAs($folderPath, $fileName, 'public');
     }

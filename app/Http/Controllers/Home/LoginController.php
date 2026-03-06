@@ -13,45 +13,7 @@ class LoginController extends Controller
     {
     }
 
-    public function __invoke()
-    {
-        return view('login');
-    }
-
     public function login(Request $request)
-    {
-        $request->validate([
-            'user_name' => 'required|string',
-            'password' => 'required|string',
-        ]);
-
-        $credentials = $request->only('user_name', 'password');
-
-        if ($this->service->attempt($credentials)) {
-            return redirect()->intended('/');
-        }
-
-        return back()->withErrors([
-            'loginError' => 'Credenciales invalidas. Por favor, intentalo de nuevo.',
-        ])->withInput($request->except('password'));
-    }
-
-    public function logout(Request $request)
-    {
-        $user = $request->user();
-
-        if ($user && method_exists($user, 'currentAccessToken') && $user->currentAccessToken()) {
-            $user->currentAccessToken()->delete();
-
-            return $this->apiSuccess('Sesion cerrada correctamente.');
-        }
-
-        $this->service->logout($request);
-
-        return $this->apiSuccess('Sesion cerrada correctamente.');
-    }
-
-    public function loginApi(Request $request)
     {
         $credentials = $request->validate([
             'user_name' => 'required|string',
@@ -74,5 +36,20 @@ class LoginController extends Controller
             'token_type' => 'Bearer',
             'user' => $user,
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user && method_exists($user, 'currentAccessToken') && $user->currentAccessToken()) {
+            $user->currentAccessToken()->delete();
+
+            return $this->apiSuccess('Sesion cerrada correctamente.');
+        }
+
+        $this->service->logout($request);
+
+        return $this->apiSuccess('Sesion cerrada correctamente.');
     }
 }

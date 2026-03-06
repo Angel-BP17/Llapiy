@@ -7,6 +7,9 @@ use Spatie\Permission\Models\Role;
 
 class PermissionService
 {
+    /**
+     * Crea un nuevo permiso en el sistema.
+     */
     public function create(string $name): Permission
     {
         return Permission::create([
@@ -15,9 +18,10 @@ class PermissionService
         ]);
     }
 
-    public function update(Permission $permission, string $name): void
+    public function update(Permission $permission, string $name): Permission
     {
         $permission->update(['name' => $name]);
+        return $permission->fresh();
     }
 
     public function delete(Permission $permission): void
@@ -25,6 +29,9 @@ class PermissionService
         $permission->delete();
     }
 
+    /**
+     * Resuelve el guard predeterminado del sistema para asegurar consistencia.
+     */
     protected function preferredGuardName(): string
     {
         return Permission::query()->value('guard_name')
