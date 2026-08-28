@@ -1,0 +1,114 @@
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../../wayfinder'
+/**
+* @see \App\Http\Controllers\Home\AuthController::showLoginForm
+ * @see app/Http/Controllers/Home/AuthController.php:21
+ * @route '/login'
+ */
+export const showLoginForm = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: showLoginForm.url(options),
+    method: 'get',
+})
+
+showLoginForm.definition = {
+    methods: ["get","head"],
+    url: '/login',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Home\AuthController::showLoginForm
+ * @see app/Http/Controllers/Home/AuthController.php:21
+ * @route '/login'
+ */
+showLoginForm.url = (options?: RouteQueryOptions) => {
+    return showLoginForm.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Home\AuthController::showLoginForm
+ * @see app/Http/Controllers/Home/AuthController.php:21
+ * @route '/login'
+ */
+showLoginForm.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: showLoginForm.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Home\AuthController::showLoginForm
+ * @see app/Http/Controllers/Home/AuthController.php:21
+ * @route '/login'
+ */
+showLoginForm.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: showLoginForm.url(options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\Home\AuthController::login
+ * @see app/Http/Controllers/Home/AuthController.php:29
+ * @route '/login'
+ */
+export const login = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: login.url(options),
+    method: 'post',
+})
+
+login.definition = {
+    methods: ["post"],
+    url: '/login',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\Home\AuthController::login
+ * @see app/Http/Controllers/Home/AuthController.php:29
+ * @route '/login'
+ */
+login.url = (options?: RouteQueryOptions) => {
+    return login.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Home\AuthController::login
+ * @see app/Http/Controllers/Home/AuthController.php:29
+ * @route '/login'
+ */
+login.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: login.url(options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\Home\AuthController::logout
+ * @see app/Http/Controllers/Home/AuthController.php:49
+ * @route '/logout'
+ */
+export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: logout.url(options),
+    method: 'post',
+})
+
+logout.definition = {
+    methods: ["post"],
+    url: '/logout',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\Home\AuthController::logout
+ * @see app/Http/Controllers/Home/AuthController.php:49
+ * @route '/logout'
+ */
+logout.url = (options?: RouteQueryOptions) => {
+    return logout.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Home\AuthController::logout
+ * @see app/Http/Controllers/Home/AuthController.php:49
+ * @route '/logout'
+ */
+logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: logout.url(options),
+    method: 'post',
+})
+const AuthController = { showLoginForm, login, logout }
+
+export default AuthController

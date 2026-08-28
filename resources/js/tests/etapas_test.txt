@@ -1,0 +1,11 @@
+Etapas de testeo del frontend:
+
+   0. Build Integrity: Compilación, resolución de módulos y chequeo de tipos (tsc).
+   1. Sanity: Carga de Página y Componentes.
+   2. Happy Path: Funcionalidad base y uso del backend exitoso.
+   3. Data Integrity: Formateo de fechas y textos (Edge cases).
+   4. Error Handling: Resiliencia (Error 500, 404, 405).
+   5. Security/Auth: Permisos (403) y Validación de Inputs (XSS).
+   6. Concurrency: Doble clic y Race conditions.
+   7. UX/a11y: Accesibilidad y Estados de carga (Spinners).
+   8. Visual: Regresión visual (Snapshots).

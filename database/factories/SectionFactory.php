@@ -1,0 +1,19 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Section;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class SectionFactory extends Factory
+{
+    protected $model = Section::class;
+
+    public function definition(): array
+    {
+        return [
+            'n_section' => $this->faker->unique()->bothify('SEC-###'),
+            'descripcion' => $this->faker->sentence,
+        ];
+    }
+}
