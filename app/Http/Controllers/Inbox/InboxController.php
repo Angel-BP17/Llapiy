@@ -12,9 +12,7 @@ use Inertia\Response;
 
 class InboxController extends Controller
 {
-    public function __construct(protected InboxService $service)
-    {
-    }
+    public function __construct(protected InboxService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -33,7 +31,7 @@ class InboxController extends Controller
             'n_box' => 'required|integer|exists:boxes,id',
             'n_andamio' => 'required|integer|exists:andamios,id',
             'n_section' => 'required|integer|exists:sections,id',
-            'root' => 'nullable|file|mimes:pdf|max:' . (50 * 1024),
+            'root' => 'nullable|file|mimes:pdf|max:'.(50 * 1024),
         ]);
 
         $this->service->updateBlockStorage($request, (int) $id);
@@ -44,5 +42,15 @@ class InboxController extends Controller
         }
 
         return redirect()->back()->with('message', 'Información de almacenamiento actualizada correctamente.');
+    }
+
+    /**
+     * Delete digital file attached to a block.
+     */
+    public function deleteFile(int $id): RedirectResponse
+    {
+        $this->service->deleteBlockFile((int) $id);
+
+        return redirect()->back()->with('message', 'Archivo del documento eliminado correctamente.');
     }
 }

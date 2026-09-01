@@ -43,6 +43,15 @@ describe('Storage Index Page', () => {
     activeBox: null,
     filters: { search: '' },
     counts: { total: 1 },
+    stats: {
+      totalBlocks: 100,
+      archivedBlocks: 75,
+      indexedBlocks: 50,
+      bothArchivedAndIndexed: 45,
+      totalBoxes: 10,
+      filledBoxes: 8,
+      emptyBoxes: 2,
+    },
   };
 
   beforeEach(() => {
@@ -65,9 +74,20 @@ describe('Storage Index Page', () => {
     expect(screen.getByText('5 andamios')).toBeInTheDocument();
   });
 
+  it('debe renderizar contadores de almacenamiento y el boton de reporte', () => {
+    render(<Index {...mockProps} />);
+    expect(screen.getByText('Bloques archivados')).toBeInTheDocument();
+    expect(screen.getByText('75')).toBeInTheDocument();
+    expect(screen.getByText('Bloques digitalizados')).toBeInTheDocument();
+    expect(screen.getByText('50')).toBeInTheDocument();
+    expect(screen.getByText('Cajas ocupadas')).toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
+    expect(screen.getByText('Reporte PDF')).toBeInTheDocument();
+  });
+
   it('debe permitir buscar en el nivel actual', () => {
     render(<Index {...mockProps} />);
-    const input = screen.getByPlaceholderText('Buscar en sections...');
+    const input = screen.getByPlaceholderText('Buscar en sections... (o por código de bloque)');
     fireEvent.change(input, { target: { value: '99' } });
     fireEvent.click(screen.getByText('Filtrar'));
     

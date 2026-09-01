@@ -81,7 +81,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:51
  * @route '/campos/{campo}'
  */
-export const show = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -96,7 +96,7 @@ show.definition = {
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:51
  * @route '/campos/{campo}'
  */
-show.url = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { campo: args }
     }
@@ -129,7 +129,7 @@ show.url = (args: { campo: string | number | { id: string | number } } | [campo:
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:51
  * @route '/campos/{campo}'
  */
-show.get = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -138,7 +138,7 @@ show.get = (args: { campo: string | number | { id: string | number } } | [campo:
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:51
  * @route '/campos/{campo}'
  */
-show.head = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -148,7 +148,7 @@ show.head = (args: { campo: string | number | { id: string | number } } | [campo
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:61
  * @route '/campos/{campo}'
  */
-export const update = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -163,7 +163,7 @@ update.definition = {
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:61
  * @route '/campos/{campo}'
  */
-update.url = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { campo: args }
     }
@@ -196,7 +196,7 @@ update.url = (args: { campo: string | number | { id: string | number } } | [camp
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:61
  * @route '/campos/{campo}'
  */
-update.put = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -206,7 +206,7 @@ update.put = (args: { campo: string | number | { id: string | number } } | [camp
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:71
  * @route '/campos/{campo}'
  */
-export const destroy = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -221,7 +221,7 @@ destroy.definition = {
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:71
  * @route '/campos/{campo}'
  */
-destroy.url = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { campo: args }
     }
@@ -254,7 +254,7 @@ destroy.url = (args: { campo: string | number | { id: string | number } } | [cam
  * @see app/Http/Controllers/DocumentTypes/CampoController.php:71
  * @route '/campos/{campo}'
  */
-destroy.delete = (args: { campo: string | number | { id: string | number } } | [campo: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { campo: number | { id: number } } | [campo: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })

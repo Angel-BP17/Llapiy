@@ -2,16 +2,16 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
+use App\Models\Andamio;
 use App\Models\Block;
 use App\Models\Box;
 use App\Models\Section;
-use App\Models\Andamio;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class InboxComprehensiveTest extends TestCase
 {
@@ -22,7 +22,7 @@ class InboxComprehensiveTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'inbox.view', 'guard_name' => 'web']);
         $adminRole->givePermissionTo('inbox.view');
@@ -57,7 +57,7 @@ class InboxComprehensiveTest extends TestCase
         $block = Block::factory()->create(['box_id' => null]);
 
         $response = $this->actingAs($this->adminUser)->put("/inbox/update-storage/{$block->id}", [
-            'box_id' => 99999 // Inexistente
+            'box_id' => 99999, // Inexistente
         ]);
 
         $response->assertSessionHasErrors(['n_box']);
@@ -71,15 +71,15 @@ class InboxComprehensiveTest extends TestCase
         $section = Section::factory()->create();
         $andamio = Andamio::factory()->create(['section_id' => $section->id]);
         $box = Box::factory()->create(['andamio_id' => $andamio->id]);
-        
+
         Block::factory()->create(['box_id' => null, 'asunto' => 'Pendiente']);
         Block::factory()->create(['box_id' => $box->id, 'asunto' => 'Archivado']);
 
         $response = $this->actingAs($this->adminUser)->get('/bandeja');
 
         $response->assertInertia(fn (Assert $page) => $page
-            ->has('documents.data', 1)
-            ->where('documents.data.0.asunto', 'Pendiente')
+            ->has('documents', 1)
+            ->where('documents.0.asunto', 'Pendiente')
         );
     }
 
@@ -105,7 +105,7 @@ class InboxComprehensiveTest extends TestCase
         $response = $this->actingAs($this->adminUser)->put("/inbox/update-storage/{$block->id}", [
             'n_section' => 1,
             'n_andamio' => 1,
-            'n_box' => 9999 // Inexistente
+            'n_box' => 9999, // Inexistente
         ]);
 
         $response->assertSessionHasErrors(['n_box']);
@@ -118,11 +118,11 @@ class InboxComprehensiveTest extends TestCase
     {
         Block::factory()->create(['box_id' => null, 'asunto' => 'Expediente 📁']);
 
-        $response = $this->actingAs($this->adminUser)->get('/bandeja?search=' . urlencode('📁'));
+        $response = $this->actingAs($this->adminUser)->get('/bandeja?search='.urlencode('📁'));
 
         $response->assertStatus(200)
             ->assertInertia(fn (Assert $page) => $page
-                ->has('documents.data', 1)
+                ->has('documents', 1)
             );
     }
 
@@ -140,5 +140,29 @@ class InboxComprehensiveTest extends TestCase
 
         // Debe cargar relaciones (user, group, etc) eficientemente
         $this->assertLessThan(25, count($queries));
+    }
+
+    /**
+     * 8. Eliminar Archivo Digital del Bloque
+     */
+    public function test_inbox_can_delete_block_file()
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $fakePath = 'blocks/test/file.pdf';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($fakePath, 'dummy content');
+
+        $block = Block::factory()->create([
+            'box_id' => null,
+            'root' => $fakePath,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->delete("/inbox/delete-file/{$block->id}");
+
+        $response->assertRedirect();
+        $response->assertSessionHas('message', 'Archivo del documento eliminado correctamente.');
+
+        $block->refresh();
+        $this->assertNull($block->root);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertMissing($fakePath);
     }
 }

@@ -3,7 +3,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout';
 import { Modal } from '@/components/Modal';
 import { router } from '@inertiajs/react';
 import { 
-  CheckCircle2, Clock3, Inbox as InboxIcon, FileText, ChevronRight 
+  CheckCircle2, Clock3, Inbox as InboxIcon, FileText, ChevronRight, Eye, Trash2, AlertTriangle 
 } from 'lucide-react';
 import inboxRoutes from '@/routes/inbox';
 import blocksRoutes from '@/routes/blocks';
@@ -67,7 +67,27 @@ export default function Index({
   const [uploadFileName, setUploadFileName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [blockToDeleteFile, setBlockToDeleteFile] = useState<any>(null);
+  const [isDeletingFile, setIsDeletingFile] = useState(false);
+
   const canUpload = can("blocks.upload");
+
+  const handleDeleteFile = () => {
+    if (!blockToDeleteFile) return;
+    setIsDeletingFile(true);
+    router.delete(`/inbox/delete-file/${blockToDeleteFile.id}`, {
+      onSuccess: () => {
+        setDeleteModalOpen(false);
+        setBlockToDeleteFile(null);
+        if (selectedBlock?.id === blockToDeleteFile?.id) {
+          setSelectedBlock(null);
+          setStorageOpen(false);
+        }
+      },
+      onFinish: () => setIsDeletingFile(false),
+    });
+  };
 
   const filteredAndamios = useMemo(() => 
     andamios.filter(a => String(a.section_id) === storageForm.section_id), 
@@ -207,7 +227,33 @@ export default function Index({
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {b.root && (
+                          <>
+                            <a
+                              href={blocksRoutes.file.url({ block: b.id })}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Ver archivo PDF"
+                              className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span className="hidden sm:inline">Ver PDF</span>
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBlockToDeleteFile(b);
+                                setDeleteModalOpen(true);
+                              }}
+                              title="Eliminar archivo del documento"
+                              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span className="hidden sm:inline">Eliminar archivo</span>
+                            </button>
+                          </>
+                        )}
                         {!b.box_id && (
                           <button type="button" onClick={() => { setSelectedBlock(b); setStorageOpen(true); }} className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-colors">Archivar</button>
                         )}
@@ -268,7 +314,42 @@ export default function Index({
               </div>
             </div>
 
-            {(!selectedBlock?.root && canUpload) && (
+            {selectedBlock?.root ? (
+              <div className="space-y-2 mt-4 pt-4 border-t border-border">
+                <label className="text-[10px] font-black uppercase text-muted-foreground pl-1">Archivo Digital Adjunto Actual</label>
+                <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50/60">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="h-5 w-5 text-emerald-600 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-emerald-900 truncate">{selectedBlock.root.split('/').pop()}</p>
+                      <p className="text-[10px] text-emerald-600">Documento digitalizado</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <a
+                      href={blocksRoutes.file.url({ block: selectedBlock.id })}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-white border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors inline-flex items-center gap-1"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      Ver
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBlockToDeleteFile(selectedBlock);
+                        setDeleteModalOpen(true);
+                      }}
+                      className="px-2.5 py-1 text-xs font-bold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors inline-flex items-center gap-1"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (canUpload) && (
               <div className="space-y-2 mt-4 pt-4 border-t border-border">
                 <label className="text-[10px] font-black uppercase text-muted-foreground pl-1">Archivo PDF del Bloque (Opcional)</label>
                 <div className="relative group/file">
@@ -292,6 +373,40 @@ export default function Index({
               <button type="submit" disabled={isSubmitting} className="rounded-xl bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] disabled:opacity-50">Confirmar Ubicación</button>
             </div>
           </form>
+        </Modal>
+
+        {/* MODAL ELIMINAR ARCHIVO */}
+        <Modal open={deleteModalOpen} title="Eliminar Archivo del Documento" onClose={() => setDeleteModalOpen(false)} maxWidth="max-w-md">
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-amber-800">
+              <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+              <div className="text-xs space-y-1">
+                <p className="font-bold">¿Está seguro de eliminar el archivo adjunto?</p>
+                <p className="text-amber-700/90">
+                  Esta acción eliminará de forma permanente el archivo PDF de <strong>{blockToDeleteFile?.asunto}</strong> (Nº {blockToDeleteFile?.n_bloque}). El registro del documento cambiará a "Solo Físico".
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(false)}
+                className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteFile}
+                disabled={isDeletingFile}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-red-600/20 hover:bg-red-700 transition-all disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Confirmar Eliminación
+              </button>
+            </div>
+          </div>
         </Modal>
       </div>
     </DashboardLayout>

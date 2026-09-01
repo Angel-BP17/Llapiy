@@ -33,20 +33,22 @@ vi.mock('@/Layouts/DashboardLayout', () => ({
 
 describe('Inbox Index Page', () => {
   const mockProps = {
-    documents: {
-      data: [{ id: 1, asunto: 'Doc Test', folios: 10, document_type: { name: 'Memo' }, status: 'PENDIENTE' }],
+    documents: [{ id: 1, asunto: 'Doc Test', folios: 10, document_type: { name: 'Memo' }, status: 'PENDIENTE', root: 'blocks/test/doc.pdf', box_id: null }],
+    pagination: {
       total: 1,
       current_page: 1,
       last_page: 1,
       from: 1,
+      to: 1,
     },
     areas: [{ id: 1, descripcion: 'Area 1' }],
     sections: [],
     andamios: [],
     boxes: [],
-    stats: { attendedCount: 5, unattendedCount: 2, totalBlocks: 7 },
+    attendedBlocksCount: 5,
+    unattendedBlocksCount: 2,
     filters: { search: '', area_id: '', periodo: '' },
-    periods: ['2024-01', '2024-02'],
+    periodos: ['2024', '2025'],
   };
 
   beforeEach(() => {
@@ -72,10 +74,27 @@ describe('Inbox Index Page', () => {
 
   it('debe filtrar por termino de busqueda', () => {
     render(<Index {...mockProps} />);
-    const input = screen.getByPlaceholderText('N bloque o asunto');
+    const input = screen.getByPlaceholderText('Nº bloque o asunto');
     fireEvent.change(input, { target: { value: 'Memo' } });
     fireEvent.click(screen.getByText('Aplicar filtros'));
     
     expect(router.get).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ search: 'Memo' }), expect.anything());
+  });
+
+  it('debe abrir el modal de confirmacion y eliminar el archivo adjunto', () => {
+    render(<Index {...mockProps} />);
+    
+    // El botón 'Eliminar archivo' debe estar visible puesto que root tiene archivo
+    const deleteBtn = screen.getByText('Eliminar archivo');
+    expect(deleteBtn).toBeInTheDocument();
+    
+    fireEvent.click(deleteBtn);
+    
+    // Verifica que abre la modal
+    expect(screen.getByText('¿Está seguro de eliminar el archivo adjunto?')).toBeInTheDocument();
+    
+    // Al hacer click en confirmar eliminación
+    fireEvent.click(screen.getByText('Confirmar Eliminación'));
+    expect(router.delete).toHaveBeenCalledWith('/inbox/delete-file/1', expect.anything());
   });
 });

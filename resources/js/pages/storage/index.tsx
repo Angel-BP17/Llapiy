@@ -3,7 +3,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout';
 import { Modal } from '@/components/Modal';
 import { router, usePage, Link } from '@inertiajs/react';
 import { 
-  Boxes, Eye, FileArchive, Layers, LayoutGrid, Pencil, Trash2, ChevronLeft, ChevronRight, Folder, Plus, AlertCircle 
+  Boxes, Eye, FileArchive, Layers, LayoutGrid, Pencil, Trash2, ChevronLeft, ChevronRight, Folder, Plus, AlertCircle, Printer, CheckCircle2 
 } from 'lucide-react';
 import sectionsRoutes from '@/routes/sections';
 import andamiosRoutes from '@/routes/andamios';
@@ -22,12 +22,22 @@ interface StorageIndexProps {
   filters: any;
   counts: any; 
   searchedBlocks?: any[];
+  stats?: {
+    totalBlocks: number;
+    archivedBlocks: number;
+    indexedBlocks: number;
+    bothArchivedAndIndexed: number;
+    totalBoxes: number;
+    filledBoxes: number;
+    emptyBoxes: number;
+  };
 }
 
 export default function Index({ 
   level, sections, andamios, boxes, archivos, 
   activeSection, activeAndamio, activeBox, 
-  filters, counts, searchedBlocks = []
+  filters, counts, searchedBlocks = [],
+  stats
 }: StorageIndexProps) {
   const { auth } = usePage().props as any;
   const [search, setSearch] = useState(filters?.search || "");
@@ -120,6 +130,41 @@ export default function Index({
           </div>
         </header>
 
+        {/* METRICAS DE CONTADORES DE ALMACENAMIENTO */}
+        {stats && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <article className="rounded-xl border border-border bg-card p-4 shadow-sm flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                <FileArchive className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Bloques archivados</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{stats.archivedBlocks}</p>
+              </div>
+            </article>
+
+            <article className="rounded-xl border border-border bg-card p-4 shadow-sm flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Bloques digitalizados</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{stats.indexedBlocks}</p>
+              </div>
+            </article>
+
+            <article className="rounded-xl border border-border bg-card p-4 shadow-sm flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                <Boxes className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Cajas ocupadas</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{stats.filledBoxes}</p>
+              </div>
+            </article>
+          </div>
+        )}
+
         {/* BREADCRUMBS DE NAVEGACIÓN */}
         <nav className="flex items-center gap-2 rounded-xl border border-border bg-card p-3 shadow-sm text-xs font-semibold text-muted-foreground overflow-x-auto whitespace-nowrap">
           <Link href={sectionsRoutes.index.url()} className="hover:text-primary transition flex items-center gap-1">
@@ -166,7 +211,17 @@ export default function Index({
             />
             <div className="flex gap-2">
               <button onClick={handleSearch} className="h-10 flex-1 rounded-lg bg-primary text-sm font-semibold text-primary-foreground">Filtrar</button>
-              <button onClick={() => { setSearch(""); router.get(window.location.pathname); }} className="h-10 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground">Limpiar</button>
+              <button onClick={() => { setSearch(""); router.get(window.location.pathname); }} className="h-10 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted">Limpiar</button>
+              <a
+                href={sectionsRoutes.report ? sectionsRoutes.report.url() : "/sections/report"}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 px-4 items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-semibold text-white transition hover:bg-red-700 whitespace-nowrap shadow-sm shrink-0"
+                title="Generar Reporte PDF"
+              >
+                <Printer className="h-4 w-4" />
+                <span>Reporte PDF</span>
+              </a>
             </div>
           </div>
         </div>

@@ -8,29 +8,30 @@ use App\Models\Block;
 use App\Models\Box;
 use App\Models\Section;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class InboxService
 {
     public function getIndexData(Request $request): array
     {
         $query = Block::withoutBox()->with([
-            'user:id,name,last_name,group_id', 
-            'user.group:id,area_group_type_id,descripcion', 
-            'user.group.areaGroupType:id,area_id', 
-            'user.group.areaGroupType.area:id,descripcion'
+            'user:id,name,last_name,group_id',
+            'user.group:id,area_group_type_id,descripcion',
+            'user.group.areaGroupType:id,area_id',
+            'user.group.areaGroupType.area:id,descripcion',
         ]);
 
-        if ($request->has('search') && !empty($request->search)) {
-            $query->where('asunto', 'like', '%' . $request->search . '%');
+        if ($request->has('search') && ! empty($request->search)) {
+            $query->where('asunto', 'like', '%'.$request->search.'%');
         }
 
-        if ($request->has('area_id') && !empty($request->area_id)) {
+        if ($request->has('area_id') && ! empty($request->area_id)) {
             $query->whereHas('group.areaGroupType', function ($inner) use ($request) {
                 $inner->where('area_id', $request->area_id);
             });
         }
 
-        if ($request->has('fecha') && !empty($request->fecha)) {
+        if ($request->has('fecha') && ! empty($request->fecha)) {
             $query->whereYear('fecha', (int) $request->fecha);
         }
 
@@ -46,7 +47,7 @@ class InboxService
         $unattendedBlocksCount = max($totalBlocks - $attendedBlocksCount, 0);
 
         $areas = Area::select('id', 'descripcion')->get();
-        
+
         $fechas = Block::select('fecha')->distinct()->pluck('fecha');
 
         $periodos = $fechas->map(function ($fecha) {
@@ -73,7 +74,7 @@ class InboxService
             'andamios' => $andamios,
             'boxes' => $boxes,
             'attendedBlocksCount' => $attendedBlocksCount,
-            'unattendedBlocksCount' => $unattendedBlocksCount
+            'unattendedBlocksCount' => $unattendedBlocksCount,
         ];
     }
 
@@ -82,5 +83,18 @@ class InboxService
         $document = Block::findOrFail($id);
         $document->box_id = $request->n_box;
         $document->save();
+    }
+
+    public function deleteBlockFile(int $id): void
+    {
+        $block = Block::findOrFail($id);
+
+        if ($block->root) {
+            if (Storage::disk('public')->exists($block->root)) {
+                Storage::disk('public')->delete($block->root);
+            }
+            $block->root = null;
+            $block->save();
+        }
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Storage\IndexSectionRequest;
 use App\Models\Section;
 use App\Services\Storage\SectionService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,9 +14,7 @@ use Inertia\Response;
 
 class SectionController extends Controller
 {
-    public function __construct(protected SectionService $service)
-    {
-    }
+    public function __construct(protected SectionService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -24,6 +23,7 @@ class SectionController extends Controller
     {
         $search = $request->input('search');
         $sections = $this->service->getAll($search);
+        $stats = $this->service->getStorageStats();
 
         $searchedBlocks = [];
         if ($search) {
@@ -31,7 +31,7 @@ class SectionController extends Controller
                 ->select(['id', 'n_bloque', 'asunto', 'folios', 'periodo', 'box_id'])
                 ->where(function ($q) use ($search) {
                     $q->where('n_bloque', 'like', "%{$search}%")
-                      ->orWhere('asunto', 'like', "%{$search}%");
+                        ->orWhere('asunto', 'like', "%{$search}%");
                 })
                 ->with(['box.andamio.section'])
                 ->whereNotNull('box_id')
@@ -48,7 +48,7 @@ class SectionController extends Controller
                             'section' => $block->box?->andamio?->section?->only(['id', 'n_section', 'descripcion']),
                             'andamio' => $block->box?->andamio?->only(['id', 'n_andamio', 'descripcion']),
                             'box' => $block->box?->only(['id', 'n_box', 'descripcion']),
-                        ]
+                        ],
                     ];
                 });
         }
@@ -56,6 +56,7 @@ class SectionController extends Controller
         return Inertia::render('storage/index', [
             'sections' => $sections->items(),
             'searchedBlocks' => $searchedBlocks,
+            'stats' => $stats,
             'pagination' => [
                 'total' => $sections->total(),
                 'current_page' => $sections->currentPage(),
@@ -66,6 +67,24 @@ class SectionController extends Controller
             'level' => 'sections',
             'filters' => $request->only(['search']),
         ]);
+    }
+
+    /**
+     * Generate storage report PDF.
+     */
+    public function report(Request $request)
+    {
+        try {
+            $data = $this->service->getReportData();
+
+            return Pdf::loadView('storage.report', $data)
+                ->setPaper('a4', 'portrait')
+                ->stream('reporte_almacenamiento.pdf');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error al generar reporte de almacenamiento: '.$e->getMessage());
+
+            return response()->json(['message' => 'No se pudo generar el reporte de almacenamiento.'], 500);
+        }
     }
 
     /**
@@ -101,13 +120,13 @@ class SectionController extends Controller
     public function update(Request $request, Section $section): JsonResponse
     {
         $validated = $request->validate([
-            'n_section' => 'required|string|unique:sections,n_section,' . $section->id,
+            'n_section' => 'required|string|unique:sections,n_section,'.$section->id,
             'descripcion' => 'required|string|max:255',
         ]);
 
         $this->service->update($section, $validated);
 
-        return response()->json(['message' => 'Sección actualizada correctamente.', 'section' => $section->fresh()]);        
+        return response()->json(['message' => 'Sección actualizada correctamente.', 'section' => $section->fresh()]);
     }
 
     /**

@@ -2,16 +2,16 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
-use App\Models\Area;
-use App\Models\Section;
 use App\Models\Andamio;
+use App\Models\Area;
 use App\Models\Box;
+use App\Models\Section;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class AreasAndStorageControllersTest extends TestCase
 {
@@ -22,9 +22,9 @@ class AreasAndStorageControllersTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
-        
+
         Permission::firstOrCreate(['name' => 'areas.view', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'areas.create', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'sections.view', 'guard_name' => 'web']);
@@ -58,7 +58,7 @@ class AreasAndStorageControllersTest extends TestCase
     {
         $data = [
             'descripcion' => 'Area de Test',
-            'abreviacion' => 'AT'
+            'abreviacion' => 'AT',
         ];
 
         $response = $this->actingAs($this->adminUser)->post('/areas', $data);
@@ -74,7 +74,7 @@ class AreasAndStorageControllersTest extends TestCase
     {
         $response = $this->actingAs($this->adminUser)->post('/sections', [
             'n_section' => '',
-            'descripcion' => ''
+            'descripcion' => '',
         ]);
 
         $response->assertSessionHasErrors(['n_section', 'descripcion']);
@@ -86,7 +86,7 @@ class AreasAndStorageControllersTest extends TestCase
 
         $response = $this->actingAs($operator)->post('/areas', [
             'descripcion' => 'Intento',
-            'abreviacion' => 'INT'
+            'abreviacion' => 'INT',
         ]);
 
         $response->assertStatus(403);
@@ -98,10 +98,10 @@ class AreasAndStorageControllersTest extends TestCase
     public function test_andamio_creation_requires_valid_section()
     {
         $section = Section::factory()->create();
-        
+
         $response = $this->actingAs($this->adminUser)->post("/sections/{$section->id}/andamios", [
             'n_andamio' => 1,
-            'descripcion' => 'Andamio A'
+            'descripcion' => 'Andamio A',
         ]);
 
         $response->assertRedirect();
@@ -118,7 +118,7 @@ class AreasAndStorageControllersTest extends TestCase
         Box::factory()->create(['n_box' => 'BOX-01', 'andamio_id' => $andamio->id]);
 
         $response = $this->actingAs($this->adminUser)->post("/sections/{$section->id}/andamios/{$andamio->id}/boxes", [
-            'n_box' => 'BOX-01'
+            'n_box' => 'BOX-01',
         ]);
 
         $response->assertSessionHasErrors(['n_box']);
@@ -137,5 +137,33 @@ class AreasAndStorageControllersTest extends TestCase
         \DB::disableQueryLog();
 
         $this->assertLessThan(20, count($queries));
+    }
+
+    /**
+     * 6. CONTADORES Y REPORTES DE ALMACÉN
+     */
+    public function test_section_index_returns_storage_stats()
+    {
+        Section::factory()->create();
+
+        $response = $this->actingAs($this->adminUser)->get('/sections');
+
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->has('stats')
+                ->has('stats.totalBlocks')
+                ->has('stats.archivedBlocks')
+                ->has('stats.indexedBlocks')
+                ->has('stats.filledBoxes')
+            );
+    }
+
+    public function test_storage_pdf_report_generates_successfully()
+    {
+        $response = $this->actingAs($this->adminUser)->get('/sections/report');
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
     }
 }

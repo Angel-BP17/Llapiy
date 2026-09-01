@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('sections')->group(function () {
     Route::get('/', [SectionController::class, 'index'])->name('sections.index')->middleware('can:sections.view');
+    Route::get('/report', [SectionController::class, 'report'])->name('sections.report')->middleware('can:sections.view');
     Route::post('/', [SectionController::class, 'store'])->name('sections.store')->middleware('can:sections.create');
     Route::get('/{section}', [SectionController::class, 'show'])->name('sections.show')->middleware('can:sections.view');
     Route::put('/{section}', [SectionController::class, 'update'])->name('sections.update')->middleware('can:sections.update');
