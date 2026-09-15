@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
 use App\Models\Document;
 use App\Models\DocumentType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class HomeComprehensiveTest extends TestCase
 {
@@ -19,7 +19,7 @@ class HomeComprehensiveTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
         $this->adminUser = User::factory()->create();
         $this->adminUser->assignRole($adminRole);
@@ -83,7 +83,7 @@ class HomeComprehensiveTest extends TestCase
         \DB::disableQueryLog();
 
         // El dashboard debe estar muy optimizado ya que usa servicios agregados
-        $this->assertLessThan(20, count($queries), "El Dashboard está ejecutando demasiadas consultas.");
+        $this->assertLessThan(20, count($queries), 'El Dashboard está ejecutando demasiadas consultas.');
     }
 
     /** @test */

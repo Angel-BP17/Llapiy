@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Campo extends Model
 {
     use HasFactory, LogsActivity;
+
     protected $fillable = ['dato', 'campo_type_id', 'document_id'];
 
     public function campoType()

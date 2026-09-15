@@ -18,11 +18,11 @@ class AndamioService
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('n_andamio', 'like', "%{$search}%")
-                      ->orWhere('descripcion', 'like', "%{$search}%")
-                      ->orWhereHas('boxes.blocks', function ($q) use ($search) {
-                          $q->where('n_bloque', 'like', "%{$search}%")
-                            ->orWhere('asunto', 'like', "%{$search}%");
-                      });
+                        ->orWhere('descripcion', 'like', "%{$search}%")
+                        ->orWhereHas('boxes.blocks', function ($q) use ($search) {
+                            $q->where('n_bloque', 'like', "%{$search}%")
+                                ->orWhere('asunto', 'like', "%{$search}%");
+                        });
                 });
             })
             ->orderBy('n_andamio')
@@ -38,6 +38,7 @@ class AndamioService
     public function update(Andamio $andamio, array $data): Andamio
     {
         $andamio->update($data);
+
         return $andamio->fresh();
     }
 

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class CampoType extends Model
 {
     use HasFactory;
+
     public const DATA_TYPES = [
         'string',
         'text',
@@ -56,6 +57,7 @@ class CampoType extends Model
     {
         return $this->hasMany(Campo::class, 'campo_type_id');
     }
+
     public function documentTypes()
     {
         return $this->belongsToMany(DocumentType::class, 'campo_document_types', 'campo_type_id', 'document_type_id');

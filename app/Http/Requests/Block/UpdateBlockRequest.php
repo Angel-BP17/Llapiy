@@ -24,7 +24,8 @@ class UpdateBlockRequest extends FormRequest
     {
         $canUploadFile = $this->user()?->can('blocks.upload') ?? false;
         $periodo = $this->filled('fecha') ? \Carbon\Carbon::parse($this->fecha)->year : null;
-        $blockId = $this->route('block')?->id ?? $this->block;
+        $blockParam = $this->route('block') ?? $this->route('bloque') ?? $this->block ?? $this->bloque;
+        $blockId = is_object($blockParam) ? $blockParam->id : $blockParam;
 
         return [
             'n_bloque' => [
@@ -32,13 +33,13 @@ class UpdateBlockRequest extends FormRequest
                 'integer',
                 Rule::unique('blocks')->where(function ($query) use ($periodo) {
                     return $query->where('periodo', $periodo);
-                })->ignore($blockId)
+                })->ignore($blockId),
             ],
             'fecha' => 'required|date',
             'asunto' => 'required|string|max:255',
             'folios' => 'required|string|max:255',
             'root' => $canUploadFile
-                ? 'nullable|file|mimes:pdf|max:' . (50 * 1024)
+                ? 'nullable|file|mimes:pdf|max:'.(50 * 1024)
                 : 'prohibited',
             'rango_inicial' => 'required|integer',
             'rango_final' => 'required|integer',

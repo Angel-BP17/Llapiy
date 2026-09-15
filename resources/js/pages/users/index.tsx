@@ -4,7 +4,7 @@ import { UserTable, defaultAvatar } from '@/components/Users/UserTable';
 import { UserFormFields, UserForm } from '@/components/Users/UserFormFields';
 import { router } from '@inertiajs/react';
 import { 
-  Users, UserPlus, Shield, Building2, Eye, Pencil, Trash2, Mail, BadgeCheck, Fingerprint
+  Users, UserPlus, Shield, Building2, Eye, Pencil, Trash2, Mail, BadgeCheck, Fingerprint, Loader2, AlertTriangle, FileDown
 } from 'lucide-react';
 import { Modal } from '@/components/Modal';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -47,14 +47,29 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfTitle, setPdfTitle] = useState("");
   
   const [createForm, setCreateForm] = useState<UserForm>(emptyForm);
   const [editForm, setEditForm] = useState<UserForm>(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
   const [search, setSearch] = useState(filters.search || "");
 
   const handleSearch = () => {
-    router.get('/usuarios', { search }, { preserveState: true });
+    setIsFiltering(true);
+    router.get('/usuarios', { search }, { 
+      preserveState: true,
+      preserveScroll: true,
+      only: ['users', 'pagination', 'filters', 'stats'],
+      onFinish: () => setIsFiltering(false),
+    });
   };
 
   const handleCreateSubmit = (e: FormEvent) => {
@@ -62,6 +77,7 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
     setIsSubmitting(true);
     router.post('/usuarios', createForm as any, {
       forceFormData: true,
+      preserveScroll: true,
       onSuccess: () => {
         setIsCreateOpen(false);
         setCreateForm(emptyForm);
@@ -74,12 +90,12 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
     e.preventDefault();
     if (!selectedUser) return;
     setIsSubmitting(true);
-    // Laravel no soporta PUT con archivos nativamente, usamos POST con _method
     router.post(`/usuarios/${selectedUser.id}`, {
       ...editForm,
       _method: 'put'
     } as any, {
       forceFormData: true,
+      preserveScroll: true,
       onSuccess: () => {
         setIsEditOpen(false);
         setSelectedUser(null);
@@ -88,8 +104,25 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
     });
   };
 
+  const handleDeleteUser = () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
+    router.delete(`/usuarios/${userToDelete.id}`, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setDeleteModalOpen(false);
+        setUserToDelete(null);
+      },
+      onFinish: () => setIsDeleting(false),
+    });
+  };
+
   const handlePageChange = (page: number) => {
-    router.get('/usuarios', { ...filters, page }, { preserveState: true });
+    router.get('/usuarios', { ...filters, page }, { 
+      preserveState: true,
+      preserveScroll: true,
+      only: ['users', 'pagination', 'filters', 'stats'],
+    });
   };
 
   return (
@@ -131,10 +164,26 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-1 max-w-xl gap-2">
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} className="h-10 flex-1 rounded-lg border border-border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Buscar por nombre, email o DNI..." />
-              <button onClick={handleSearch} className="h-10 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Filtrar</button>
+              <button 
+                onClick={handleSearch} 
+                disabled={isFiltering}
+                className="h-10 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:opacity-90 inline-flex items-center gap-2 disabled:opacity-50"
+              >
+                {isFiltering ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {isFiltering ? "Filtrando..." : "Filtrar"}
+              </button>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => window.open('/usuarios/pdf', '_blank')} className="h-10 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted transition-colors">Exportar PDF</button>
+              <button 
+                onClick={() => {
+                  setPdfUrl('/usuarios/pdf');
+                  setPdfTitle("Reporte PDF - Padrón de Usuarios");
+                  setPdfModalOpen(true);
+                }} 
+                className="h-10 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted transition-colors inline-flex items-center gap-1.5"
+              >
+                <FileDown className="h-4 w-4" /> Exportar PDF
+              </button>
               {can('users.create') && (
                 <button onClick={() => { setCreateForm(emptyForm); setIsCreateOpen(true); }} className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20"><UserPlus className="h-4 w-4" /> Nuevo Usuario</button>
               )}
@@ -178,7 +227,10 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
               });
               setIsEditOpen(true); 
             }} 
-            onDelete={(u: User) => confirm(`¿Eliminar a ${u.name}?`) && router.delete(`/usuarios/${u.id}`)} 
+            onDelete={(u: User) => {
+              setUserToDelete(u);
+              setDeleteModalOpen(true);
+            }} 
             onView={(u: User) => setSelectedUser(u)}
           />
         </div>
@@ -192,17 +244,88 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
         <div className="h-8" />
 
         {/* MODAL CREAR */}
-        <Modal open={isCreateOpen} title="Registrar Nuevo Colaborador" onClose={() => setIsCreateOpen(false)} maxWidth="max-w-4xl">
+        <Modal open={isCreateOpen} title="Registrar Nuevo Colaborador" onClose={() => { if (!isSubmitting) setIsCreateOpen(false); }} maxWidth="max-w-4xl">
           <form onSubmit={handleCreateSubmit} className="py-2">
             <UserFormFields form={createForm} setForm={setCreateForm} areas={areas} roles={roles} isSubmitting={isSubmitting} submitLabel="Crear Usuario" />
           </form>
         </Modal>
 
         {/* MODAL EDITAR */}
-        <Modal open={isEditOpen} title={`Editar Usuario: ${selectedUser?.name}`} onClose={() => setIsEditOpen(false)} maxWidth="max-w-4xl">
+        <Modal open={isEditOpen} title={`Editar Usuario: ${selectedUser?.name}`} onClose={() => { if (!isSubmitting) setIsEditOpen(false); }} maxWidth="max-w-4xl">
           <form onSubmit={handleEditSubmit} className="py-2">
             <UserFormFields form={editForm} setForm={setEditForm} areas={areas} roles={roles} isSubmitting={isSubmitting} isEdit submitLabel="Actualizar Información" />
           </form>
+        </Modal>
+
+        {/* MODAL CONFIRMAR ELIMINACIÓN */}
+        <Modal open={deleteModalOpen} title="Confirmar Eliminación" onClose={() => { if (!isDeleting) setDeleteModalOpen(false); }} maxWidth="max-w-md">
+          <div className="space-y-4 text-center py-2">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400">
+              <AlertTriangle className="h-7 w-7" />
+            </div>
+            <div>
+              <h4 className="text-base font-semibold text-foreground">
+                ¿Eliminar al colaborador {userToDelete?.name} {userToDelete?.last_name}?
+              </h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Esta acción eliminará de forma permanente el acceso y cuenta del usuario en el sistema.
+              </p>
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={isDeleting}
+                className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={isDeleting}
+                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50 transition"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" /> Eliminar Usuario
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* MODAL PREVISUALIZADOR DE PDF IN-APP */}
+        <Modal
+          open={pdfModalOpen}
+          title={pdfTitle || "Previsualizador de PDF"}
+          onClose={() => setPdfModalOpen(false)}
+          maxWidth="max-w-5xl"
+        >
+          <div className="space-y-3">
+            <div className="flex justify-end gap-2">
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition"
+              >
+                <FileDown className="h-3.5 w-3.5" /> Abrir en pestaña nueva
+              </a>
+            </div>
+            <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-border bg-slate-900 shadow-inner">
+              <iframe
+                src={pdfUrl}
+                className="h-full w-full border-0"
+                title="Previsualizador PDF"
+              />
+            </div>
+          </div>
         </Modal>
 
         {/* MODAL DETALLES */}

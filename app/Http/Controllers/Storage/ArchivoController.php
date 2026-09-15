@@ -11,9 +11,7 @@ use Inertia\Response;
 
 class ArchivoController extends Controller
 {
-    public function __construct(protected ArchivoService $service)
-    {
-    }
+    public function __construct(protected ArchivoService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -46,6 +44,7 @@ class ArchivoController extends Controller
     {
         try {
             $this->service->moveToDefault((int) $box, (int) $block);
+
             return redirect()->back()->with('message', 'Archivo movido al contenedor default.');
         } catch (\RuntimeException $e) {
             return redirect()->back()->with('error', $e->getMessage());

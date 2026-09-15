@@ -2,7 +2,7 @@ import React, { useState, useMemo, FormEvent } from 'react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import { Modal } from '@/components/Modal';
 import { router } from '@inertiajs/react';
-import { Eye, FileDown, FileText, Filter, Pencil, Plus, Trash2, Search, Calendar, MapPin, Tag, ChevronRight, CheckCircle2, Clock3 } from 'lucide-react';
+import { Eye, FileDown, FileText, Filter, Pencil, Plus, Trash2, Search, Calendar, MapPin, Tag, ChevronRight, CheckCircle2, Clock3, Loader2, AlertTriangle, Building2 } from 'lucide-react';
 import { DocumentFormFields, DocumentForm } from '@/components/documents/DocumentFormFields';
 import docsRoutes from '@/routes/documents';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -50,13 +50,28 @@ export default function Index({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<Document | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfTitle, setPdfTitle] = useState("");
+
   const [form, setForm] = useState<DocumentForm>(emptyForm);
   const [f, setF] = useState(filters);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
 
   const handleSearch = () => {
-    router.get('/documentos', f as any, { preserveState: true });
+    setIsFiltering(true);
+    router.get('/documentos', f as any, { 
+      preserveState: true,
+      preserveScroll: true,
+      only: ['documents', 'pagination', 'filters', 'stats'],
+      onFinish: () => setIsFiltering(false),
+    });
   };
 
   const handleCreateSubmit = (e: FormEvent) => {
@@ -64,6 +79,7 @@ export default function Index({
     setIsSubmitting(true);
     router.post('/documentos', form as any, {
       forceFormData: true,
+      preserveScroll: true,
       onSuccess: () => {
         setIsCreateOpen(false);
         setForm(emptyForm);
@@ -81,6 +97,7 @@ export default function Index({
       _method: 'put'
     } as any, {
       forceFormData: true,
+      preserveScroll: true,
       onSuccess: () => {
         setIsEditOpen(false);
         setSelectedDocument(null);
@@ -89,8 +106,25 @@ export default function Index({
     });
   };
 
+  const handleDeleteDocument = () => {
+    if (!docToDelete) return;
+    setIsDeleting(true);
+    router.delete(`/documentos/${docToDelete.id}`, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setDeleteModalOpen(false);
+        setDocToDelete(null);
+      },
+      onFinish: () => setIsDeleting(false),
+    });
+  };
+
   const handlePageChange = (page: number) => {
-    router.get('/documentos', { ...filters, page } as any, { preserveState: true });
+    router.get('/documentos', { ...filters, page } as any, { 
+      preserveState: true,
+      preserveScroll: true,
+      only: ['documents', 'pagination', 'filters', 'stats'],
+    });
   };
 
   return (
@@ -156,8 +190,13 @@ export default function Index({
               {areas.map(a => <option key={a.id} value={a.id}>{a.descripcion}</option>)}
             </select>
             <div className="flex flex-nowrap items-center gap-2">
-              <button onClick={handleSearch} className="flex h-10 px-4 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 whitespace-nowrap">
-                <Filter className="h-4 w-4" /> Filtrar
+              <button 
+                onClick={handleSearch} 
+                disabled={isFiltering}
+                className="flex h-10 px-4 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 whitespace-nowrap disabled:opacity-50"
+              >
+                {isFiltering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Filter className="h-4 w-4" />}
+                {isFiltering ? "Filtrando..." : "Filtrar"}
               </button>
               {can('documents.create') && (
                 <button 
@@ -168,7 +207,11 @@ export default function Index({
                 </button>
               )}
               <button 
-                onClick={() => window.open(docsRoutes.pdf.url(f as any), '_blank')} 
+                onClick={() => {
+                  setPdfUrl(docsRoutes.pdf.url(f as any));
+                  setPdfTitle("Reporte PDF - Documentos Digitales");
+                  setPdfModalOpen(true);
+                }} 
                 disabled={stats.totalDocuments === 0}
                 className="flex h-10 w-12 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
                 title="Exportar PDF"
@@ -228,7 +271,7 @@ export default function Index({
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => { setSelectedDocument(doc); setIsDetailsOpen(true); }} className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"><Eye className="h-4 w-4" /></button>
+                        <button onClick={() => { setSelectedDocument(doc); setIsDetailsOpen(true); }} className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors" title="Ver detalles"><Eye className="h-4 w-4" /></button>
                         {doc.can?.update && (
                           <button onClick={() => { 
                             setSelectedDocument(doc); 
@@ -241,10 +284,10 @@ export default function Index({
                               campos: doc.campos?.reduce((acc, c) => ({...acc, [c.campo_type_id]: c.valor}), {}) || {}
                             });
                             setIsEditOpen(true); 
-                          }} className="p-1.5 rounded-md bg-amber-500 text-white hover:bg-amber-600 transition-colors"><Pencil className="h-4 w-4" /></button>
+                          }} className="p-1.5 rounded-md bg-amber-500 text-white hover:bg-amber-600 transition-colors" title="Editar"><Pencil className="h-4 w-4" /></button>
                         )}
                         {doc.can?.delete && (
-                          <button onClick={() => confirm('¿Eliminar documento?') && router.delete(`/documentos/${doc.id}`)} className="p-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                          <button onClick={() => { setDocToDelete(doc); setDeleteModalOpen(true); }} className="p-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors" title="Eliminar"><Trash2 className="h-4 w-4" /></button>
                         )}
                       </div>
                     </td>
@@ -279,17 +322,88 @@ export default function Index({
         <div className="h-8" />
 
         {/* MODAL CREAR */}
-        <Modal open={isCreateOpen} title="Registrar Nuevo Documento" onClose={() => setIsCreateOpen(false)} maxWidth="max-w-5xl">
+        <Modal open={isCreateOpen} title="Registrar Nuevo Documento" onClose={() => { if (!isSubmitting) setIsCreateOpen(false); }} maxWidth="max-w-5xl">
           <form onSubmit={handleCreateSubmit} className="py-2">
             <DocumentFormFields form={form} setForm={setForm} documentTypes={documentTypes} areas={areas} isSubmitting={isSubmitting} submitLabel="Registrar Documento" />
           </form>
         </Modal>
 
         {/* MODAL EDITAR */}
-        <Modal open={isEditOpen} title={`Editar Documento: ${selectedDocument?.asunto}`} onClose={() => setIsEditOpen(false)} maxWidth="max-w-5xl">
+        <Modal open={isEditOpen} title={`Editar Documento: ${selectedDocument?.asunto}`} onClose={() => { if (!isSubmitting) setIsEditOpen(false); }} maxWidth="max-w-5xl">
           <form onSubmit={handleEditSubmit} className="py-2">
             <DocumentFormFields form={form} setForm={setForm} documentTypes={documentTypes} areas={areas} isSubmitting={isSubmitting} isEdit submitLabel="Actualizar Información" />
           </form>
+        </Modal>
+
+        {/* MODAL ELIMINAR CONFIRMACIÓN */}
+        <Modal open={deleteModalOpen} title="Confirmar Eliminación" onClose={() => { if (!isDeleting) setDeleteModalOpen(false); }} maxWidth="max-w-md">
+          <div className="space-y-4 text-center py-2">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400">
+              <AlertTriangle className="h-7 w-7" />
+            </div>
+            <div>
+              <h4 className="text-base font-semibold text-foreground">
+                ¿Eliminar Documento {docToDelete?.n_documento}?
+              </h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Esta acción eliminará de forma permanente el documento "{docToDelete?.asunto}" y sus metadatos asociados.
+              </p>
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={isDeleting}
+                className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteDocument}
+                disabled={isDeleting}
+                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50 transition"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" /> Eliminar Documento
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* MODAL PREVISUALIZADOR DE PDF IN-APP */}
+        <Modal
+          open={pdfModalOpen}
+          title={pdfTitle || "Previsualizador de Documentos"}
+          onClose={() => setPdfModalOpen(false)}
+          maxWidth="max-w-5xl"
+        >
+          <div className="space-y-3">
+            <div className="flex justify-end gap-2">
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition"
+              >
+                <FileDown className="h-3.5 w-3.5" /> Abrir en pestaña nueva
+              </a>
+            </div>
+            <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-border bg-slate-900 shadow-inner">
+              <iframe
+                src={pdfUrl}
+                className="h-full w-full border-0"
+                title="Previsualizador PDF"
+              />
+            </div>
+          </div>
         </Modal>
 
         {/* MODAL DETALLES */}
@@ -339,7 +453,17 @@ export default function Index({
                   </div>
                   <div className="pt-4">
                     {selectedDocument.root ? (
-                      <button onClick={() => window.open(`/documentos/${selectedDocument.id}/file`, '_blank')} className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"><FileDown className="h-5 w-5" /> Ver Documento Original</button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setPdfUrl(`/documentos/${selectedDocument.id}/file`);
+                          setPdfTitle(`Documento Escaneado Original - ${selectedDocument.asunto}`);
+                          setPdfModalOpen(true);
+                        }} 
+                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20"
+                      >
+                        <FileDown className="h-5 w-5" /> Ver Documento Original
+                      </button>
                     ) : (
                       <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground italic">Archivo digital no disponible</div>
                     )}

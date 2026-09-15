@@ -19,26 +19,26 @@ class UpdateUserRequest extends FormRequest
             $role = \Spatie\Permission\Models\Role::find($this->role_id);
             if ($role) {
                 $this->merge([
-                    'roles' => [$role->name]
+                    'roles' => [$role->name],
                 ]);
             }
         }
 
         if ($this->has('roles')) {
             $upperRoles = collect($this->input('roles', []))
-                ->map(fn($role) => mb_strtoupper((string) $role))
+                ->map(fn ($role) => mb_strtoupper((string) $role))
                 ->all();
 
             $this->merge([
-                'roles' => $upperRoles
+                'roles' => $upperRoles,
             ]);
 
-            if (!$this->has('role_id') || empty($this->role_id)) {
+            if (! $this->has('role_id') || empty($this->role_id)) {
                 $roleName = collect($upperRoles)->first();
                 $role = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
                 if ($role) {
                     $this->merge([
-                        'role_id' => $role->id
+                        'role_id' => $role->id,
                     ]);
                 }
             }
@@ -59,9 +59,9 @@ class UpdateUserRequest extends FormRequest
             'password' => 'nullable|string|min:6',
             'foto_perfil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'group_id' => [
-                Rule::requiredIf(fn() => $this->filled('area_id')),
+                Rule::requiredIf(fn () => $this->filled('area_id')),
                 'nullable',
-                'exists:groups,id'
+                'exists:groups,id',
             ],
             'subgroup_id' => 'nullable|exists:subgroups,id',
             'role_id' => 'required|exists:roles,id',

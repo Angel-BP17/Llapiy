@@ -9,9 +9,7 @@ use Illuminate\Http\JsonResponse;
 
 class NotificationController extends Controller
 {
-    public function __construct(protected NotificationService $service)
-    {
-    }
+    public function __construct(protected NotificationService $service) {}
 
     /**
      * Display a listing of the notifications.
@@ -30,7 +28,7 @@ class NotificationController extends Controller
     {
         $notification = $this->service->findNotificationOrFail($notificationId);
 
-        if (!$this->service->isNotificationOwner($notification)) {
+        if (! $this->service->isNotificationOwner($notification)) {
             return response()->json(['message' => 'Acceso no autorizado.'], 403);
         }
 

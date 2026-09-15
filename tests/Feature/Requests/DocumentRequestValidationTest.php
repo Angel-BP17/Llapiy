@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Requests;
 
-use App\Models\User;
 use App\Models\Block;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
-use Carbon\Carbon;
 
 class DocumentRequestValidationTest extends TestCase
 {
@@ -16,7 +16,7 @@ class DocumentRequestValidationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->seed(\Database\Seeders\RolePermissionSeeder::class);
 
         Route::put('/test-block-update/{bloque}', function (\App\Http\Requests\Block\UpdateBlockRequest $request, Block $bloque) {
@@ -30,10 +30,10 @@ class DocumentRequestValidationTest extends TestCase
         $admin = User::factory()->create();
         $admin->givePermissionTo('blocks.update');
         $this->actingAs($admin);
-        
+
         $fecha = '2025-05-15';
         $periodo = Carbon::parse($fecha)->year;
-        
+
         $block = Block::create([
             'n_bloque' => 1,
             'fecha' => $fecha,
@@ -65,10 +65,10 @@ class DocumentRequestValidationTest extends TestCase
         $admin = User::factory()->create();
         $admin->givePermissionTo('blocks.update');
         $this->actingAs($admin);
-        
+
         $fecha = '2025-05-15';
         $periodo = Carbon::parse($fecha)->year;
-        
+
         Block::create([
             'n_bloque' => 1,
             'fecha' => $fecha,

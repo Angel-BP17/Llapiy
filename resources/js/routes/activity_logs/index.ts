@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\Activities\ActivityLogController::index
- * @see app/Http/Controllers/Activities/ActivityLogController.php:22
+ * @see app/Http/Controllers/Activities/ActivityLogController.php:20
  * @route '/actividades'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Activities\ActivityLogController::index
- * @see app/Http/Controllers/Activities/ActivityLogController.php:22
+ * @see app/Http/Controllers/Activities/ActivityLogController.php:20
  * @route '/actividades'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Activities\ActivityLogController::index
- * @see app/Http/Controllers/Activities/ActivityLogController.php:22
+ * @see app/Http/Controllers/Activities/ActivityLogController.php:20
  * @route '/actividades'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Activities\ActivityLogController::index
- * @see app/Http/Controllers/Activities/ActivityLogController.php:22
+ * @see app/Http/Controllers/Activities/ActivityLogController.php:20
  * @route '/actividades'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Activities\ActivityLogController::pdf
- * @see app/Http/Controllers/Activities/ActivityLogController.php:44
+ * @see app/Http/Controllers/Activities/ActivityLogController.php:42
  * @route '/actividades/pdf'
  */
 export const pdf = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ pdf.definition = {
 
 /**
 * @see \App\Http\Controllers\Activities\ActivityLogController::pdf
- * @see app/Http/Controllers/Activities/ActivityLogController.php:44
+ * @see app/Http/Controllers/Activities/ActivityLogController.php:42
  * @route '/actividades/pdf'
  */
 pdf.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ pdf.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Activities\ActivityLogController::pdf
- * @see app/Http/Controllers/Activities/ActivityLogController.php:44
+ * @see app/Http/Controllers/Activities/ActivityLogController.php:42
  * @route '/actividades/pdf'
  */
 pdf.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ pdf.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Activities\ActivityLogController::pdf
- * @see app/Http/Controllers/Activities/ActivityLogController.php:44
+ * @see app/Http/Controllers/Activities/ActivityLogController.php:42
  * @route '/actividades/pdf'
  */
 pdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

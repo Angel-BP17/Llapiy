@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../wayfinder'
 /**
 * @see \App\Http\Controllers\Home\AuthController::login
- * @see app/Http/Controllers/Home/AuthController.php:21
+ * @see app/Http/Controllers/Home/AuthController.php:19
  * @route '/login'
  */
 export const login = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ login.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\AuthController::login
- * @see app/Http/Controllers/Home/AuthController.php:21
+ * @see app/Http/Controllers/Home/AuthController.php:19
  * @route '/login'
  */
 login.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ login.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\AuthController::login
- * @see app/Http/Controllers/Home/AuthController.php:21
+ * @see app/Http/Controllers/Home/AuthController.php:19
  * @route '/login'
  */
 login.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ login.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Home\AuthController::login
- * @see app/Http/Controllers/Home/AuthController.php:21
+ * @see app/Http/Controllers/Home/AuthController.php:19
  * @route '/login'
  */
 login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Home\AuthController::logout
- * @see app/Http/Controllers/Home/AuthController.php:49
+ * @see app/Http/Controllers/Home/AuthController.php:48
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ logout.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\AuthController::logout
- * @see app/Http/Controllers/Home/AuthController.php:49
+ * @see app/Http/Controllers/Home/AuthController.php:48
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ logout.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\AuthController::logout
- * @see app/Http/Controllers/Home/AuthController.php:49
+ * @see app/Http/Controllers/Home/AuthController.php:48
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -78,7 +78,7 @@ logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::dashboard
- * @see app/Http/Controllers/Home/DashboardController.php:23
+ * @see app/Http/Controllers/Home/DashboardController.php:21
  * @route '/'
  */
 export const dashboard = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -93,7 +93,7 @@ dashboard.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::dashboard
- * @see app/Http/Controllers/Home/DashboardController.php:23
+ * @see app/Http/Controllers/Home/DashboardController.php:21
  * @route '/'
  */
 dashboard.url = (options?: RouteQueryOptions) => {
@@ -102,7 +102,7 @@ dashboard.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::dashboard
- * @see app/Http/Controllers/Home/DashboardController.php:23
+ * @see app/Http/Controllers/Home/DashboardController.php:21
  * @route '/'
  */
 dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -111,7 +111,7 @@ dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Home\DashboardController::dashboard
- * @see app/Http/Controllers/Home/DashboardController.php:23
+ * @see app/Http/Controllers/Home/DashboardController.php:21
  * @route '/'
  */
 dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

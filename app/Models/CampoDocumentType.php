@@ -10,6 +10,7 @@ class CampoDocumentType extends Model
     use HasFactory;
 
     protected $table = 'campo_document_types';
+
     protected $fillable = ['document_type_id', 'campo_type_id'];
 
     public function documentType()

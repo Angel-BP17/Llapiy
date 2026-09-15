@@ -13,7 +13,7 @@ class ActivityLog extends Model
 
     protected $casts = [
         'before' => 'array',
-        'after' => 'array'
+        'after' => 'array',
     ];
 
     public $timestamps = false;

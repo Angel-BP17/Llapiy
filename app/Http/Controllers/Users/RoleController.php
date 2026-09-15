@@ -3,22 +3,20 @@
 namespace App\Http\Controllers\Users;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Role\IndexRoleRequest;
 use App\Http\Requests\Role\CreateRoleRequest;
+use App\Http\Requests\Role\IndexRoleRequest;
 use App\Http\Requests\Role\UpdateRoleRequest;
 use App\Services\Users\RoleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
-    public function __construct(protected RoleService $service)
-    {
-    }
+    public function __construct(protected RoleService $service) {}
 
     /**
      * Display a listing of the resource.

@@ -41,7 +41,7 @@ describe('Blocks Index Page', () => {
     years: [2024, 2025],
     filters: { asunto: '' },
     stats: { totalBlocks: 1, attendedCount: 1, unattendedCount: 0 },
-  };
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,7 +65,7 @@ describe('Blocks Index Page', () => {
 
   it('debe filtrar al buscar un bloque', () => {
     render(<Index {...mockProps} />);
-    const input = screen.getByPlaceholderText('Asunto');
+    const input = screen.getByPlaceholderText('Buscar por asunto del bloque...');
 
     fireEvent.change(input, { target: { value: 'B1' } });
     fireEvent.click(screen.getByText('Aplicar filtros'));

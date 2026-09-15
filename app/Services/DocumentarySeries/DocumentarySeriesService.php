@@ -3,8 +3,8 @@
 namespace App\Services\DocumentarySeries;
 
 use App\Models\DocumentarySeries;
-use Illuminate\Http\Request;
 use DB;
+use Illuminate\Http\Request;
 
 class DocumentarySeriesService
 {
@@ -17,11 +17,11 @@ class DocumentarySeriesService
             ->withCount('blocks');
 
         if ($codigo) {
-            $query->where('codigo', 'like', '%' . $codigo . '%');
+            $query->where('codigo', 'like', '%'.$codigo.'%');
         }
 
         if ($nombre) {
-            $query->where('nombre', 'like', '%' . $nombre . '%');
+            $query->where('nombre', 'like', '%'.$nombre.'%');
         }
 
         $documentarySeries = $query->paginate(10);
@@ -46,6 +46,7 @@ class DocumentarySeriesService
                 'codigo' => $request->codigo,
                 'nombre' => $request->nombre,
             ]);
+
             return $documentarySeries;
         });
     }

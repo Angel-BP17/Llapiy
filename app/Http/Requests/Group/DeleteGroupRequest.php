@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Group;
 
-use App\Models\Group;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationException;
 
 class DeleteGroupRequest extends FormRequest
 {
@@ -17,5 +15,4 @@ class DeleteGroupRequest extends FormRequest
     {
         return [];
     }
-
 }

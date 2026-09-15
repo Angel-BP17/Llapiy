@@ -3,7 +3,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout';
 import { Modal } from '@/components/Modal';
 import { router } from '@inertiajs/react';
 import { 
-  CheckCircle2, Clock3, Inbox as InboxIcon, FileText, ChevronRight, Eye, Trash2, AlertTriangle 
+  CheckCircle2, Clock3, Inbox as InboxIcon, FileText, ChevronRight, Eye, Trash2, AlertTriangle, AlertCircle, Loader2, FileDown 
 } from 'lucide-react';
 import inboxRoutes from '@/routes/inbox';
 import blocksRoutes from '@/routes/blocks';
@@ -59,17 +59,24 @@ export default function Index({
     periodo: filters?.periodo || ""
   });
 
+  const [isFiltering, setIsFiltering] = useState(false);
   const [storageOpen, setStorageOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [storageForm, setStorageForm] = useState<StorageForm>(emptyStorageForm);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadFileName, setUploadFileName] = useState("");
+  const [fileError, setFileError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [blockToDeleteFile, setBlockToDeleteFile] = useState<any>(null);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
+
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfTitle, setPdfTitle] = useState("");
 
   const canUpload = can("blocks.upload");
 
@@ -77,6 +84,7 @@ export default function Index({
     if (!blockToDeleteFile) return;
     setIsDeletingFile(true);
     router.delete(`/inbox/delete-file/${blockToDeleteFile.id}`, {
+      preserveScroll: true,
       onSuccess: () => {
         setDeleteModalOpen(false);
         setBlockToDeleteFile(null);
@@ -97,7 +105,27 @@ export default function Index({
     boxes.filter(b => String(b.andamio_id) === storageForm.andamio_id), 
   [boxes, storageForm.andamio_id]);
 
-  const handleFilter = () => router.get(inboxRoutes.index.url(), f, { preserveState: true });
+  const handleFilter = () => {
+    setIsFiltering(true);
+    router.get(inboxRoutes.index.url(), f, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['documents', 'pagination', 'filters'],
+      onFinish: () => setIsFiltering(false),
+    });
+  };
+
+  const handleClearFilters = () => {
+    const cleared = { search: "", area_id: "", periodo: "" };
+    setF(cleared);
+    setIsFiltering(true);
+    router.get(inboxRoutes.index.url(), cleared, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['documents', 'pagination', 'filters'],
+      onFinish: () => setIsFiltering(false),
+    });
+  };
 
   const handleStorageSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -117,14 +145,22 @@ export default function Index({
 
     router.post(inboxRoutes.updateStorage.url({ id: selectedBlock.id }), data, {
       forceFormData: true,
+      preserveScroll: true,
       onSuccess: () => { 
         setStorageOpen(false); 
         setStorageForm(emptyStorageForm); 
         setUploadFile(null);
         setUploadFileName("");
+        setFileError("");
       },
       onFinish: () => setIsSubmitting(false)
     });
+  };
+
+  const handleViewPdf = (b: any) => {
+    setPdfUrl(blocksRoutes.file.url({ block: b.id }));
+    setPdfTitle(`Archivo PDF - ${b.asunto} (Nº ${b.n_bloque})`);
+    setPdfModalOpen(true);
   };
 
   return (
@@ -178,8 +214,23 @@ export default function Index({
             </select>
           </div>
           <div className="mt-4 flex gap-2">
-            <button type="button" onClick={handleFilter} className="h-10 px-6 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90">Aplicar filtros</button>
-            <button type="button" onClick={() => { setF({search:"", area_id:"", periodo:""}); router.get('/bandeja'); }} className="h-10 px-6 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted">Limpiar</button>
+            <button 
+              type="button" 
+              onClick={handleFilter} 
+              disabled={isFiltering}
+              className="h-10 px-6 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 inline-flex items-center gap-2 disabled:opacity-50"
+            >
+              {isFiltering ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {isFiltering ? "Filtrando..." : "Aplicar filtros"}
+            </button>
+            <button 
+              type="button" 
+              onClick={handleClearFilters} 
+              disabled={isFiltering}
+              className="h-10 px-6 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+            >
+              Limpiar
+            </button>
           </div>
         </div>
 
@@ -190,6 +241,8 @@ export default function Index({
                 <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <th className="px-4 py-3">#</th>
                   <th className="px-4 py-3">Bloque</th>
+                  <th className="px-4 py-3">Serie Documental</th>
+                  <th className="px-4 py-3">Rango</th>
                   <th className="px-4 py-3">Origen</th>
                   <th className="px-4 py-3">Estatus</th>
                   <th className="px-4 py-3 text-right">Acciones</th>
@@ -207,6 +260,21 @@ export default function Index({
                           <span className="text-[10px] text-muted-foreground">{formatDateLabel(b.fecha)}</span>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const ds = b.documentary_series || b.documentarySeries;
+                        return ds ? (
+                          <span className="font-mono text-xs font-bold text-indigo-600">
+                            {ds.codigo}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground italic text-xs">Sin serie</span>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-700">
+                      {b.rango_inicial && b.rango_final ? `${b.rango_inicial} - ${b.rango_final}` : "-"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col">
@@ -230,16 +298,15 @@ export default function Index({
                       <div className="flex items-center justify-end gap-1.5">
                         {b.root && (
                           <>
-                            <a
-                              href={blocksRoutes.file.url({ block: b.id })}
-                              target="_blank"
-                              rel="noreferrer"
+                            <button
+                              type="button"
+                              onClick={() => handleViewPdf(b)}
                               title="Ver archivo PDF"
                               className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors"
                             >
                               <Eye className="h-3.5 w-3.5" />
                               <span className="hidden sm:inline">Ver PDF</span>
-                            </a>
+                            </button>
                             <button
                               type="button"
                               onClick={() => {
@@ -263,7 +330,7 @@ export default function Index({
                 ))}
                 {documents.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-16 text-center">
+                    <td colSpan={7} className="px-4 py-16 text-center">
                       <div className="flex flex-col items-center justify-center max-w-md mx-auto">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 mb-4 animate-bounce">
                           <InboxIcon className="h-8 w-8" />
@@ -283,12 +350,12 @@ export default function Index({
 
         <Pagination 
           {...pagination}
-          onPageChange={(page) => router.get(inboxRoutes.index.url(), { ...f, page }, { preserveState: true })}
+          onPageChange={(page) => router.get(inboxRoutes.index.url(), { ...f, page }, { preserveState: true, preserveScroll: true, only: ['documents', 'pagination', 'filters'] })}
           label="pendientes"
         />
 
         {/* MODAL ARCHIVAR Y DIGITALIZAR */}
-        <Modal open={storageOpen} title="Completar y Archivar Bloque" onClose={() => setStorageOpen(false)}>
+        <Modal open={storageOpen} title="Completar y Archivar Bloque" onClose={() => { if (!isSubmitting) setStorageOpen(false); }}>
           <form onSubmit={handleStorageSubmit} className="space-y-4 py-2">
             <div className="grid gap-4">
               <div className="space-y-1.5">
@@ -326,15 +393,14 @@ export default function Index({
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <a
-                      href={blocksRoutes.file.url({ block: selectedBlock.id })}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => handleViewPdf(selectedBlock)}
                       className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-white border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors inline-flex items-center gap-1"
                     >
                       <Eye className="h-3.5 w-3.5" />
                       Ver
-                    </a>
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -352,9 +418,23 @@ export default function Index({
             ) : (canUpload) && (
               <div className="space-y-2 mt-4 pt-4 border-t border-border">
                 <label className="text-[10px] font-black uppercase text-muted-foreground pl-1">Archivo PDF del Bloque (Opcional)</label>
+                {fileError && (
+                  <div className="flex items-center gap-2 p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+                    <span>{fileError}</span>
+                  </div>
+                )}
                 <div className="relative group/file">
                   <input type="file" accept=".pdf,application/pdf" onChange={e => {
                     const file = e.target.files?.[0] || null;
+                    if (file && file.size > MAX_FILE_SIZE_BYTES) {
+                      setFileError(`El archivo supera el límite de 50 MB (${(file.size / (1024 * 1024)).toFixed(1)} MB). Por favor selecciona un PDF más liviano.`);
+                      e.target.value = "";
+                      setUploadFile(null);
+                      setUploadFileName("");
+                      return;
+                    }
+                    setFileError("");
                     setUploadFile(file);
                     setUploadFileName(file?.name || "");
                   }} className="block w-full rounded-xl border border-border bg-muted/20 px-4 py-8 text-xs focus:ring-2 focus:ring-primary/20 outline-none border-dashed group-hover/file:bg-muted/40 transition-all cursor-pointer" />
@@ -369,14 +449,34 @@ export default function Index({
               </div>
             )}
 
-            <div className="flex justify-end pt-4">
-              <button type="submit" disabled={isSubmitting} className="rounded-xl bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] disabled:opacity-50">Confirmar Ubicación</button>
+            <div className="flex justify-end pt-4 gap-2">
+              <button
+                type="button"
+                onClick={() => setStorageOpen(false)}
+                disabled={isSubmitting}
+                className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Guardando...
+                  </>
+                ) : (
+                  "Confirmar Ubicación"
+                )}
+              </button>
             </div>
           </form>
         </Modal>
 
         {/* MODAL ELIMINAR ARCHIVO */}
-        <Modal open={deleteModalOpen} title="Eliminar Archivo del Documento" onClose={() => setDeleteModalOpen(false)} maxWidth="max-w-md">
+        <Modal open={deleteModalOpen} title="Eliminar Archivo del Documento" onClose={() => { if (!isDeletingFile) setDeleteModalOpen(false); }} maxWidth="max-w-md">
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-amber-800">
               <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
@@ -392,7 +492,8 @@ export default function Index({
               <button
                 type="button"
                 onClick={() => setDeleteModalOpen(false)}
-                className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                disabled={isDeletingFile}
+                className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -402,9 +503,44 @@ export default function Index({
                 disabled={isDeletingFile}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-red-600/20 hover:bg-red-700 transition-all disabled:opacity-50"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                Confirmar Eliminación
+                {isDeletingFile ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" /> Confirmar Eliminación
+                  </>
+                )}
               </button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* MODAL PREVISUALIZADOR DE PDF IN-APP */}
+        <Modal
+          open={pdfModalOpen}
+          title={pdfTitle || "Previsualizador de Documentos"}
+          onClose={() => setPdfModalOpen(false)}
+          maxWidth="max-w-5xl"
+        >
+          <div className="space-y-3">
+            <div className="flex justify-end gap-2">
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition"
+              >
+                <FileDown className="h-3.5 w-3.5" /> Abrir en pestaña nueva
+              </a>
+            </div>
+            <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-border bg-slate-900 shadow-inner">
+              <iframe
+                src={pdfUrl}
+                className="h-full w-full border-0"
+                title="Previsualizador PDF"
+              />
             </div>
           </div>
         </Modal>

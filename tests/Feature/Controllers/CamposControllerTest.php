@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
 use App\Models\CampoType;
 use App\Models\DocumentType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -14,14 +14,15 @@ class CamposControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $adminUser;
+
     protected User $operatorUser;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->seed(\Database\Seeders\RolePermissionSeeder::class);
-        
+
         \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'OPERADOR']);
 
         $this->adminUser = User::factory()->create();
@@ -58,7 +59,7 @@ class CamposControllerTest extends TestCase
             'name' => 'Campo de Prueba',
             'data_type' => 'string',
             'is_nullable' => true,
-            'length' => 100
+            'length' => 100,
         ];
 
         $response = $this->actingAs($this->adminUser)->post('/campos', $data);
@@ -96,13 +97,13 @@ class CamposControllerTest extends TestCase
     {
         $campo = CampoType::create(['name' => 'En Uso', 'data_type' => 'string']);
         $docType = DocumentType::factory()->create();
-        
+
         // Tabla pivote correcta segun el modelo CampoType
         \DB::table('campo_document_types')->insert([
             'document_type_id' => $docType->id,
             'campo_type_id' => $campo->id,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         $response = $this->actingAs($this->adminUser)->delete("/campos/{$campo->id}");
@@ -117,7 +118,7 @@ class CamposControllerTest extends TestCase
     {
         foreach (['date', 'time', 'date_time'] as $type) {
             $data = [
-                'name' => 'Campo ' . ucfirst($type),
+                'name' => 'Campo '.ucfirst($type),
                 'data_type' => $type,
                 'is_nullable' => true,
             ];
@@ -125,7 +126,7 @@ class CamposControllerTest extends TestCase
             $response = $this->actingAs($this->adminUser)->post('/campos', $data);
 
             $response->assertRedirect();
-            $this->assertDatabaseHas('campo_types', ['name' => 'Campo ' . ucfirst($type), 'data_type' => $type]);
+            $this->assertDatabaseHas('campo_types', ['name' => 'Campo '.ucfirst($type), 'data_type' => $type]);
         }
     }
 }

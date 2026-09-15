@@ -147,9 +147,9 @@ class InboxComprehensiveTest extends TestCase
      */
     public function test_inbox_can_delete_block_file()
     {
-        \Illuminate\Support\Facades\Storage::fake('public');
+        \Illuminate\Support\Facades\Storage::fake('local');
         $fakePath = 'blocks/test/file.pdf';
-        \Illuminate\Support\Facades\Storage::disk('public')->put($fakePath, 'dummy content');
+        \Illuminate\Support\Facades\Storage::disk('local')->put($fakePath, 'dummy content');
 
         $block = Block::factory()->create([
             'box_id' => null,
@@ -163,6 +163,6 @@ class InboxComprehensiveTest extends TestCase
 
         $block->refresh();
         $this->assertNull($block->root);
-        \Illuminate\Support\Facades\Storage::disk('public')->assertMissing($fakePath);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($fakePath);
     }
 }

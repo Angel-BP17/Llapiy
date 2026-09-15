@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Documents;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\DocumentarySeries\IndexDocumentarySeriesRequest;
 use App\Http\Requests\DocumentarySeries\CreateDocumentarySeriesRequest;
+use App\Http\Requests\DocumentarySeries\IndexDocumentarySeriesRequest;
 use App\Http\Requests\DocumentarySeries\UpdateDocumentarySeriesRequest;
 use App\Models\DocumentarySeries;
 use App\Services\DocumentarySeries\DocumentarySeriesService;
@@ -15,9 +15,7 @@ use Inertia\Response;
 
 class DocumentarySeriesController extends Controller
 {
-    public function __construct(protected DocumentarySeriesService $service)
-    {
-    }
+    public function __construct(protected DocumentarySeriesService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -25,7 +23,7 @@ class DocumentarySeriesController extends Controller
     public function index(IndexDocumentarySeriesRequest $request): Response
     {
         // Solo administradores pueden ingresar a este CRUD
-        if (!auth()->user()->hasRole('ADMINISTRADOR')) {
+        if (! auth()->user()->hasRole('ADMINISTRADOR')) {
             abort(403, 'No tienes autorización para acceder a esta sección.');
         }
 
@@ -49,15 +47,17 @@ class DocumentarySeriesController extends Controller
      */
     public function store(CreateDocumentarySeriesRequest $request): RedirectResponse
     {
-        if (!auth()->user()->hasRole('ADMINISTRADOR')) {
+        if (! auth()->user()->hasRole('ADMINISTRADOR')) {
             abort(403, 'No tienes autorización para acceder a esta sección.');
         }
 
         try {
             $this->service->create($request);
+
             return redirect()->back()->with('message', 'Serie documental creada correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al crear serie documental: ' . $e->getMessage());
+            Log::error('Error al crear serie documental: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Hubo un error al crear la serie documental.');
         }
     }
@@ -67,15 +67,17 @@ class DocumentarySeriesController extends Controller
      */
     public function update(UpdateDocumentarySeriesRequest $request, DocumentarySeries $documentarySeries): RedirectResponse
     {
-        if (!auth()->user()->hasRole('ADMINISTRADOR')) {
+        if (! auth()->user()->hasRole('ADMINISTRADOR')) {
             abort(403, 'No tienes autorización para acceder a esta sección.');
         }
 
         try {
             $this->service->update($request, $documentarySeries);
+
             return redirect()->back()->with('message', 'Serie documental actualizada correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al actualizar serie documental: ' . $e->getMessage());
+            Log::error('Error al actualizar serie documental: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrió un error al actualizar la serie documental.');
         }
     }
@@ -85,7 +87,7 @@ class DocumentarySeriesController extends Controller
      */
     public function destroy(DocumentarySeries $documentarySeries): RedirectResponse
     {
-        if (!auth()->user()->hasRole('ADMINISTRADOR')) {
+        if (! auth()->user()->hasRole('ADMINISTRADOR')) {
             abort(403, 'No tienes autorización para acceder a esta sección.');
         }
 
@@ -96,9 +98,11 @@ class DocumentarySeriesController extends Controller
             }
 
             $this->service->delete($documentarySeries);
+
             return redirect()->back()->with('message', 'Serie documental eliminada correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al eliminar serie documental: ' . $e->getMessage());
+            Log::error('Error al eliminar serie documental: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrió un error al eliminar la serie documental.');
         }
     }

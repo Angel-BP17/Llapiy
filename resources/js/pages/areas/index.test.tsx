@@ -40,7 +40,7 @@ describe('Areas Index Page', () => {
     groupTypes: [],
     pagination: { total: 2, current_page: 1, last_page: 1, from: 1, to: 2 },
     filters: {},
-  };
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();

@@ -14,8 +14,7 @@ class UploadDocumentFileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'root' => 'required|file|mimes:pdf|max:' . (15 * 1024),
+            'root' => 'required|file|mimes:pdf|max:'.(15 * 1024),
         ];
     }
 }
-

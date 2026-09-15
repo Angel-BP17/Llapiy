@@ -15,9 +15,7 @@ use Inertia\Response;
 
 class CampoController extends Controller
 {
-    public function __construct(protected CampoService $service)
-    {
-    }
+    public function __construct(protected CampoService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -72,6 +70,7 @@ class CampoController extends Controller
     {
         try {
             $this->service->delete($campo);
+
             return redirect()->back()->with('message', 'Tipo de campo eliminado correctamente.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());

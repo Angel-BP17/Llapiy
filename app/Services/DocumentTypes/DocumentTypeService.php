@@ -8,7 +8,6 @@ use App\Models\CampoType;
 use App\Models\DocumentType;
 use App\Models\Group;
 use App\Models\Subgroup;
-use Cache;
 use DB;
 use Illuminate\Http\Request;
 
@@ -26,7 +25,7 @@ class DocumentTypeService
             ->withCount('documents');
 
         if ($name) {
-            $query->where('name', 'like', '%' . $name . '%');
+            $query->where('name', 'like', '%'.$name.'%');
         }
 
         if ($areaId) {
@@ -54,11 +53,11 @@ class DocumentTypeService
         $areas = Area::with([
             'areaGroupTypes:id,area_id,group_type_id',
             'areaGroupTypes.groups:groups.id,groups.area_group_type_id,groups.descripcion',
-            'areaGroupTypes.groups.subgroups:subgroups.id,subgroups.group_id,subgroups.descripcion'
+            'areaGroupTypes.groups.subgroups:subgroups.id,subgroups.group_id,subgroups.descripcion',
         ])->get(['id', 'descripcion']);
-        
+
         $groups = Group::all();
-        
+
         $subgroups = Subgroup::all();
 
         return compact('documentTypes', 'areas', 'groups', 'subgroups');
@@ -85,16 +84,16 @@ class DocumentTypeService
         $campoTypeIds = json_decode($request->campos, true) ?? [];
 
         $groupIds = json_decode($request->groups, true) ?? [];
-        if (!empty($groupIds)) {
+        if (! empty($groupIds)) {
             $documentType->groups()->sync($groupIds);
         }
 
         $subgroupIds = json_decode($request->subgroups, true) ?? [];
-        if (!empty($subgroupIds)) {
+        if (! empty($subgroupIds)) {
             $documentType->subgroups()->sync($subgroupIds);
         }
 
-        if (!empty($campoTypeIds)) {
+        if (! empty($campoTypeIds)) {
             foreach ($campoTypeIds as $campoTypeId) {
                 CampoDocumentType::create([
                     'document_type_id' => $documentType->id,

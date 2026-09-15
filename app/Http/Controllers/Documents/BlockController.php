@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Documents;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Block\IndexBlockRequest;
 use App\Http\Requests\Block\CreateBlockRequest;
+use App\Http\Requests\Block\IndexBlockRequest;
 use App\Http\Requests\Block\UpdateBlockRequest;
 use App\Http\Requests\Block\UploadBlockFileRequest;
 use App\Models\Block;
@@ -26,9 +26,7 @@ class BlockController extends Controller
 {
     use AuthorizesRequests;
 
-    public function __construct(protected BlockService $service)
-    {
-    }
+    public function __construct(protected BlockService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -51,11 +49,11 @@ class BlockController extends Controller
 
         $paginatedBlocks->getCollection()->transform(function ($block) {
             $block->load(['user', 'group.areaGroupType.area', 'subgroup', 'box.andamio.section', 'documentarySeries']);
-            
+
             $block->area = $block->group?->areaGroupType?->area?->descripcion ?? 'Sin área';
             $block->group_name = $block->group?->descripcion ?? 'Sin grupo';
             $block->subgroup_name = $block->subgroup?->descripcion ?? 'Sin subgrupo';
-            
+
             if ($block->box) {
                 $block->box_info = [
                     'section' => $block->box->andamio?->section?->n_section ?? '-',
@@ -70,6 +68,7 @@ class BlockController extends Controller
                 'delete' => auth()->user()->can('delete', $block),
                 'view' => auth()->user()->can('view', $block),
             ];
+
             return $block;
         });
 
@@ -117,7 +116,8 @@ class BlockController extends Controller
 
             return redirect()->back()->with('message', 'Bloque creado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al registrar el bloque: ' . $e->getMessage());
+            Log::error('Error al registrar el bloque: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrio un error al registrar el bloque.');
         }
     }
@@ -133,11 +133,11 @@ class BlockController extends Controller
             'group.areaGroupType.area',
             'subgroup',
             'box.andamio.section',
-            'documentarySeries'
+            'documentarySeries',
         ]);
-        
+
         return Inertia::render('blocks/show', [
-            'block' => $block
+            'block' => $block,
         ]);
     }
 
@@ -152,7 +152,8 @@ class BlockController extends Controller
 
             return redirect()->back()->with('message', 'Bloque actualizado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al editar el bloque: ' . $e->getMessage());
+            Log::error('Error al editar el bloque: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrio un error al editar el bloque.');
         }
     }
@@ -168,7 +169,8 @@ class BlockController extends Controller
 
             return redirect()->back()->with('message', 'Bloque eliminado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al eliminar el bloque: ' . $e->getMessage());
+            Log::error('Error al eliminar el bloque: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrio un error al eliminar el bloque.');
         }
     }
@@ -178,15 +180,19 @@ class BlockController extends Controller
      */
     public function file(Block $block)
     {
-        if (!$block->root) {
+        if (! $block->root) {
             abort(404, 'El bloque no tiene un archivo adjunto.');
         }
 
-        if (!Storage::disk('public')->exists($block->root)) {
-            abort(404, 'El archivo no existe en el almacenamiento.');
+        if (Storage::disk('local')->exists($block->root)) {
+            return Storage::disk('local')->response($block->root);
         }
 
-        return Storage::disk('public')->response($block->root);
+        if (Storage::disk('public')->exists($block->root)) {
+            return Storage::disk('public')->response($block->root);
+        }
+
+        abort(404, 'El archivo no existe en el almacenamiento.');
     }
 
     /**
@@ -200,7 +206,8 @@ class BlockController extends Controller
 
             return redirect()->back()->with('message', 'Archivo del bloque actualizado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al subir archivo del bloque: ' . $e->getMessage());
+            Log::error('Error al subir archivo del bloque: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrio un error al subir el archivo del bloque.');
         }
     }

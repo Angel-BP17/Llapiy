@@ -47,8 +47,8 @@ class CampoService
         $enumValues = null;
         if ($isEnumType) {
             $enumValues = collect(preg_split('/[\r\n,]+/', (string) ($data['enum_values'] ?? '')))
-                ->map(fn($value) => trim((string) $value))
-                ->filter(fn($value) => $value !== '')
+                ->map(fn ($value) => trim((string) $value))
+                ->filter(fn ($value) => $value !== '')
                 ->unique()
                 ->values()
                 ->all();
@@ -61,7 +61,7 @@ class CampoService
             'name' => $data['name'],
             'data_type' => $dataType,
             'is_nullable' => (bool) ($data['is_nullable'] ?? $campo?->is_nullable ?? true),
-            'length' => !empty($data['length']) ? (int) $data['length'] : null,
+            'length' => ! empty($data['length']) ? (int) $data['length'] : null,
             'allow_negative' => $isNumericType ? (bool) ($data['allow_negative'] ?? false) : false,
             'allow_zero' => $isNumericType ? (bool) ($data['allow_zero'] ?? true) : true,
             'enum_values' => $isEnumType ? $enumValues : null,

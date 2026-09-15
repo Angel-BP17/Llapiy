@@ -12,9 +12,7 @@ use Inertia\Response;
 
 class ConfigurationController extends Controller
 {
-    public function __construct(protected BackupService $service)
-    {
-    }
+    public function __construct(protected BackupService $service) {}
 
     /**
      * Display the configuration page.
@@ -31,9 +29,10 @@ class ConfigurationController extends Controller
     {
         try {
             $path = $this->service->createBackup();
+
             return response()->download($path)->deleteFileAfterSend(true);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Error al exportar backup: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al exportar backup: '.$e->getMessage());
         }
     }
 
@@ -49,14 +48,14 @@ class ConfigurationController extends Controller
         try {
             $file = $request->file('backup_file');
             $path = $file->storeAs('temp', 'import_backup.zip');
-            
+
             $this->service->restoreBackup(storage_path("app/{$path}"));
-            
+
             Storage::delete($path);
 
             return redirect()->back()->with('message', 'Sistema restaurado exitosamente.');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Error al importar backup: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al importar backup: '.$e->getMessage());
         }
     }
 

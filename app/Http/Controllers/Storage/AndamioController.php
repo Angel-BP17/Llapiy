@@ -14,9 +14,7 @@ use Inertia\Response;
 
 class AndamioController extends Controller
 {
-    public function __construct(protected AndamioService $service)
-    {
-    }
+    public function __construct(protected AndamioService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -32,7 +30,7 @@ class AndamioController extends Controller
                 ->select(['id', 'n_bloque', 'asunto', 'folios', 'periodo', 'box_id'])
                 ->where(function ($q) use ($search) {
                     $q->where('n_bloque', 'like', "%{$search}%")
-                      ->orWhere('asunto', 'like', "%{$search}%");
+                        ->orWhere('asunto', 'like', "%{$search}%");
                 })
                 ->with(['box.andamio.section'])
                 ->whereNotNull('box_id')
@@ -49,7 +47,7 @@ class AndamioController extends Controller
                             'section' => $block->box?->andamio?->section?->only(['id', 'n_section', 'descripcion']),
                             'andamio' => $block->box?->andamio?->only(['id', 'n_andamio', 'descripcion']),
                             'box' => $block->box?->only(['id', 'n_box', 'descripcion']),
-                        ]
+                        ],
                     ];
                 });
         }
@@ -76,7 +74,7 @@ class AndamioController extends Controller
     public function store(Request $request, Section $section): RedirectResponse
     {
         $validated = $request->validate([
-            'n_andamio' => 'required|integer|unique:andamios,n_andamio,NULL,id,section_id,' . $section->id,      
+            'n_andamio' => 'required|integer|unique:andamios,n_andamio,NULL,id,section_id,'.$section->id,
             'descripcion' => 'required|string|max:255',
         ]);
 
@@ -91,7 +89,7 @@ class AndamioController extends Controller
     public function update(Request $request, Section $section, Andamio $andamio): RedirectResponse
     {
         $validated = $request->validate([
-            'n_andamio' => 'required|integer|unique:andamios,n_andamio,' . $andamio->id . ',id,section_id,' . $section->id,
+            'n_andamio' => 'required|integer|unique:andamios,n_andamio,'.$andamio->id.',id,section_id,'.$section->id,
             'descripcion' => 'required|string|max:255',
         ]);
 

@@ -3,17 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Models\Area;
-use App\Models\Group;
-use App\Models\GroupType;
-use App\Models\AreaGroupType;
-use App\Models\Document;
-use App\Models\DocumentType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class ModularControllersTest extends TestCase
 {
@@ -24,9 +18,9 @@ class ModularControllersTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
-        
+
         // Crear permisos necesarios
         Permission::firstOrCreate(['name' => 'users.view', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'documents.view', 'guard_name' => 'web']);

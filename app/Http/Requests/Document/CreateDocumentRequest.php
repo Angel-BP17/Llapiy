@@ -2,8 +2,6 @@
 
 namespace App\Http\Requests\Document;
 
-use App\Models\CampoType;
-use App\Models\DocumentType;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -43,10 +41,10 @@ class CreateDocumentRequest extends FormRequest
                 'max:255',
                 Rule::unique('documents')->where(function ($query) use ($periodo) {
                     return $query->where('periodo', $periodo);
-                })
+                }),
             ],
             'asunto' => 'required|string|max:1000',
-            'root' => 'nullable|file|mimes:pdf|max:' . (15 * 1024),
+            'root' => 'nullable|file|mimes:pdf|max:'.(15 * 1024),
             'folios' => 'required|string|max:50',
             'document_type_id' => 'required|exists:document_types,id',
             'fecha' => 'required|date',
@@ -61,4 +59,3 @@ class CreateDocumentRequest extends FormRequest
         return (int) $this->input('document_type_id');
     }
 }
-

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
 use App\Models\ActivityLog;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class ActivityLogComprehensiveTest extends TestCase
 {
@@ -19,7 +19,7 @@ class ActivityLogComprehensiveTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'activity-logs.view', 'guard_name' => 'web']);
         $adminRole->givePermissionTo('activity-logs.view');
@@ -51,7 +51,7 @@ class ActivityLogComprehensiveTest extends TestCase
      */
     public function test_activity_log_index_validates_dates()
     {
-        $response = $this->actingAs($this->adminUser)->get('/actividades?date=fecha-invalida');       
+        $response = $this->actingAs($this->adminUser)->get('/actividades?date=fecha-invalida');
         $response->assertSessionHasErrors(['date']);
     }
 
@@ -89,7 +89,7 @@ class ActivityLogComprehensiveTest extends TestCase
     {
         ActivityLog::factory()->create(['action' => 'Acción especial @#$%']);
 
-        $response = $this->actingAs($this->adminUser)->get('/actividades?search=' . urlencode('@#$%'));
+        $response = $this->actingAs($this->adminUser)->get('/actividades?search='.urlencode('@#$%'));
 
         $response->assertStatus(200);
     }

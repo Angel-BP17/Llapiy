@@ -15,6 +15,7 @@ class GroupDocumentType extends Model
     {
         return $this->belongsTo(Group::class, 'group_id');
     }
+
     public function documentType()
     {
         return $this->belongsTo(DocumentType::class, 'document_type_id');

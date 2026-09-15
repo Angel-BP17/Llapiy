@@ -4,10 +4,9 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Support\Facades\Hash;
-use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class LoginTest extends TestCase
 {
@@ -33,7 +32,7 @@ class LoginTest extends TestCase
     public function users_can_authenticate_using_the_login_screen()
     {
         $this->withoutVite();
-        
+
         $password = 'password123';
         $user = User::factory()->create([
             'password' => Hash::make($password),

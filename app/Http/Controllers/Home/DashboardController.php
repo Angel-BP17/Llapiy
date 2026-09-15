@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Home;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Home\IndexHomeRequest;
-use App\Services\Home\HomeService;
 use App\Models\Document;
+use App\Services\Home\HomeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -13,9 +13,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __construct(protected HomeService $service)
-    {
-    }
+    public function __construct(protected HomeService $service) {}
 
     /**
      * Display the dashboard.
@@ -54,14 +52,14 @@ class DashboardController extends Controller
 
         return response()->json([
             'docs_by_area' => $docsByArea,
-            'total_global' => Document::count()
+            'total_global' => Document::count(),
         ]);
     }
 
     public function notifications(): JsonResponse
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([]);
         }
 

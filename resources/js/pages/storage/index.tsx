@@ -3,7 +3,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout';
 import { Modal } from '@/components/Modal';
 import { router, usePage, Link } from '@inertiajs/react';
 import { 
-  Boxes, Eye, FileArchive, Layers, LayoutGrid, Pencil, Trash2, ChevronLeft, ChevronRight, Folder, Plus, AlertCircle, Printer, CheckCircle2 
+  Boxes, Eye, FileArchive, Layers, LayoutGrid, Pencil, Trash2, ChevronLeft, ChevronRight, Folder, Plus, AlertCircle, AlertTriangle, Printer, CheckCircle2, Loader2, FileDown 
 } from 'lucide-react';
 import sectionsRoutes from '@/routes/sections';
 import andamiosRoutes from '@/routes/andamios';
@@ -42,6 +42,7 @@ export default function Index({
   const { auth } = usePage().props as any;
   const [search, setSearch] = useState(filters?.search || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
   const [error, setError] = useState("");
 
   const [sectionForm, setSectionForm] = useState({ n_section: "", descripcion: "" });
@@ -51,10 +52,33 @@ export default function Index({
   const [fileModalOpen, setFileModalOpen] = useState(false);
   const [selectedArchivo, setSelectedArchivo] = useState<any>(null);
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: number; title: string; type: 'item' | 'archivo' } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfTitle, setPdfTitle] = useState("");
+
   const can = (p: string) => auth.permissions?.includes(p) || auth.roles?.some((r: any) => (typeof r === 'string' ? r : r?.name || '').toUpperCase() === 'ADMINISTRADOR');
 
   const handleSearch = () => {
-    router.get(window.location.pathname, { search }, { preserveState: true });
+    setIsFiltering(true);
+    router.get(window.location.pathname, { search }, {
+      preserveState: true,
+      preserveScroll: true,
+      onFinish: () => setIsFiltering(false),
+    });
+  };
+
+  const handleClearSearch = () => {
+    setSearch("");
+    setIsFiltering(true);
+    router.get(window.location.pathname, {}, {
+      preserveState: true,
+      preserveScroll: true,
+      onFinish: () => setIsFiltering(false),
+    });
   };
 
   const handleQuickCreate = (e: FormEvent) => {
@@ -68,6 +92,7 @@ export default function Index({
     else if (level === 'boxes') { url = boxesRoutes.store.url({ section: activeSection.id, andamio: activeAndamio.id }); data = boxForm; }
 
     router.post(url, data, {
+      preserveScroll: true,
       onSuccess: () => {
         setSectionForm({ n_section: "", descripcion: "" });
         setAndamioForm({ n_andamio: "", descripcion: "" });
@@ -77,24 +102,37 @@ export default function Index({
     });
   };
 
-  const handleDelete = (id: number) => {
-    if (!confirm('¿Seguro de eliminar este elemento?')) return;
-    let url = "";
-    if (level === 'sections') url = sectionsRoutes.destroy.url({ section: id });
-    else if (level === 'andamios') url = andamiosRoutes.destroy.url({ section: activeSection.id, andamio: id });
-    else if (level === 'boxes') url = boxesRoutes.delete.url({ section: activeSection.id, andamio: activeAndamio.id, box: id });
-    
-    router.delete(url);
+  const openDeleteModal = (id: number, title: string, type: 'item' | 'archivo' = 'item') => {
+    setItemToDelete({ id, title, type });
+    setDeleteModalOpen(true);
   };
 
-  const removeArchivo = (archivoId: number) => {
-    if (confirm('¿Seguro de retirar este archivo del almacén?')) {
+  const handleConfirmDelete = () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+
+    if (itemToDelete.type === 'archivo') {
       router.post(archivosRoutes.move.url({ 
         section: activeSection.id, 
         andamio: activeAndamio.id, 
         box: activeBox.id, 
-        block: archivoId 
-      }));
+        block: itemToDelete.id 
+      }), {}, {
+        preserveScroll: true,
+        onSuccess: () => setDeleteModalOpen(false),
+        onFinish: () => setIsDeleting(false),
+      });
+    } else {
+      let url = "";
+      if (level === 'sections') url = sectionsRoutes.destroy.url({ section: itemToDelete.id });
+      else if (level === 'andamios') url = andamiosRoutes.destroy.url({ section: activeSection.id, andamio: itemToDelete.id });
+      else if (level === 'boxes') url = boxesRoutes.delete.url({ section: activeSection.id, andamio: activeAndamio.id, box: itemToDelete.id });
+
+      router.delete(url, {
+        preserveScroll: true,
+        onSuccess: () => setDeleteModalOpen(false),
+        onFinish: () => setIsDeleting(false),
+      });
     }
   };
 
@@ -360,25 +398,22 @@ export default function Index({
                         </div>
                       </div>
                     </div>
-
-                    <div className="mt-5 flex flex-wrap gap-2 pt-3 border-t border-border/40">
+                               <div className="mt-5 flex flex-wrap gap-2 pt-3 border-t border-border/40">
                       <Link 
                         href={level === 'sections' ? andamiosRoutes.index.url({ section: item.id }) : (level === 'andamios' ? boxesRoutes.index.url({ section: activeSection.id, andamio: item.id }) : archivosRoutes.index.url({ section: activeSection.id, andamio: activeAndamio.id, box: item.id }))}
                         className="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 transition"
                       >
                         <Eye className="h-3.5 w-3.5" /> Ver contenido
                       </Link>
-                      <button className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 transition">
-                        <Pencil className="h-3.5 w-3.5" /> Editar
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(item.id)}
-                        disabled={childCount > 0}
-                        title={childCount > 0 ? "No se puede eliminar porque tiene elementos asociados" : ""}
-                        className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700 transition"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                      </button>
+                      {can('sections.delete') && (
+                        <button 
+                          onClick={() => openDeleteModal(item.id, `Código ${item.n_section || item.n_andamio || item.n_box}`, 'item')} 
+                          className="p-1.5 rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-600 transition"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </article>
                 );
@@ -386,27 +421,35 @@ export default function Index({
             </div>
           )
         ) : (
+          /* LEVEL === ARCHIVOS TABLE */
           <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/60">
                   <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="px-4 py-3">ID</th>
-                    <th className="px-4 py-3">Asunto / Contenido</th>
-                    <th className="px-4 py-3">Folios</th>
+                    <th className="px-4 py-3">#</th>
+                    <th className="px-4 py-3">Bloque</th>
+                    <th className="px-4 py-3">Serie / Folios</th>
                     <th className="px-4 py-3 text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {archivos.map((a: any) => (
-                    <tr key={a.id} className="border-t border-border hover:bg-muted/30">
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{a.id}</td>
-                      <td className="px-4 py-3 font-medium text-foreground">{a.asunto}</td>
-                      <td className="px-4 py-3">{a.folios}</td>
+                  {archivos.map((a, i) => (
+                    <tr key={a.id} className="border-t border-border transition hover:bg-muted/30">
+                      <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
+                      <td className="px-4 py-3">
+                        <p className="font-bold text-foreground">{a.asunto}</p>
+                        <p className="text-[10px] text-muted-foreground">Nº Bloque: <span className="font-mono font-bold text-foreground">{a.n_bloque}</span></p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-xs font-medium text-foreground">{a.documentary_series?.codigo || 'Sin Serie'}</p>
+                        <p className="text-[10px] text-muted-foreground">{a.folios || 0} folios</p>
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">
                           {a.root && (
-                            <button 
+                            <button
+                              type="button"
                               onClick={() => {
                                 setSelectedArchivo(a);
                                 setFileModalOpen(true);
@@ -418,7 +461,7 @@ export default function Index({
                             </button>
                           )}
                           <button 
-                            onClick={() => removeArchivo(a.id)}
+                            onClick={() => openDeleteModal(a.id, `Bloque ${a.n_bloque}`, 'archivo')}
                             className="inline-flex items-center gap-1.5 rounded-md bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
                           >
                             <Trash2 className="h-3.5 w-3.5" /> Retirar
@@ -427,26 +470,89 @@ export default function Index({
                       </td>
                     </tr>
                   ))}
-                  {archivos.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="px-4 py-16 text-center">
-                        <div className="flex flex-col items-center justify-center max-w-md mx-auto">
-                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 mb-4 animate-bounce">
-                            <FileArchive className="h-8 w-8" />
-                          </div>
-                          <h3 className="text-lg font-semibold text-foreground">No hay archivos en la caja</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            Esta caja de almacenamiento no tiene archivos físicos registrados en este momento.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
           </div>
         )}
+
+        {/* MODAL CONFIRMAR ELIMINACIÓN */}
+        <Modal 
+          open={deleteModalOpen} 
+          title="Confirmar Eliminación" 
+          onClose={() => { if (!isDeleting) setDeleteModalOpen(false); }} 
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-4 text-center py-2">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400">
+              <AlertTriangle className="h-7 w-7" />
+            </div>
+            <div>
+              <h4 className="text-base font-semibold text-foreground">
+                ¿Eliminar / Retirar {itemToDelete?.title}?
+              </h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {itemToDelete?.type === 'archivo'
+                  ? "Esta acción retirará la asignación física del archivo de esta caja de almacenamiento."
+                  : "Esta acción eliminará el elemento seleccionado de la estructura de almacén."}
+              </p>
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={isDeleting}
+                className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50 transition"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Procesando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" /> Confirmar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* MODAL PREVISUALIZADOR DE REPORTE PDF IN-APP */}
+        <Modal
+          open={pdfModalOpen}
+          title={pdfTitle || "Previsualizador de Reporte PDF"}
+          onClose={() => setPdfModalOpen(false)}
+          maxWidth="max-w-5xl"
+        >
+          <div className="space-y-3">
+            <div className="flex justify-end gap-2">
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition"
+              >
+                <FileDown className="h-3.5 w-3.5" /> Abrir en pestaña nueva
+              </a>
+            </div>
+            <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-border bg-slate-900 shadow-inner">
+              <iframe
+                src={pdfUrl}
+                className="h-full w-full border-0"
+                title="Reporte PDF Almacén"
+              />
+            </div>
+          </div>
+        </Modal>
 
         {/* MODAL VISOR DE PDF CON DETALLES */}
         <Modal 

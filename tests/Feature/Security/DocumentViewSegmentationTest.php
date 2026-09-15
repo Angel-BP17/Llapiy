@@ -2,16 +2,15 @@
 
 namespace Tests\Feature\Security;
 
-use App\Models\User;
-use App\Models\Document;
-use App\Models\Group;
-use App\Models\Subgroup;
 use App\Models\Area;
 use App\Models\AreaGroupType;
+use App\Models\Document;
+use App\Models\Group;
 use App\Models\GroupType;
+use App\Models\Subgroup;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class DocumentViewSegmentationTest extends TestCase
@@ -19,13 +18,15 @@ class DocumentViewSegmentationTest extends TestCase
     use RefreshDatabase;
 
     protected $area;
+
     protected $group;
+
     protected $subgroup;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->area = Area::factory()->create();
         $gt = GroupType::factory()->create();
         $agt = AreaGroupType::create(['area_id' => $this->area->id, 'group_type_id' => $gt->id]);
@@ -33,7 +34,7 @@ class DocumentViewSegmentationTest extends TestCase
         $this->subgroup = Subgroup::create([
             'group_id' => $this->group->id,
             'descripcion' => 'Subgrupo Test',
-            'abreviacion' => 'ST'
+            'abreviacion' => 'ST',
         ]);
 
         // Crear los permisos nuevos
@@ -81,15 +82,15 @@ class DocumentViewSegmentationTest extends TestCase
         $user->givePermissionTo('documents.view.group');
 
         Document::factory()->create([
-            'group_id' => $this->group->id, 
-            'subgroup_id' => $this->subgroup->id, 
-            'asunto' => 'Del Subgrupo'
+            'group_id' => $this->group->id,
+            'subgroup_id' => $this->subgroup->id,
+            'asunto' => 'Del Subgrupo',
         ]);
-        
+
         Document::factory()->create([
-            'group_id' => $this->group->id, 
-            'subgroup_id' => null, 
-            'asunto' => 'Del Grupo General'
+            'group_id' => $this->group->id,
+            'subgroup_id' => null,
+            'asunto' => 'Del Grupo General',
         ]);
 
         $response = $this->actingAs($user)->getJson('/api/documents');

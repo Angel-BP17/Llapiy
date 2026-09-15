@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\Home\DashboardController::stats
- * @see app/Http/Controllers/Home/DashboardController.php:45
+ * @see app/Http/Controllers/Home/DashboardController.php:43
  * @route '/dashboard/stats'
  */
 export const stats = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ stats.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::stats
- * @see app/Http/Controllers/Home/DashboardController.php:45
+ * @see app/Http/Controllers/Home/DashboardController.php:43
  * @route '/dashboard/stats'
  */
 stats.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ stats.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::stats
- * @see app/Http/Controllers/Home/DashboardController.php:45
+ * @see app/Http/Controllers/Home/DashboardController.php:43
  * @route '/dashboard/stats'
  */
 stats.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ stats.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Home\DashboardController::stats
- * @see app/Http/Controllers/Home/DashboardController.php:45
+ * @see app/Http/Controllers/Home/DashboardController.php:43
  * @route '/dashboard/stats'
  */
 stats.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

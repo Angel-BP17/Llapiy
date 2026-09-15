@@ -29,7 +29,7 @@ class ActivityLogService
         $modules = ActivityLog::select('model')
             ->distinct()
             ->pluck('model')
-            ->map(fn($model) => str_replace('App\\Models\\', '', $model))
+            ->map(fn ($model) => str_replace('App\\Models\\', '', $model))
             ->unique()
             ->values();
 
@@ -63,7 +63,7 @@ class ActivityLogService
         }
 
         if ($request->filled('module')) {
-            $query->where('model', 'like', '%' . $request->module . '%');
+            $query->where('model', 'like', '%'.$request->module.'%');
         }
     }
 
@@ -73,7 +73,7 @@ class ActivityLogService
             return $jsonData;
         }
 
-        if (!$jsonData || !is_string($jsonData)) {
+        if (! $jsonData || ! is_string($jsonData)) {
             return '-';
         }
 

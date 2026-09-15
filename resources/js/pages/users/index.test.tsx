@@ -34,14 +34,14 @@ vi.mock('@/Layouts/DashboardLayout', () => ({
 describe('Users Index Page', () => {
   const mockProps = {
     users: [
-      { id: 1, name: 'JUAN', last_name: 'PEREZ', user_name: 'JUANP', email: 'juan@test.com', roles: ['OPERADOR'], area_id: 1, group_id: 1, subgroup_id: 1, dni: '12345678', foto_perfil: null, group_type_id: 1 },
+      { id: 1, name: 'JUAN', last_name: 'PEREZ', user_name: 'JUANP', email: 'juan@test.com', roles: ['OPERADOR'], area_id: 1, group_id: 1, subgroup_id: 1, dni: '12345678', foto_perfil: null, group_type_id: 1, created_at: '2024-01-01', updated_at: '2024-01-01' },
     ],
     areas: [],
     roles: [{ id: 1, name: 'ADMINISTRADOR' }, { id: 2, name: 'OPERADOR' }],
     stats: { totalUsers: 1, totalRoles: 2, totalAreas: 0 },
     pagination: { total: 1, current_page: 1, last_page: 1, from: 1 },
     filters: { search: '' },
-  };
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();

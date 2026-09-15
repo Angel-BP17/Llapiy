@@ -12,7 +12,7 @@ use Schema;
 class SystemService
 {
     /**
-     * Limpia completamente la base de datos y el almacenamiento físico, 
+     * Limpia completamente la base de datos y el almacenamiento físico,
      * dejando el sistema en su estado inicial (Seeding).
      */
     public function clearAll(): void
@@ -34,7 +34,7 @@ class SystemService
             $protectedTables = ['migrations', 'failed_jobs', 'password_reset_tokens', 'personal_access_tokens'];
 
             foreach ($tables as $table) {
-                if (!in_array($table, $protectedTables)) {
+                if (! in_array($table, $protectedTables)) {
                     DB::table($table)->truncate();
                 }
             }
@@ -45,7 +45,7 @@ class SystemService
             $paths = [
                 storage_path('app/public/documents'),
                 storage_path('app/public/usuarios/perfiles'),
-                storage_path('app/public/blocks')
+                storage_path('app/public/blocks'),
             ];
 
             foreach ($paths as $path) {
@@ -58,7 +58,7 @@ class SystemService
 
             Artisan::call('db:seed', ['--force' => true]);
         } catch (Exception $e) {
-            Log::error('Fallo crítico en SystemService::clearAll(): ' . $e->getMessage());
+            Log::error('Fallo crítico en SystemService::clearAll(): '.$e->getMessage());
             throw $e;
         }
     }

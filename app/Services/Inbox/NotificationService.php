@@ -26,6 +26,6 @@ class NotificationService
 
     public function isNotificationOwner($notification): bool
     {
-        return (int)$notification->notifiable_id === (int)Auth::id();
+        return (int) $notification->notifiable_id === (int) Auth::id();
     }
 }

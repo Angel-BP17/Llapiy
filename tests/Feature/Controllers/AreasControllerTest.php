@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
 use App\Models\Area;
+use App\Models\AreaGroupType;
+use App\Models\Document;
 use App\Models\Group;
 use App\Models\GroupType;
-use App\Models\AreaGroupType;
 use App\Models\Subgroup;
-use App\Models\Document;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;

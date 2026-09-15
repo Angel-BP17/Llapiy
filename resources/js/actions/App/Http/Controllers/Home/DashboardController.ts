@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Home\DashboardController::index
- * @see app/Http/Controllers/Home/DashboardController.php:23
+ * @see app/Http/Controllers/Home/DashboardController.php:21
  * @route '/'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::index
- * @see app/Http/Controllers/Home/DashboardController.php:23
+ * @see app/Http/Controllers/Home/DashboardController.php:21
  * @route '/'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::index
- * @see app/Http/Controllers/Home/DashboardController.php:23
+ * @see app/Http/Controllers/Home/DashboardController.php:21
  * @route '/'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Home\DashboardController::index
- * @see app/Http/Controllers/Home/DashboardController.php:23
+ * @see app/Http/Controllers/Home/DashboardController.php:21
  * @route '/'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::stats
- * @see app/Http/Controllers/Home/DashboardController.php:45
+ * @see app/Http/Controllers/Home/DashboardController.php:43
  * @route '/dashboard/stats'
  */
 export const stats = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ stats.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::stats
- * @see app/Http/Controllers/Home/DashboardController.php:45
+ * @see app/Http/Controllers/Home/DashboardController.php:43
  * @route '/dashboard/stats'
  */
 stats.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ stats.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::stats
- * @see app/Http/Controllers/Home/DashboardController.php:45
+ * @see app/Http/Controllers/Home/DashboardController.php:43
  * @route '/dashboard/stats'
  */
 stats.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ stats.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Home\DashboardController::stats
- * @see app/Http/Controllers/Home/DashboardController.php:45
+ * @see app/Http/Controllers/Home/DashboardController.php:43
  * @route '/dashboard/stats'
  */
 stats.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -87,7 +87,7 @@ stats.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::notifications
- * @see app/Http/Controllers/Home/DashboardController.php:61
+ * @see app/Http/Controllers/Home/DashboardController.php:59
  * @route '/notifications/api'
  */
 export const notifications = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -102,7 +102,7 @@ notifications.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::notifications
- * @see app/Http/Controllers/Home/DashboardController.php:61
+ * @see app/Http/Controllers/Home/DashboardController.php:59
  * @route '/notifications/api'
  */
 notifications.url = (options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ notifications.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::notifications
- * @see app/Http/Controllers/Home/DashboardController.php:61
+ * @see app/Http/Controllers/Home/DashboardController.php:59
  * @route '/notifications/api'
  */
 notifications.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -120,7 +120,7 @@ notifications.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Home\DashboardController::notifications
- * @see app/Http/Controllers/Home/DashboardController.php:61
+ * @see app/Http/Controllers/Home/DashboardController.php:59
  * @route '/notifications/api'
  */
 notifications.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

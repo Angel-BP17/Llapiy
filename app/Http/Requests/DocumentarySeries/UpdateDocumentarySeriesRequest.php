@@ -17,7 +17,7 @@ class UpdateDocumentarySeriesRequest extends FormRequest
         $seriesId = is_object($series) ? $series->id : $series;
 
         return [
-            'codigo' => 'required|string|max:50|unique:documentary_series,codigo,' . $seriesId,
+            'codigo' => 'required|string|max:50|unique:documentary_series,codigo,'.$seriesId,
             'nombre' => 'required|string|max:255',
         ];
     }

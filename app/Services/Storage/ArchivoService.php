@@ -19,8 +19,8 @@ class ArchivoService
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($inner) use ($search) {
                     $inner->where('n_bloque', 'like', "%{$search}%")
-                          ->orWhere('asunto', 'like', "%{$search}%")
-                          ->orWhere('periodo', 'like', "%{$search}%");
+                        ->orWhere('asunto', 'like', "%{$search}%")
+                        ->orWhere('periodo', 'like', "%{$search}%");
                 });
             })
             ->latest()
@@ -37,7 +37,7 @@ class ArchivoService
     {
         $block = Block::findOrFail($blockId);
 
-        if ((int)$block->box_id !== $boxId) {
+        if ((int) $block->box_id !== $boxId) {
             throw new \RuntimeException('El archivo no pertenece a la caja especificada.');
         }
 

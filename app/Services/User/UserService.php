@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Services\User;
 
 use App\Models\Area;
 use App\Models\User;
+use DB;
 use Hash;
 use Storage;
-use DB;
 
 class UserService
 {
@@ -23,22 +24,22 @@ class UserService
             'subgroup:id,descripcion',
             'roles:id,name',
         ])
-        ->select(['id', 'name', 'last_name', 'dni', 'user_name', 'email', 'foto_perfil', 'group_id', 'subgroup_id', 'created_at'])
-        ->when($data->search, function ($query, $search) {
-            $query->where(function ($q) use ($search) {
-                $driver = DB::connection()->getDriverName();
-                $concatExpression = $driver === 'mysql' 
-                    ? "CONCAT(name, ' ', last_name)" 
-                    : "name || ' ' || last_name";
+            ->select(['id', 'name', 'last_name', 'dni', 'user_name', 'email', 'foto_perfil', 'group_id', 'subgroup_id', 'created_at'])
+            ->when($data->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $driver = DB::connection()->getDriverName();
+                    $concatExpression = $driver === 'mysql'
+                        ? "CONCAT(name, ' ', last_name)"
+                        : "name || ' ' || last_name";
 
-                $q->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('last_name', 'LIKE', "%{$search}%")
-                    ->orWhere('dni', 'LIKE', "%{$search}%")
-                    ->orWhere('user_name', 'LIKE', "%{$search}%")
-                    ->orWhereRaw("{$concatExpression} LIKE ?", ["%{$search}%"]);
-            });
-        })
-        ->paginate(10);
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('last_name', 'LIKE', "%{$search}%")
+                        ->orWhere('dni', 'LIKE', "%{$search}%")
+                        ->orWhere('user_name', 'LIKE', "%{$search}%")
+                        ->orWhereRaw("{$concatExpression} LIKE ?", ["%{$search}%"]);
+                });
+            })
+            ->paginate(10);
 
         $areas = Area::with('areaGroupTypes.groupType', 'areaGroupTypes.groups.subgroups')->get();
 
@@ -53,7 +54,7 @@ class UserService
 
             $data['password'] = Hash::make($data['password']);
             if ($fotoPerfil) {
-                $data['foto_perfil'] = $fotoPerfil->store('usuarios/perfiles', 'public');
+                $data['foto_perfil'] = $fotoPerfil->store('usuarios/perfiles', 'local');
             }
 
             $user = User::create($data);
@@ -77,10 +78,16 @@ class UserService
             }
 
             if ($request->hasFile('foto_perfil')) {
-                if ($user->foto_perfil) {
-                    Storage::disk('public')->delete($user->foto_perfil);
+                $oldPath = $user->getRawOriginal('foto_perfil');
+                if ($oldPath) {
+                    if (Storage::disk('local')->exists($oldPath)) {
+                        Storage::disk('local')->delete($oldPath);
+                    }
+                    if (Storage::disk('public')->exists($oldPath)) {
+                        Storage::disk('public')->delete($oldPath);
+                    }
                 }
-                $data['foto_perfil'] = $request->file('foto_perfil')->store('usuarios/perfiles', 'public');
+                $data['foto_perfil'] = $request->file('foto_perfil')->store('usuarios/perfiles', 'local');
             }
 
             $user->update($data);
@@ -95,8 +102,14 @@ class UserService
 
     public function delete(User $user): void
     {
-        if ($user->foto_perfil) {
-            Storage::disk('public')->delete($user->foto_perfil);
+        $oldPath = $user->getRawOriginal('foto_perfil');
+        if ($oldPath) {
+            if (Storage::disk('local')->exists($oldPath)) {
+                Storage::disk('local')->delete($oldPath);
+            }
+            if (Storage::disk('public')->exists($oldPath)) {
+                Storage::disk('public')->delete($oldPath);
+            }
         }
         $user->delete();
     }

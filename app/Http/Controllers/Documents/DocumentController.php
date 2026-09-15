@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Documents;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Document\IndexDocumentRequest;
 use App\Http\Requests\Document\CreateDocumentRequest;
+use App\Http\Requests\Document\IndexDocumentRequest;
 use App\Http\Requests\Document\UpdateDocumentRequest;
 use App\Http\Requests\Document\UploadDocumentFileRequest;
 use App\Models\Document;
@@ -22,9 +22,7 @@ class DocumentController extends Controller
 {
     use AuthorizesRequests;
 
-    public function __construct(protected DocumentService $service)
-    {
-    }
+    public function __construct(protected DocumentService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -42,20 +40,21 @@ class DocumentController extends Controller
         $unattendedCount = max($totalDocuments - $attendedCount, 0);
 
         $paginatedDocuments = $query->paginate(10);
-        
+
         $paginatedDocuments->getCollection()->transform(function ($doc) {
             $doc->load([
-                'documentType', 
-                'user', 
-                'campos.campoType', 
-                'group.areaGroupType.area', 
-                'subgroup'
+                'documentType',
+                'user',
+                'campos.campoType',
+                'group.areaGroupType.area',
+                'subgroup',
             ]);
             $doc->can = [
                 'update' => auth()->user()->can('update', $doc),
                 'delete' => auth()->user()->can('delete', $doc),
                 'view' => auth()->user()->can('view', $doc),
             ];
+
             return $doc;
         });
 
@@ -89,9 +88,11 @@ class DocumentController extends Controller
     {
         try {
             $this->service->create($request->validated(), $request->file('root'), $request->input('campos', []));
+
             return redirect()->back()->with('message', 'Documento creado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al registrar documento: ' . $e->getMessage());
+            Log::error('Error al registrar documento: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrio un error al registrar el documento.');
         }
     }
@@ -106,7 +107,7 @@ class DocumentController extends Controller
             'documentType',
             'user',
             'group.areaGroupType.area',
-            'campos.campoType'
+            'campos.campoType',
         ]);
 
         return Inertia::render('documents/show', [
@@ -131,7 +132,8 @@ class DocumentController extends Controller
 
             return redirect()->back()->with('message', 'Documento actualizado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al editar el documento: ' . $e->getMessage());
+            Log::error('Error al editar el documento: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrio un error al editar el documento.');
         }
     }
@@ -147,7 +149,8 @@ class DocumentController extends Controller
 
             return redirect()->back()->with('message', 'Documento eliminado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al eliminar el documento: ' . $e->getMessage());
+            Log::error('Error al eliminar el documento: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrio un error al eliminar el documento.');
         }
     }
@@ -158,11 +161,19 @@ class DocumentController extends Controller
     public function file(Document $document)
     {
         $this->authorize('view', $document);
-        if (!$document->root || !Storage::disk('public')->exists($document->root)) {
+        if (! $document->root) {
             return response()->json(['message' => 'El archivo no existe o no ha sido cargado.'], 404);
         }
 
-        return Storage::disk('public')->response($document->root);
+        if (Storage::disk('local')->exists($document->root)) {
+            return Storage::disk('local')->response($document->root);
+        }
+
+        if (Storage::disk('public')->exists($document->root)) {
+            return Storage::disk('public')->response($document->root);
+        }
+
+        return response()->json(['message' => 'El archivo no existe o no ha sido cargado.'], 404);
     }
 
     /**
@@ -172,9 +183,11 @@ class DocumentController extends Controller
     {
         try {
             $this->service->uploadFile($document, $request->file('root'));
+
             return redirect()->back()->with('message', 'Archivo del documento actualizado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al subir archivo del documento: ' . $e->getMessage());
+            Log::error('Error al subir archivo del documento: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Ocurrio un error al subir el archivo del documento.');
         }
     }

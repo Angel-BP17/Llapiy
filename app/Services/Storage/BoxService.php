@@ -19,10 +19,10 @@ class BoxService
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('n_box', 'like', "%{$search}%")
-                      ->orWhereHas('blocks', function ($q) use ($search) {
-                          $q->where('n_bloque', 'like', "%{$search}%")
-                            ->orWhere('asunto', 'like', "%{$search}%");
-                      });
+                        ->orWhereHas('blocks', function ($q) use ($search) {
+                            $q->where('n_bloque', 'like', "%{$search}%")
+                                ->orWhere('asunto', 'like', "%{$search}%");
+                        });
                 });
             })
             ->orderBy('n_box')
@@ -38,6 +38,7 @@ class BoxService
     public function update(Box $box, array $data): Box
     {
         $box->update($data);
+
         return $box->fresh();
     }
 

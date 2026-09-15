@@ -21,7 +21,7 @@ class RoleService
             ->where('guard_name', $guardName)
             ->with('permissions:id,name')
             ->withCount('users')
-            ->when($request->search, fn($query, $search) => $query->where('name', 'like', "%{$search}%"))
+            ->when($request->search, fn ($query, $search) => $query->where('name', 'like', "%{$search}%"))
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
@@ -40,19 +40,20 @@ class RoleService
         $permissions = Permission::where('guard_name', $this->preferredGuardName())
             ->orderBy('name')
             ->pluck('name');
-            
+
         $labels = $this->getPermissionLabels();
 
         return $permissions->groupBy(function ($name) {
             return str_contains($name, '.') ? explode('.', $name)[0] : $name;
         })->map(function ($items, $key) use ($labels) {
-            $main = $items->first(fn($n) => !str_contains($name = $n, '.') || str_ends_with($name, '.view'));
+            $main = $items->first(fn ($n) => ! str_contains($name = $n, '.') || str_ends_with($name, '.view'));
+
             return [
                 'key' => $key,
                 'module' => $main,
-                'permissions' => $items->filter(fn($n) => $n !== $main)
-                    ->sortBy(fn($n) => $labels[$n] ?? $n)
-                    ->values()
+                'permissions' => $items->filter(fn ($n) => $n !== $main)
+                    ->sortBy(fn ($n) => $labels[$n] ?? $n)
+                    ->values(),
             ];
         })->values()->all();
     }
@@ -73,8 +74,10 @@ class RoleService
         ];
 
         return Permission::pluck('name')->mapWithKeys(function ($name) use ($actionLabels, $moduleLabels, $customLabels) {
-            if (isset($customLabels[$name])) return [$name => $customLabels[$name]];
-            
+            if (isset($customLabels[$name])) {
+                return [$name => $customLabels[$name]];
+            }
+
             $parts = explode('.', $name);
             $count = count($parts);
 
@@ -85,13 +88,13 @@ class RoleService
 
                 if (isset($actionLabels[$act])) {
                     $modLabel = $moduleLabels[$mod] ?? ucfirst(str_replace('-', ' ', $mod));
-                    $baseLabel = "{$actionLabels[$act]} " . strtolower($modLabel);
+                    $baseLabel = "{$actionLabels[$act]} ".strtolower($modLabel);
 
                     if ($scope) {
                         $scopeLabels = [
                             'all' => ' (Todos)',
                             'group' => ' (Grupo)',
-                            'own' => ' (Propios)'
+                            'own' => ' (Propios)',
                         ];
                         $baseLabel .= $scopeLabels[$scope] ?? " ({$scope})";
                     }
@@ -99,7 +102,7 @@ class RoleService
                     return [$name => $baseLabel];
                 }
             }
-            
+
             return [$name => $name];
         })->all();
     }
@@ -122,6 +125,7 @@ class RoleService
             $guard = $this->resolveGuardName($permissions);
             $role = Role::create(['name' => $name, 'guard_name' => $guard]);
             $this->syncPermissionsByGuard($role, $permissions, $guard);
+
             return $role;
         });
     }
@@ -132,6 +136,7 @@ class RoleService
             $guard = $this->resolveGuardName($permissions, $role->guard_name);
             $role->update(['name' => $name, 'guard_name' => $guard]);
             $this->syncPermissionsByGuard($role, $permissions, $guard);
+
             return $role->fresh('permissions');
         });
     }
@@ -161,6 +166,7 @@ class RoleService
     protected function resolveGuardName(array $permissions = [], ?string $fallback = null): string
     {
         $guards = Permission::whereIn('name', array_filter($permissions))->pluck('guard_name');
+
         return $guards->isEmpty() ? ($fallback ?: $this->preferredGuardName()) : $guards->countBy()->sortDesc()->keys()->first();
     }
 

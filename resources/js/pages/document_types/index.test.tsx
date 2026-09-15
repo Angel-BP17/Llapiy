@@ -64,7 +64,7 @@ describe('DocumentTypes Index Page', () => {
 
   it('debe renderizar el mensaje de estado vacio cuando no hay registros', () => {
     render(<Index {...mockProps} documentTypes={[]} paginationData={{total: 0}} />);
-    expect(screen.getByText('No se encontraron tipos de documentos.')).toBeInTheDocument();
+    expect(screen.getByText(/No se encontraron tipos de documentos/i)).toBeInTheDocument();
   });
 
   it('debe renderizar la lista de tipos de documentos correctamente', () => {

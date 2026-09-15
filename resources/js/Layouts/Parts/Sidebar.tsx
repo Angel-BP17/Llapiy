@@ -43,7 +43,7 @@ export default function Sidebar({ sections, isOpen, setIsOpen }: SidebarProps) {
     >
       {/* User Profile Section */}
       <div className={`border-b border-border py-5 transition-all duration-300 ${isOpen ? 'px-6' : 'px-0 flex justify-center'}`}>
-        <Link href={profile.url()} className="flex items-center gap-3 transition-opacity hover:opacity-80 group overflow-hidden">
+        <Link href={profile.url()} prefetch className="flex items-center gap-3 transition-opacity hover:opacity-80 group overflow-hidden">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full overflow-hidden border border-border group-hover:ring-4 group-hover:ring-primary/5 transition-all shadow-sm">
             {user?.foto_perfil ? (
               <img src={`/storage/${user.foto_perfil}`} alt="P" className="h-full w-full object-cover" />
@@ -102,14 +102,14 @@ export default function Sidebar({ sections, isOpen, setIsOpen }: SidebarProps) {
                             <ul className="overflow-hidden space-y-1 pl-12">
                               {item.children?.filter(child => can(child.permission)).map((child, childIdx) => (
                                 <li key={childIdx}>
-                                  <Link href={toUrl(child.href)} className={`block rounded-lg py-2 text-xs font-bold transition-colors ${child.active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>{child.label}</Link>
+                                  <Link href={toUrl(child.href)} prefetch className={`block rounded-lg py-2 text-xs font-bold transition-colors ${child.active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>{child.label}</Link>
                                 </li>
                               ))}
                             </ul>
                           </div>
                         </div>
                       ) : (
-                        <Link href={toUrl(item.href || '#')} className={itemClasses}>
+                        <Link href={toUrl(item.href || '#')} prefetch className={itemClasses}>
                           <div className="flex-none w-[54px] flex items-center justify-center">
                             <span className="shrink-0 transition-transform duration-300 group-hover:scale-110" dangerouslySetInnerHTML={{ __html: item.icon }} />
                           </div>

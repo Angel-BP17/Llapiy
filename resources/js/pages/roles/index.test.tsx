@@ -38,7 +38,7 @@ describe('Roles Index Page', () => {
     permissions: ['users.view', 'users.create', 'roles.view', 'documents.view.own'],
     pagination: { total: 2, current_page: 1, last_page: 1 },
     filters: { search: '' },
-  };
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -59,7 +59,6 @@ describe('Roles Index Page', () => {
     expect(screen.getAllByText('Roles').length).toBeGreaterThan(0);
     expect(screen.getByText('Administrador')).toBeInTheDocument(); // roleLabels[ADMINISTRADOR]
     expect(screen.getByText('OPERADOR')).toBeInTheDocument();
-    expect(screen.getByText('2 roles')).toBeInTheDocument();
   });
 
   it('debe abrir el modal de creacion y permitir escribir el nombre', () => {

@@ -1,13 +1,14 @@
 <?php
+
 namespace App\Services\Block;
 
+use App\Models\Andamio;
 use App\Models\Area;
 use App\Models\Block;
-use App\Models\Group;
-use App\Models\Subgroup;
-use App\Models\Section;
-use App\Models\Andamio;
 use App\Models\Box;
+use App\Models\Group;
+use App\Models\Section;
+use App\Models\Subgroup;
 use Auth;
 use Carbon\Carbon;
 use DB;
@@ -34,10 +35,10 @@ class BlockService
         $user = Auth::user();
         $query = Block::query()
             ->select([
-                'id', 'n_bloque', 'asunto', 'folios', 'root', 'rango_inicial', 'rango_final', 
-                'user_id', 'group_id', 'subgroup_id', 'box_id', 'fecha', 'periodo', 'created_at'
+                'id', 'n_bloque', 'asunto', 'folios', 'root', 'rango_inicial', 'rango_final',
+                'user_id', 'group_id', 'subgroup_id', 'box_id', 'fecha', 'periodo', 'documentary_series_id', 'created_at',
             ])
-            ->when(!$user->hasRole('ADMINISTRADOR'), function ($q) use ($user) {
+            ->when(! $user->hasRole('ADMINISTRADOR'), function ($q) use ($user) {
                 if ($user->can('blocks.view.all')) {
                     return $q;
                 }
@@ -46,6 +47,7 @@ class BlockService
                     if ($user->subgroup_id) {
                         return $q->where('subgroup_id', $user->subgroup_id);
                     }
+
                     return $q->where('group_id', $user->group_id);
                 }
 
@@ -64,55 +66,55 @@ class BlockService
                 'box:id,n_box,andamio_id',
                 'box.andamio:id,n_andamio,section_id',
                 'box.andamio.section:id,n_section',
-                'documentarySeries:id,codigo,nombre'
+                'documentarySeries:id,codigo,nombre',
             ])
             ->when(
                 $data->n_bloque,
-                fn($q, $nBloque) => $q->where('n_bloque', 'LIKE', "%{$nBloque}%")
+                fn ($q, $nBloque) => $q->where('n_bloque', 'LIKE', "%{$nBloque}%")
             )
             ->when(
                 $data->asunto,
-                fn($q, $asunto) => $q->where('asunto', 'LIKE', "%{$asunto}%")
+                fn ($q, $asunto) => $q->where('asunto', 'LIKE', "%{$asunto}%")
             )
             ->when(
                 $data->area_id,
-                fn($q, $areaId) => $q->whereHas('group.areaGroupType.area', function ($q) use ($areaId) {
+                fn ($q, $areaId) => $q->whereHas('group.areaGroupType.area', function ($q) use ($areaId) {
                     $q->where('id', $areaId);
                 })
             )
             ->when(
                 $data->group_id,
-                fn($q, $groupId) => $q->where('group_id', $groupId)
+                fn ($q, $groupId) => $q->where('group_id', $groupId)
             )
             ->when(
                 $data->subgroup_id,
-                fn($q, $subgroupId) => $q->where('subgroup_id', $subgroupId)
+                fn ($q, $subgroupId) => $q->where('subgroup_id', $subgroupId)
             )
             ->when(
                 $data->role_id,
-                fn($q, $roleId) => $q->whereHas('user.roles', function ($q) use ($roleId) {
+                fn ($q, $roleId) => $q->whereHas('user.roles', function ($q) use ($roleId) {
                     $q->where('roles.id', $roleId);
                 })
             )
             ->when(
                 $data->year,
-                fn($q, $year) => $q->whereYear('fecha', $year)
+                fn ($q, $year) => $q->whereYear('fecha', $year)
             )
             ->when(
                 $data->month,
-                fn($q, $month) => $q->whereMonth('fecha', $month)
+                fn ($q, $month) => $q->whereMonth('fecha', $month)
             )
             ->when(
                 $data->box_id,
-                fn($q, $boxId) => $q->where('box_id', $boxId)
+                fn ($q, $boxId) => $q->where('box_id', $boxId)
             )
             ->when(
                 $data->andamio_id,
-                fn($q, $andamioId) => $q->whereHas('box', fn($q) => $q->where('andamio_id', $andamioId))
+                fn ($q, $andamioId) => $q->whereHas('box', fn ($q) => $q->where('andamio_id', $andamioId))
             )
             ->when(
                 $data->section_id,
-                fn($q, $sectionId) => $q->whereHas('box.andamio', fn($q) => $q->where('section_id', $sectionId))
+                fn ($q, $sectionId) => $q->whereHas('box.andamio', fn ($q) => $q->where('section_id', $sectionId))
             );
 
         $driver = DB::connection()->getDriverName();
@@ -133,6 +135,7 @@ class BlockService
             'areas' => Area::with('areaGroupTypes.groups.subgroups')->get(),
             'groups' => Group::with('areaGroupType')->get()->map(function ($group) {
                 $group->area_id = $group->areaGroupType?->area_id;
+
                 return $group;
             }),
             'subgroups' => Subgroup::all(),
@@ -151,18 +154,18 @@ class BlockService
             $filePath = $file ? $this->storeBlockFile($file, $data['asunto']) : null;
 
             $block = Block::create([
-                'n_bloque' => $data['n_bloque'],
+                'n_bloque' => $data['n_bloque'] ?? null,
                 'asunto' => $data['asunto'],
                 'folios' => $data['folios'],
                 'root' => $filePath,
                 'rango_inicial' => $data['rango_inicial'],
                 'rango_final' => $data['rango_final'],
                 'user_id' => Auth::id(),
-                'group_id' => Auth::user()->group_id,
-                'subgroup_id' => Auth::user()->subgroup_id,
+                'group_id' => Auth::user()?->group_id,
+                'subgroup_id' => Auth::user()?->subgroup_id,
                 'fecha' => $data['fecha'],
                 'periodo' => Carbon::parse($data['fecha'])->year,
-                'documentary_series_id' => $data['documentary_series_id'] ?? null,
+                'documentary_series_id' => ! empty($data['documentary_series_id']) ? $data['documentary_series_id'] : null,
             ]);
 
             return $block;
@@ -174,7 +177,12 @@ class BlockService
         return DB::transaction(function () use ($data, $file, $hasFile, $block) {
             if ($hasFile) {
                 if ($block->root) {
-                    Storage::disk('public')->delete($block->root);
+                    if (Storage::disk('local')->exists($block->root)) {
+                        Storage::disk('local')->delete($block->root);
+                    }
+                    if (Storage::disk('public')->exists($block->root)) {
+                        Storage::disk('public')->delete($block->root);
+                    }
                 }
                 $data['root'] = $this->storeBlockFile($file, $data['asunto']);
             }
@@ -183,12 +191,16 @@ class BlockService
                 'n_bloque' => $data['n_bloque'] ?? $block->n_bloque,
                 'asunto' => $data['asunto'] ?? $block->asunto,
                 'folios' => $data['folios'] ?? $block->folios,
+                'rango_inicial' => $data['rango_inicial'] ?? $block->rango_inicial,
+                'rango_final' => $data['rango_final'] ?? $block->rango_final,
                 'fecha' => $data['fecha'] ?? $block->fecha,
                 'root' => $data['root'] ?? $block->root,
-                'periodo' => Carbon::parse($data['fecha'])->year ?? $block->periodo,
-                'group_id' => Auth::user()->group_id,
-                'subgroup_id' => Auth::user()->subgroup_id,
-                'documentary_series_id' => $data['documentary_series_id'] ?? null,
+                'periodo' => isset($data['fecha']) ? Carbon::parse($data['fecha'])->year : $block->periodo,
+                'group_id' => Auth::user()?->group_id ?? $block->group_id,
+                'subgroup_id' => Auth::user()?->subgroup_id ?? $block->subgroup_id,
+                'documentary_series_id' => array_key_exists('documentary_series_id', $data)
+                    ? (! empty($data['documentary_series_id']) ? $data['documentary_series_id'] : null)
+                    : $block->documentary_series_id,
             ]);
 
             return $block;
@@ -201,7 +213,12 @@ class BlockService
             $filePath = $block->root;
             $block->delete();
             if ($filePath) {
-                Storage::disk('public')->delete($filePath);
+                if (Storage::disk('local')->exists($filePath)) {
+                    Storage::disk('local')->delete($filePath);
+                }
+                if (Storage::disk('public')->exists($filePath)) {
+                    Storage::disk('public')->delete($filePath);
+                }
             }
         });
     }
@@ -212,7 +229,12 @@ class BlockService
             $block = Block::lockForUpdate()->findOrFail($model->id);
 
             if ($block->root) {
-                Storage::disk('public')->delete($block->root);
+                if (Storage::disk('local')->exists($block->root)) {
+                    Storage::disk('local')->delete($block->root);
+                }
+                if (Storage::disk('public')->exists($block->root)) {
+                    Storage::disk('public')->delete($block->root);
+                }
             }
 
             $block->update([
@@ -228,35 +250,35 @@ class BlockService
         return Block::query()->with(['group.areaGroupType.area', 'subgroup', 'user', 'box.andamio.section', 'documentarySeries'])
             ->when(
                 $data->asunto,
-                fn($q, $asunto) => $q->where('asunto', 'like', "%{$asunto}%")
+                fn ($q, $asunto) => $q->where('asunto', 'like', "%{$asunto}%")
             )
             ->when(
                 $data->area_id,
-                fn($q, $areaId) => $q->whereHas('group.areaGroupType.area', function ($q) use ($areaId) {
+                fn ($q, $areaId) => $q->whereHas('group.areaGroupType.area', function ($q) use ($areaId) {
                     $q->where('id', $areaId);
                 })
             )
             ->when(
                 $data->group_id,
-                fn($q, $groupId) => $q->where('group_id', $groupId)
+                fn ($q, $groupId) => $q->where('group_id', $groupId)
             )
             ->when(
                 $data->subgroup_id,
-                fn($q, $subgroupId) => $q->where('subgroup_id', $subgroupId)
+                fn ($q, $subgroupId) => $q->where('subgroup_id', $subgroupId)
             )
             ->when(
                 $data->role_id,
-                fn($q, $roleId) => $q->whereHas('user.roles', function ($q) use ($roleId) {
+                fn ($q, $roleId) => $q->whereHas('user.roles', function ($q) use ($roleId) {
                     $q->where('roles.id', $roleId);
                 })
             )
             ->when(
                 $data->year,
-                fn($q, $year) => $q->whereYear('fecha', $year)
+                fn ($q, $year) => $q->whereYear('fecha', $year)
             )
             ->when(
                 $data->month,
-                fn($q, $month) => $q->whereMonth('fecha', $month)
+                fn ($q, $month) => $q->whereMonth('fecha', $month)
             );
     }
 
@@ -264,15 +286,15 @@ class BlockService
     {
         // Usar extension() es más seguro que getClientOriginalExtension()
         $extension = $file->extension() ?: $file->getClientOriginalExtension();
-        
+
         // Añadir milisegundos y un string aleatorio para evitar colisiones en alta concurrencia
         $safeAsunto = Str::limit(Str::slug($asunto), 100, '');
-        $fileName = $safeAsunto . '_' . now()->getTimestampMs() . '_' . Str::random(5) . '.' . $extension;
-        
-        $user = Auth::user();
-        $areaName = $user?->group?->areaGroupType?->area?->descripcion ?? "Sin_area";
-        $folderPath = "blocks/" . Str::slug($areaName);
+        $fileName = $safeAsunto.'_'.now()->getTimestampMs().'_'.Str::random(5).'.'.$extension;
 
-        return $file->storeAs($folderPath, $fileName, 'public');
+        $user = Auth::user();
+        $areaName = $user?->group?->areaGroupType?->area?->descripcion ?? 'Sin_area';
+        $folderPath = 'blocks/'.Str::slug($areaName);
+
+        return $file->storeAs($folderPath, $fileName, 'local');
     }
 }

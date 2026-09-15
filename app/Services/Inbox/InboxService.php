@@ -19,6 +19,7 @@ class InboxService
             'user.group:id,area_group_type_id,descripcion',
             'user.group.areaGroupType:id,area_id',
             'user.group.areaGroupType.area:id,descripcion',
+            'documentarySeries:id,codigo,nombre',
         ]);
 
         if ($request->has('search') && ! empty($request->search)) {
@@ -90,6 +91,9 @@ class InboxService
         $block = Block::findOrFail($id);
 
         if ($block->root) {
+            if (Storage::disk('local')->exists($block->root)) {
+                Storage::disk('local')->delete($block->root);
+            }
             if (Storage::disk('public')->exists($block->root)) {
                 Storage::disk('public')->delete($block->root);
             }

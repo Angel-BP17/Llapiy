@@ -43,7 +43,7 @@ describe('Documents Index Page', () => {
     filters: { asunto: '', area_id: '' },
     periods: ['2024-01'],
     stats: { total: 1, registered: 1, archived: 0 },
-  };
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -67,18 +67,19 @@ describe('Documents Index Page', () => {
 
   it('debe filtrar por asunto', () => {
     render(<Index {...mockProps} />);
-    const input = screen.getByPlaceholderText('Asunto');
+    const input = screen.getByPlaceholderText(/Buscar por asunto/i);
     fireEvent.change(input, { target: { value: 'Contrato' } });
-    fireEvent.click(screen.getByText('Aplicar filtros'));
+    fireEvent.click(screen.getByText('Filtrar'));
     
     expect(router.get).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ asunto: 'Contrato' }), expect.anything());
   });
 
   it('debe mostrar el detalle del documento al hacer clic en Ver', () => {
     render(<Index {...mockProps} />);
-    fireEvent.click(screen.getByText('Ver'));
+    const viewButton = screen.getByTitle('Ver detalles');
+    fireEvent.click(viewButton);
     
-    expect(screen.getByText('Detalle del documento')).toBeInTheDocument();
+    expect(screen.getByText(/Detalles del Documento/i)).toBeInTheDocument();
     expect(screen.getAllByText('D1').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Doc 1').length).toBeGreaterThan(0);
     // Verificamos que el area se resuelva correctamente

@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
-use App\Models\GroupType;
 use App\Models\Area;
 use App\Models\AreaGroupType;
 use App\Models\Group;
+use App\Models\GroupType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -56,10 +56,10 @@ class GroupTypesControllerTest extends TestCase
     {
         $gt = GroupType::factory()->create();
         $area = Area::factory()->create();
-        
+
         $agt = AreaGroupType::create([
             'area_id' => $area->id,
-            'group_type_id' => $gt->id
+            'group_type_id' => $gt->id,
         ]);
 
         // Crear un grupo asociado real

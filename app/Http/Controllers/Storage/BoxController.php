@@ -15,9 +15,7 @@ use Inertia\Response;
 
 class BoxController extends Controller
 {
-    public function __construct(protected BoxService $service)
-    {
-    }
+    public function __construct(protected BoxService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -33,7 +31,7 @@ class BoxController extends Controller
                 ->select(['id', 'n_bloque', 'asunto', 'folios', 'periodo', 'box_id'])
                 ->where(function ($q) use ($search) {
                     $q->where('n_bloque', 'like', "%{$search}%")
-                      ->orWhere('asunto', 'like', "%{$search}%");
+                        ->orWhere('asunto', 'like', "%{$search}%");
                 })
                 ->with(['box.andamio.section'])
                 ->whereNotNull('box_id')
@@ -50,7 +48,7 @@ class BoxController extends Controller
                             'section' => $block->box?->andamio?->section?->only(['id', 'n_section', 'descripcion']),
                             'andamio' => $block->box?->andamio?->only(['id', 'n_andamio', 'descripcion']),
                             'box' => $block->box?->only(['id', 'n_box', 'descripcion']),
-                        ]
+                        ],
                     ];
                 });
         }
@@ -78,7 +76,7 @@ class BoxController extends Controller
     public function store(Request $request, Section $section, Andamio $andamio): RedirectResponse
     {
         $validated = $request->validate([
-            'n_box' => 'required|string|unique:boxes,n_box,NULL,id,andamio_id,' . $andamio->id,
+            'n_box' => 'required|string|unique:boxes,n_box,NULL,id,andamio_id,'.$andamio->id,
         ]);
 
         $this->service->create($andamio, $validated);
@@ -92,7 +90,7 @@ class BoxController extends Controller
     public function update(Request $request, Section $section, Andamio $andamio, Box $box): RedirectResponse
     {
         $validated = $request->validate([
-            'n_box' => 'required|string|unique:boxes,n_box,' . $box->id . ',id,andamio_id,' . $andamio->id,      
+            'n_box' => 'required|string|unique:boxes,n_box,'.$box->id.',id,andamio_id,'.$andamio->id,
         ]);
 
         $this->service->update($box, $validated);
@@ -106,7 +104,7 @@ class BoxController extends Controller
     public function destroy(Section $section, Andamio $andamio, Box $box): RedirectResponse
     {
         if ($box->blocks()->exists()) {
-            return redirect()->back()->with('error', 'No se puede eliminar una caja con paquetes asociados.');   
+            return redirect()->back()->with('error', 'No se puede eliminar una caja con paquetes asociados.');
         }
 
         $this->service->delete($box);

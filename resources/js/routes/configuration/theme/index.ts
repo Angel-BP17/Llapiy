@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::update
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:66
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:65
  * @route '/configuracion/theme'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::update
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:66
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:65
  * @route '/configuracion/theme'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::update
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:66
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:65
  * @route '/configuracion/theme'
  */
 update.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

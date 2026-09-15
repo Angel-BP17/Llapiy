@@ -11,9 +11,7 @@ use Inertia\Response;
 
 class AuthController extends Controller
 {
-    public function __construct(protected LoginService $service)
-    {
-    }
+    public function __construct(protected LoginService $service) {}
 
     /**
      * Show the login form.
@@ -35,6 +33,7 @@ class AuthController extends Controller
 
         if ($this->service->attempt($credentials)) {
             $request->session()->regenerate();
+
             return redirect()->intended('/');
         }
 
@@ -49,6 +48,7 @@ class AuthController extends Controller
     public function logout(Request $request): RedirectResponse
     {
         $this->service->logout($request);
+
         return redirect('/login');
     }
 }

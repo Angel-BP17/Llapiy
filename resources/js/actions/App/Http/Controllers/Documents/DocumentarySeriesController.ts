@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::index
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:25
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:23
  * @route '/series-documentales'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::index
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:25
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:23
  * @route '/series-documentales'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::index
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:25
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:23
  * @route '/series-documentales'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::index
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:25
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:23
  * @route '/series-documentales'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::store
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:50
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:48
  * @route '/series-documentales'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::store
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:50
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:48
  * @route '/series-documentales'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::store
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:50
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:48
  * @route '/series-documentales'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -131,7 +131,7 @@ update.put = (args: { documentary_series: string | number } | [documentary_serie
 
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::destroy
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:86
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:88
  * @route '/series-documentales/{documentary_series}'
  */
 export const destroy = (args: { documentary_series: string | number } | [documentary_series: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -146,7 +146,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::destroy
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:86
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:88
  * @route '/series-documentales/{documentary_series}'
  */
 destroy.url = (args: { documentary_series: string | number } | [documentary_series: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -174,7 +174,7 @@ destroy.url = (args: { documentary_series: string | number } | [documentary_seri
 
 /**
 * @see \App\Http\Controllers\Documents\DocumentarySeriesController::destroy
- * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:86
+ * @see app/Http/Controllers/Documents/DocumentarySeriesController.php:88
  * @route '/series-documentales/{documentary_series}'
  */
 destroy.delete = (args: { documentary_series: string | number } | [documentary_series: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({

@@ -7,9 +7,9 @@ use App\Models\DocumentType;
 
 /**
  * Trait HasDocumentValidation
- * 
- * Este trait proporciona una lógica de validación dinámica para los metadatos (campos) 
- * asociados a un documento. Se utiliza para asegurar que los campos enviados por el 
+ *
+ * Este trait proporciona una lógica de validación dinámica para los metadatos (campos)
+ * asociados a un documento. Se utiliza para asegurar que los campos enviados por el
  * frontend correspondan a las definiciones del Tipo de Documento seleccionado.
  */
 trait HasDocumentValidation
@@ -22,9 +22,9 @@ trait HasDocumentValidation
     {
         $validator->after(function ($validator) {
             $fields = $this->input('campos', []);
-            
+
             // Si no hay campos que validar, terminamos.
-            if (!is_array($fields) || empty($fields)) {
+            if (! is_array($fields) || empty($fields)) {
                 return;
             }
 
@@ -40,7 +40,7 @@ trait HasDocumentValidation
                 ->whereKey($documentTypeId)
                 ->first()?->campoTypes()
                 ->pluck('campo_types.id')
-                ->map(fn($id) => (int) $id)
+                ->map(fn ($id) => (int) $id)
                 ->all() ?? [];
 
             $allowedLookup = array_fill_keys($allowedCampoIds, true);
@@ -50,21 +50,21 @@ trait HasDocumentValidation
             $requiredCampoIds = CampoType::whereIn('id', $allowedCampoIds)
                 ->where('is_nullable', false)
                 ->pluck('id')
-                ->map(fn($id) => (int) $id)
+                ->map(fn ($id) => (int) $id)
                 ->all();
 
             // IDs de los campos que el usuario realmente envió.
             $providedCampoIds = collect($fields)
                 ->pluck('id')
                 ->filter()
-                ->map(fn($id) => (int) $id)
+                ->map(fn ($id) => (int) $id)
                 ->unique()
                 ->values()
                 ->all();
 
             // Comprobamos que todos los campos requeridos estén presentes en el envío.
             foreach ($requiredCampoIds as $requiredCampoId) {
-                if (!in_array($requiredCampoId, $providedCampoIds, true)) {
+                if (! in_array($requiredCampoId, $providedCampoIds, true)) {
                     $requiredCampo = CampoType::find($requiredCampoId);
                     $requiredName = $requiredCampo?->name ?? 'desconocido';
                     $validator->errors()->add('campos', "Falta enviar el campo obligatorio {$requiredName}.");
@@ -76,7 +76,7 @@ trait HasDocumentValidation
             $campoTypeIds = collect($fields)
                 ->pluck('id')
                 ->filter()
-                ->map(fn($id) => (int) $id)
+                ->map(fn ($id) => (int) $id)
                 ->unique()
                 ->values()
                 ->all();
@@ -90,13 +90,14 @@ trait HasDocumentValidation
                 }
 
                 // Seguridad: Validar que el campo enviado pertenece al tipo de documento (evita inyección de campos ajenos).
-                if (!isset($allowedLookup[$campoTypeId])) {
+                if (! isset($allowedLookup[$campoTypeId])) {
                     $validator->errors()->add("campos.$index.id", 'El campo no pertenece al tipo de documento seleccionado.');
+
                     continue;
                 }
 
                 $campoType = $campoTypes->get($campoTypeId);
-                if (!$campoType) {
+                if (! $campoType) {
                     continue;
                 }
 
@@ -104,8 +105,9 @@ trait HasDocumentValidation
                 $isEmpty = $value === null || $value === '';
 
                 // Validar nulidad si el campo es obligatorio.
-                if (!$campoType->is_nullable && $isEmpty) {
+                if (! $campoType->is_nullable && $isEmpty) {
                     $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} es obligatorio.");
+
                     continue;
                 }
 
@@ -130,6 +132,7 @@ trait HasDocumentValidation
         if (in_array($dataType, ['string', 'text', 'char'], true)) {
             if (is_array($value)) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} debe ser texto.");
+
                 return;
             }
 
@@ -138,14 +141,16 @@ trait HasDocumentValidation
             if ($maxLength && mb_strlen($stringValue) > $maxLength) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} no debe exceder {$maxLength} caracteres.");
             }
+
             return;
         }
 
         // Manejo de booleanos (acepta true/false, 1/0, si/no)
         if ($dataType === 'boolean') {
-            if (!$this->isValidBooleanValue($value)) {
+            if (! $this->isValidBooleanValue($value)) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} debe ser booleano.");
             }
+
             return;
         }
 
@@ -153,57 +158,65 @@ trait HasDocumentValidation
         if ($dataType === 'int') {
             if (filter_var($value, FILTER_VALIDATE_INT) === false) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} debe ser un numero entero.");
+
                 return;
             }
             $this->validateNumericConstraints($validator, $index, $campoType, (float) $value, (string) $value);
+
             return;
         }
 
         // Manejo de números decimales
         if (in_array($dataType, ['float', 'double'], true)) {
-            if (!is_numeric($value)) {
+            if (! is_numeric($value)) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} debe ser numerico.");
+
                 return;
             }
             $this->validateNumericConstraints($validator, $index, $campoType, (float) $value, (string) $value);
+
             return;
         }
 
         // Manejo de listas desplegables (Enums)
         if ($dataType === 'enum') {
             $options = collect($campoType->enum_values ?? [])
-                ->map(fn($option) => trim((string) $option))
-                ->filter(fn($option) => $option !== '')
+                ->map(fn ($option) => trim((string) $option))
+                ->filter(fn ($option) => $option !== '')
                 ->values()
                 ->all();
 
-            if (empty($options) || !in_array((string) $value, $options, true)) {
+            if (empty($options) || ! in_array((string) $value, $options, true)) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} tiene un valor no permitido.");
             }
+
             return;
         }
 
         // Manejo de Fechas
         if ($dataType === 'date') {
-            if (!$this->isValidDate($value)) {
+            if (! $this->isValidDate($value)) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} debe ser una fecha valida (AAAA-MM-DD).");
             }
+
             return;
         }
 
         // Manejo de Horas
         if ($dataType === 'time') {
-            if (!$this->isValidTime($value)) {
+            if (! $this->isValidTime($value)) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} debe ser una hora valida (HH:MM o HH:MM:SS).");
             }
+
             return;
         }
 
         // Manejo de Fecha y Hora
         if ($dataType === 'date_time') {
-            if (!$this->isValidDateTime($value)) {
+            if (! $this->isValidDateTime($value)) {
                 $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} debe ser una fecha y hora valida.");
             }
+
             return;
         }
     }
@@ -213,11 +226,11 @@ trait HasDocumentValidation
      */
     private function validateNumericConstraints($validator, int $index, CampoType $campoType, float $numericValue, string $rawValue): void
     {
-        if (!$campoType->allow_negative && $numericValue < 0) {
+        if (! $campoType->allow_negative && $numericValue < 0) {
             $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} no permite valores negativos.");
         }
 
-        if (!$campoType->allow_zero && abs($numericValue) < PHP_FLOAT_EPSILON) {
+        if (! $campoType->allow_zero && abs($numericValue) < PHP_FLOAT_EPSILON) {
             $validator->errors()->add("campos.$index.dato", "El campo {$campoType->name} no permite el valor 0.");
         }
 
@@ -255,6 +268,7 @@ trait HasDocumentValidation
             return false;
         }
         $d = \DateTime::createFromFormat('Y-m-d', $value);
+
         return $d && $d->format('Y-m-d') === $value;
     }
 
@@ -268,6 +282,7 @@ trait HasDocumentValidation
             return true;
         }
         $d2 = \DateTime::createFromFormat('H:i', $value);
+
         return $d2 && $d2->format('H:i') === $value;
     }
 
@@ -282,7 +297,7 @@ trait HasDocumentValidation
             'Y-m-d\TH:i:s',
             'Y-m-d\TH:i',
             \DateTimeInterface::ATOM,
-            \DateTimeInterface::ISO8601
+            \DateTimeInterface::ISO8601,
         ];
 
         foreach ($formats as $format) {
@@ -299,7 +314,7 @@ trait HasDocumentValidation
     }
 
     /**
-     * Obliga a la clase que use este trait a implementar la lógica para obtener el ID 
+     * Obliga a la clase que use este trait a implementar la lógica para obtener el ID
      * del tipo de documento, necesario para la validación cruzada.
      */
     abstract protected function getDocumentTypeId(): int;

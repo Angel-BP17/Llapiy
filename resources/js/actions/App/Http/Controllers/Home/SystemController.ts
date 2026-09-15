@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Home\SystemController::clearAll
- * @see app/Http/Controllers/Home/SystemController.php:22
+ * @see app/Http/Controllers/Home/SystemController.php:19
  * @route '/admin/clear-all'
  */
 export const clearAll = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -16,7 +16,7 @@ clearAll.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\SystemController::clearAll
- * @see app/Http/Controllers/Home/SystemController.php:22
+ * @see app/Http/Controllers/Home/SystemController.php:19
  * @route '/admin/clear-all'
  */
 clearAll.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ clearAll.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\SystemController::clearAll
- * @see app/Http/Controllers/Home/SystemController.php:22
+ * @see app/Http/Controllers/Home/SystemController.php:19
  * @route '/admin/clear-all'
  */
 clearAll.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({

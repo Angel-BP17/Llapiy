@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import { DocumentType, Area } from '@/types/models';
+import { Loader2 } from 'lucide-react';
 
 export type DocumentForm = {
   asunto: string;
@@ -142,9 +143,15 @@ export function DocumentFormFields({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-xl bg-primary px-10 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-10 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] disabled:opacity-50"
         >
-          {submitLabel}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Guardando...
+            </>
+          ) : (
+            submitLabel
+          )}
         </button>
       </div>
     </div>

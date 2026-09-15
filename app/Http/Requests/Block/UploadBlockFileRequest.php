@@ -14,7 +14,7 @@ class UploadBlockFileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'root' => 'required|file|mimes:pdf|max:' . (50 * 1024),
+            'root' => 'required|file|mimes:pdf|max:'.(50 * 1024),
         ];
     }
 }

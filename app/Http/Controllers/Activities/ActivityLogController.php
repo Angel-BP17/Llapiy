@@ -12,9 +12,7 @@ use Inertia\Response;
 
 class ActivityLogController extends Controller
 {
-    public function __construct(protected ActivityLogService $service)
-    {
-    }
+    public function __construct(protected ActivityLogService $service) {}
 
     /**
      * Display a listing of the activity logs.

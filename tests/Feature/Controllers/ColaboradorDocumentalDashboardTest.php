@@ -2,16 +2,15 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
-use App\Models\Document;
-use App\Models\Block;
-use App\Models\Setting;
 use App\Models\ActivityLog;
-use App\Models\Group;
-use App\Models\Subgroup;
 use App\Models\Area;
-use App\Models\GroupType;
 use App\Models\AreaGroupType;
+use App\Models\Block;
+use App\Models\Document;
+use App\Models\Group;
+use App\Models\GroupType;
+use App\Models\Subgroup;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,8 +19,11 @@ class ColaboradorDocumentalDashboardTest extends TestCase
     use RefreshDatabase;
 
     protected User $colaborador;
+
     protected Group $group1;
+
     protected Subgroup $subgroup1;
+
     protected AreaGroupType $agt;
 
     protected function setUp(): void
@@ -99,7 +101,7 @@ class ColaboradorDocumentalDashboardTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->colaborador)->get('/');
-        
+
         $response->assertStatus(200);
         $stats = $response->viewData('page')['props']['stats'];
 
@@ -117,7 +119,7 @@ class ColaboradorDocumentalDashboardTest extends TestCase
             'group_id' => $this->group1->id,
             'subgroup_id' => $this->subgroup1->id,
         ]);
-        
+
         ActivityLog::create([
             'user_id' => $coworker->id,
             'action' => 'create',
@@ -140,7 +142,7 @@ class ColaboradorDocumentalDashboardTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->colaborador)->get('/');
-        
+
         $response->assertStatus(200);
         $activityStats = $response->viewData('page')['props']['activityStats'];
 

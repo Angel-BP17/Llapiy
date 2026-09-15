@@ -2,18 +2,15 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
+use App\Models\CampoType;
 use App\Models\Document;
 use App\Models\DocumentType;
-use App\Models\Area;
-use App\Models\CampoType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class DocumentsComprehensiveTest extends TestCase
 {
@@ -24,13 +21,13 @@ class DocumentsComprehensiveTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'view-documents', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'documents.create', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'documents.update', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'documents.delete', 'guard_name' => 'web']);
-        
+
         $adminRole->givePermissionTo(Permission::all());
 
         $this->adminUser = User::factory()->create();
@@ -62,7 +59,7 @@ class DocumentsComprehensiveTest extends TestCase
     {
         $response = $this->actingAs($this->adminUser)->post('/documentos', [
             'asunto' => '',
-            'document_type_id' => 999
+            'document_type_id' => 999,
         ]);
 
         $response->assertSessionHasErrors(['asunto', 'document_type_id']);

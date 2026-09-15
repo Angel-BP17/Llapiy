@@ -2,15 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Area;
-use App\Models\GroupType;
 use App\Models\AreaGroupType;
 use App\Models\Group;
+use App\Models\GroupType;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class E2ETestSeeder extends Seeder
 {
@@ -19,7 +19,7 @@ class E2ETestSeeder extends Seeder
         // 1. Asegurar Rol y Permisos
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
         $operatorRole = Role::firstOrCreate(['name' => 'OPERADOR', 'guard_name' => 'web']);
-        
+
         $permissions = [
             'users.view', 'users.create', 'users.update', 'users.delete',
             'areas.view', 'roles.view',
@@ -27,13 +27,13 @@ class E2ETestSeeder extends Seeder
             'document-types.view', 'blocks.view', 'inbox.view', 'sections.view', 'activity-logs.view',
             'sections.create', 'sections.update', 'sections.delete',
             'areas.create', 'areas.update', 'areas.delete',
-            'group-types.view', 'group-types.create', 'group-types.update', 'group-types.delete'
+            'group-types.view', 'group-types.create', 'group-types.update', 'group-types.delete',
         ];
 
         foreach ($permissions as $p) {
             Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
         }
-        
+
         $adminRole->syncPermissions(Permission::all());
 
         // 2. Crear Estructura Base para que no falle la selección de combos
@@ -54,7 +54,7 @@ class E2ETestSeeder extends Seeder
                 'email' => 'admin_e2e@test.com',
                 'password' => Hash::make('password'),
                 'dni' => '00000000',
-                'group_id' => $group->id
+                'group_id' => $group->id,
             ]
         );
 

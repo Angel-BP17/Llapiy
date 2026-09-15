@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
-use App\Models\DocumentType;
 use App\Models\CampoType;
+use App\Models\DocumentType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class DocumentTypesControllersTest extends TestCase
 {
@@ -19,7 +19,7 @@ class DocumentTypesControllersTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
         $this->adminUser = User::factory()->create();
         $this->adminUser->assignRole($adminRole);
@@ -47,7 +47,7 @@ class DocumentTypesControllersTest extends TestCase
             'name' => 'Nuevo Tipo Doc',
             'campos' => json_encode([]),
             'groups' => json_encode([]),
-            'subgroups' => json_encode([])
+            'subgroups' => json_encode([]),
         ];
 
         $response = $this->actingAs($this->adminUser)->post('/tipos-documentos', $data);
@@ -76,7 +76,7 @@ class DocumentTypesControllersTest extends TestCase
     {
         $data = [
             'name' => 'Nuevo Campo',
-            'type' => 'string'
+            'type' => 'string',
         ];
 
         $response = $this->actingAs($this->adminUser)->post('/campos', $data);

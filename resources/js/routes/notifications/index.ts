@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\Home\DashboardController::api
- * @see app/Http/Controllers/Home/DashboardController.php:61
+ * @see app/Http/Controllers/Home/DashboardController.php:59
  * @route '/notifications/api'
  */
 export const api = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ api.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::api
- * @see app/Http/Controllers/Home/DashboardController.php:61
+ * @see app/Http/Controllers/Home/DashboardController.php:59
  * @route '/notifications/api'
  */
 api.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ api.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\DashboardController::api
- * @see app/Http/Controllers/Home/DashboardController.php:61
+ * @see app/Http/Controllers/Home/DashboardController.php:59
  * @route '/notifications/api'
  */
 api.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ api.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Home\DashboardController::api
- * @see app/Http/Controllers/Home/DashboardController.php:61
+ * @see app/Http/Controllers/Home/DashboardController.php:59
  * @route '/notifications/api'
  */
 api.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ api.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Inbox\NotificationController::index
- * @see app/Http/Controllers/Inbox/NotificationController.php:19
+ * @see app/Http/Controllers/Inbox/NotificationController.php:17
  * @route '/notifications'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Inbox\NotificationController::index
- * @see app/Http/Controllers/Inbox/NotificationController.php:19
+ * @see app/Http/Controllers/Inbox/NotificationController.php:17
  * @route '/notifications'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Inbox\NotificationController::index
- * @see app/Http/Controllers/Inbox/NotificationController.php:19
+ * @see app/Http/Controllers/Inbox/NotificationController.php:17
  * @route '/notifications'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Inbox\NotificationController::index
- * @see app/Http/Controllers/Inbox/NotificationController.php:19
+ * @see app/Http/Controllers/Inbox/NotificationController.php:17
  * @route '/notifications'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -87,7 +87,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Inbox\NotificationController::read
- * @see app/Http/Controllers/Inbox/NotificationController.php:29
+ * @see app/Http/Controllers/Inbox/NotificationController.php:27
  * @route '/notifications/{notification}'
  */
 export const read = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -102,7 +102,7 @@ read.definition = {
 
 /**
 * @see \App\Http\Controllers\Inbox\NotificationController::read
- * @see app/Http/Controllers/Inbox/NotificationController.php:29
+ * @see app/Http/Controllers/Inbox/NotificationController.php:27
  * @route '/notifications/{notification}'
  */
 read.url = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -130,7 +130,7 @@ read.url = (args: { notification: string | number } | [notification: string | nu
 
 /**
 * @see \App\Http\Controllers\Inbox\NotificationController::read
- * @see app/Http/Controllers/Inbox/NotificationController.php:29
+ * @see app/Http/Controllers/Inbox/NotificationController.php:27
  * @route '/notifications/{notification}'
  */
 read.get = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -139,7 +139,7 @@ read.get = (args: { notification: string | number } | [notification: string | nu
 })
 /**
 * @see \App\Http\Controllers\Inbox\NotificationController::read
- * @see app/Http/Controllers/Inbox/NotificationController.php:29
+ * @see app/Http/Controllers/Inbox/NotificationController.php:27
  * @route '/notifications/{notification}'
  */
 read.head = (args: { notification: string | number } | [notification: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({

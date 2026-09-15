@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Users\RoleController::index
- * @see app/Http/Controllers/Users/RoleController.php:26
+ * @see app/Http/Controllers/Users/RoleController.php:24
  * @route '/roles'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::index
- * @see app/Http/Controllers/Users/RoleController.php:26
+ * @see app/Http/Controllers/Users/RoleController.php:24
  * @route '/roles'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::index
- * @see app/Http/Controllers/Users/RoleController.php:26
+ * @see app/Http/Controllers/Users/RoleController.php:24
  * @route '/roles'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Users\RoleController::index
- * @see app/Http/Controllers/Users/RoleController.php:26
+ * @see app/Http/Controllers/Users/RoleController.php:24
  * @route '/roles'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::store
- * @see app/Http/Controllers/Users/RoleController.php:53
+ * @see app/Http/Controllers/Users/RoleController.php:51
  * @route '/roles'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::store
- * @see app/Http/Controllers/Users/RoleController.php:53
+ * @see app/Http/Controllers/Users/RoleController.php:51
  * @route '/roles'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::store
- * @see app/Http/Controllers/Users/RoleController.php:53
+ * @see app/Http/Controllers/Users/RoleController.php:51
  * @route '/roles'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -78,10 +78,10 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::update
- * @see app/Http/Controllers/Users/RoleController.php:66
+ * @see app/Http/Controllers/Users/RoleController.php:64
  * @route '/roles/{role}'
  */
-export const update = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -93,10 +93,10 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::update
- * @see app/Http/Controllers/Users/RoleController.php:66
+ * @see app/Http/Controllers/Users/RoleController.php:64
  * @route '/roles/{role}'
  */
-update.url = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+update.url = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { role: args }
     }
@@ -126,20 +126,20 @@ update.url = (args: { role: number | { id: number } } | [role: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::update
- * @see app/Http/Controllers/Users/RoleController.php:66
+ * @see app/Http/Controllers/Users/RoleController.php:64
  * @route '/roles/{role}'
  */
-update.put = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::destroy
- * @see app/Http/Controllers/Users/RoleController.php:80
+ * @see app/Http/Controllers/Users/RoleController.php:78
  * @route '/roles/{role}'
  */
-export const destroy = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -151,10 +151,10 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::destroy
- * @see app/Http/Controllers/Users/RoleController.php:80
+ * @see app/Http/Controllers/Users/RoleController.php:78
  * @route '/roles/{role}'
  */
-destroy.url = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { role: args }
     }
@@ -184,20 +184,20 @@ destroy.url = (args: { role: number | { id: number } } | [role: number | { id: n
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::destroy
- * @see app/Http/Controllers/Users/RoleController.php:80
+ * @see app/Http/Controllers/Users/RoleController.php:78
  * @route '/roles/{role}'
  */
-destroy.delete = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::updatePermissions
- * @see app/Http/Controllers/Users/RoleController.php:90
+ * @see app/Http/Controllers/Users/RoleController.php:88
  * @route '/roles/{role}/permissions'
  */
-export const updatePermissions = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const updatePermissions = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: updatePermissions.url(args, options),
     method: 'put',
 })
@@ -209,10 +209,10 @@ updatePermissions.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::updatePermissions
- * @see app/Http/Controllers/Users/RoleController.php:90
+ * @see app/Http/Controllers/Users/RoleController.php:88
  * @route '/roles/{role}/permissions'
  */
-updatePermissions.url = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+updatePermissions.url = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { role: args }
     }
@@ -242,10 +242,10 @@ updatePermissions.url = (args: { role: number | { id: number } } | [role: number
 
 /**
 * @see \App\Http\Controllers\Users\RoleController::updatePermissions
- * @see app/Http/Controllers/Users/RoleController.php:90
+ * @see app/Http/Controllers/Users/RoleController.php:88
  * @route '/roles/{role}/permissions'
  */
-updatePermissions.put = (args: { role: number | { id: number } } | [role: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+updatePermissions.put = (args: { role: string | number | { id: string | number } } | [role: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: updatePermissions.url(args, options),
     method: 'put',
 })

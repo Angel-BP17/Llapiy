@@ -76,9 +76,9 @@ class ActivityObserver
                 'created_at' => now(),
             ]);
         } catch (\Throwable $e) {
-            Log::error("Fallo al guardar log de auditoría: " . $e->getMessage(), [
+            Log::error('Fallo al guardar log de auditoría: '.$e->getMessage(), [
                 'action' => $action,
-                'model' => get_class($model)
+                'model' => get_class($model),
             ]);
         }
     }

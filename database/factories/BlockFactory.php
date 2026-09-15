@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Block;
 use App\Models\User;
-use App\Models\Group;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class BlockFactory extends Factory

@@ -11,16 +11,17 @@ use ZipArchive;
 class BackupService
 {
     protected $backupPath;
+
     protected $storagePaths = [
         'documents' => 'app/public/documents',
         'perfiles' => 'app/public/usuarios/perfiles',
-        'blocks' => 'app/public/blocks'
+        'blocks' => 'app/public/blocks',
     ];
 
     public function __construct()
     {
         $this->backupPath = storage_path('app/backups');
-        if (!File::exists($this->backupPath)) {
+        if (! File::exists($this->backupPath)) {
             File::makeDirectory($this->backupPath, 0755, true);
         }
     }
@@ -37,9 +38,9 @@ class BackupService
 
             $sqlFile = $this->generateSqlDump();
 
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
             if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-                throw new Exception("No se pudo crear el archivo ZIP.");
+                throw new Exception('No se pudo crear el archivo ZIP.');
             }
 
             // Añadir base de datos
@@ -51,7 +52,7 @@ class BackupService
                 if (File::exists($fullPath)) {
                     $files = File::allFiles($fullPath);
                     foreach ($files as $file) {
-                        $zip->addFile($file->getRealPath(), "storage/{$folder}/" . $file->getRelativePathname());
+                        $zip->addFile($file->getRealPath(), "storage/{$folder}/".$file->getRelativePathname());
                     }
                 }
             }
@@ -61,7 +62,7 @@ class BackupService
 
             return $zipPath;
         } catch (Exception $e) {
-            Log::error('Error al crear backup: ' . $e->getMessage());
+            Log::error('Error al crear backup: '.$e->getMessage());
             throw $e;
         }
     }
@@ -72,9 +73,9 @@ class BackupService
     public function restoreBackup(string $zipPath): void
     {
         try {
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
             if ($zip->open($zipPath) !== true) {
-                throw new Exception("No se pudo abrir el archivo de respaldo.");
+                throw new Exception('No se pudo abrir el archivo de respaldo.');
             }
 
             $tempPath = storage_path('app/temp_restore');
@@ -98,7 +99,7 @@ class BackupService
                 $dest = storage_path($relPath);
 
                 if (File::exists($src)) {
-                    if (!File::exists($dest)) {
+                    if (! File::exists($dest)) {
                         File::makeDirectory($dest, 0755, true);
                     }
                     File::cleanDirectory($dest);
@@ -107,12 +108,12 @@ class BackupService
             }
 
             File::deleteDirectory($tempPath);
-            
+
             // Limpiar caché de la aplicación
             \Artisan::call('cache:clear');
-            
+
         } catch (Exception $e) {
-            Log::error('Error al restaurar backup: ' . $e->getMessage());
+            Log::error('Error al restaurar backup: '.$e->getMessage());
             throw $e;
         }
     }
@@ -134,14 +135,14 @@ class BackupService
 
         foreach ($tables as $table) {
             $tableName = $table->$key;
-            
+
             // Ignorar tablas de sistema si es necesario (opcional)
             // if (in_array($tableName, ['migrations'])) continue;
 
             // Estructura
             $createTable = DB::select("SHOW CREATE TABLE `{$tableName}`")[0]->{'Create Table'};
             fwrite($handle, "DROP TABLE IF EXISTS `{$tableName}`;\n");
-            fwrite($handle, $createTable . ";\n\n");
+            fwrite($handle, $createTable.";\n\n");
 
             // Datos
             $rows = DB::table($tableName)->get();
@@ -150,12 +151,15 @@ class BackupService
                 $columns = array_keys($rowArray);
                 $values = array_values($rowArray);
 
-                $escapedValues = array_map(function($val) {
-                    if (is_null($val)) return 'NULL';
-                    return "'" . addslashes($val) . "'";
+                $escapedValues = array_map(function ($val) {
+                    if (is_null($val)) {
+                        return 'NULL';
+                    }
+
+                    return "'".addslashes($val)."'";
                 }, $values);
 
-                $sql = "INSERT INTO `{$tableName}` (`" . implode("`, `", $columns) . "`) VALUES (" . implode(", ", $escapedValues) . ");\n";
+                $sql = "INSERT INTO `{$tableName}` (`".implode('`, `', $columns).'`) VALUES ('.implode(', ', $escapedValues).");\n";
                 fwrite($handle, $sql);
             }
             fwrite($handle, "\n");

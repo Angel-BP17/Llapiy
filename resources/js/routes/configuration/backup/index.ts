@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::exportMethod
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:30
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:28
  * @route '/configuracion/backup/export'
  */
 export const exportMethod = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ exportMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::exportMethod
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:30
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:28
  * @route '/configuracion/backup/export'
  */
 exportMethod.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ exportMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::exportMethod
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:30
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:28
  * @route '/configuracion/backup/export'
  */
 exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ exportMethod.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::exportMethod
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:30
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:28
  * @route '/configuracion/backup/export'
  */
 exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ exportMethod.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::importMethod
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:43
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:42
  * @route '/configuracion/backup/import'
  */
 export const importMethod = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ importMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::importMethod
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:43
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:42
  * @route '/configuracion/backup/import'
  */
 importMethod.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ importMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Configuration\ConfigurationController::importMethod
- * @see app/Http/Controllers/Configuration/ConfigurationController.php:43
+ * @see app/Http/Controllers/Configuration/ConfigurationController.php:42
  * @route '/configuracion/backup/import'
  */
 importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

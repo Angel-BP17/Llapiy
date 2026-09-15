@@ -15,6 +15,7 @@ class SubgroupDocumentType extends Model
     {
         return $this->belongsTo(Subgroup::class, 'subgroup_id');
     }
+
     public function documentType()
     {
         return $this->belongsTo(DocumentType::class, 'document_type_id');

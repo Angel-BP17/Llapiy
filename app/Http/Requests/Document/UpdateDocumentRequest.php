@@ -2,8 +2,6 @@
 
 namespace App\Http\Requests\Document;
 
-use App\Models\CampoType;
-use App\Models\DocumentType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -34,11 +32,11 @@ class UpdateDocumentRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('documents', 'n_documento')->ignore($documentId)
+                Rule::unique('documents', 'n_documento')->ignore($documentId),
             ],
             'asunto' => 'required|string|max:255',
             'root' => $canUploadFile
-                ? 'nullable|file|mimes:pdf|max:' . (15 * 1024)
+                ? 'nullable|file|mimes:pdf|max:'.(15 * 1024)
                 : 'prohibited',
             'folios' => 'nullable|string|max:255',
             'fecha' => 'required|date',
@@ -53,4 +51,3 @@ class UpdateDocumentRequest extends FormRequest
         return (int) ($this->route('document')?->document_type_id ?? $this->document_type_id ?? 0);
     }
 }
-

@@ -29,12 +29,12 @@ class CreateBlockRequest extends FormRequest
                 'integer',
                 Rule::unique('blocks')->where(function ($query) {
                     return $query->where('periodo', Carbon::parse($this->fecha)->year);
-                })
+                }),
             ],
             'fecha' => 'required|date',
             'asunto' => 'required|string|max:255',
             'folios' => 'required|string|max:255',
-            'root' => 'nullable|file|mimes:pdf|max:' . (50 * 1024),
+            'root' => 'nullable|file|mimes:pdf|max:'.(50 * 1024),
             'rango_inicial' => 'required|integer',
             'rango_final' => 'required|integer',
             'documentary_series_id' => 'nullable|exists:documentary_series,id',

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
 use App\Models\Block;
+use App\Models\User;
 use App\Notifications\NewBlockNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -31,7 +31,7 @@ class NotificationTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonCount(1)
-            ->assertJsonPath('0.data.message', 'Se ha añadido un nuevo archivo: ' . $block->asunto);
+            ->assertJsonPath('0.data.message', 'Se ha añadido un nuevo archivo: '.$block->asunto);
     }
 
     public function test_read_notification_endpoint_requires_authentication(): void

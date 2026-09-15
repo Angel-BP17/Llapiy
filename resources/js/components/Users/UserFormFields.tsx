@@ -1,6 +1,7 @@
 import React, { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { defaultAvatar } from "./UserTable";
 import { Area, Role } from "@/types/models";
+import { Loader2 } from "lucide-react";
 
 export type UserForm = {
   name: string;
@@ -13,8 +14,8 @@ export type UserForm = {
   role_id: string; // Simplificamos para el formulario
   area_id?: string;
   group_type_id?: string;
-  group_id: string;
-  subgroup_id: string;
+  group_id?: string;
+  subgroup_id?: string;
   foto_perfil: string | File | null;
 };
 
@@ -243,9 +244,15 @@ export function UserFormFields({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-primary px-8 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
         >
-          {submitLabel}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Guardando...
+            </>
+          ) : (
+            submitLabel
+          )}
         </button>
       </div>
     </div>

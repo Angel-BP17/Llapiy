@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\AreaGroupType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class GroupFactory extends Factory

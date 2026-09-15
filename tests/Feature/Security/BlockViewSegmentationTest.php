@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Security;
 
-use App\Models\User;
-use App\Models\Block;
-use App\Models\Group;
-use App\Models\Subgroup;
 use App\Models\Area;
 use App\Models\AreaGroupType;
+use App\Models\Block;
+use App\Models\Group;
 use App\Models\GroupType;
+use App\Models\Subgroup;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -18,13 +18,15 @@ class BlockViewSegmentationTest extends TestCase
     use RefreshDatabase;
 
     protected $area;
+
     protected $group;
+
     protected $subgroup;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->area = Area::factory()->create();
         $gt = GroupType::factory()->create();
         $agt = AreaGroupType::create(['area_id' => $this->area->id, 'group_type_id' => $gt->id]);
@@ -32,7 +34,7 @@ class BlockViewSegmentationTest extends TestCase
         $this->subgroup = Subgroup::create([
             'group_id' => $this->group->id,
             'descripcion' => 'Subgrupo Test',
-            'abreviacion' => 'ST'
+            'abreviacion' => 'ST',
         ]);
 
         // Crear los permisos nuevos
@@ -90,15 +92,15 @@ class BlockViewSegmentationTest extends TestCase
         $user->givePermissionTo('blocks.view.group');
 
         Block::factory()->create([
-            'group_id' => $this->group->id, 
-            'subgroup_id' => $this->subgroup->id, 
-            'asunto' => 'Bloque del Subgrupo'
+            'group_id' => $this->group->id,
+            'subgroup_id' => $this->subgroup->id,
+            'asunto' => 'Bloque del Subgrupo',
         ]);
-        
+
         Block::factory()->create([
-            'group_id' => $this->group->id, 
-            'subgroup_id' => null, 
-            'asunto' => 'Bloque del Grupo General'
+            'group_id' => $this->group->id,
+            'subgroup_id' => null,
+            'asunto' => 'Bloque del Grupo General',
         ]);
 
         $response = $this->actingAs($user)->get('/bloques');

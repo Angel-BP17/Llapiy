@@ -25,7 +25,7 @@ class Document extends Model
         'periodo',
         'box_id',
         'group_id',
-        'subgroup_id'
+        'subgroup_id',
     ];
 
     public function documentType()

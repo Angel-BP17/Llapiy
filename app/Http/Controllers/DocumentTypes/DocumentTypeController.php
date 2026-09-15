@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\DocumentTypes;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\DocumentType\IndexDocumentTypeRequest;
 use App\Http\Requests\DocumentType\CreateDocumentTypeRequest;
+use App\Http\Requests\DocumentType\IndexDocumentTypeRequest;
 use App\Http\Requests\DocumentType\UpdateDocumentTypeRequest;
 use App\Models\CampoType;
 use App\Models\DocumentType;
@@ -16,9 +16,7 @@ use Inertia\Response;
 
 class DocumentTypeController extends Controller
 {
-    public function __construct(protected DocumentTypeService $service)
-    {
-    }
+    public function __construct(protected DocumentTypeService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -50,9 +48,11 @@ class DocumentTypeController extends Controller
     {
         try {
             $this->service->create($request);
+
             return redirect()->back()->with('message', 'Tipo de documento creado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al crear tipo de documento: ' . $e->getMessage());
+            Log::error('Error al crear tipo de documento: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Hubo un error al crear el tipo de documento.');
         }
     }
@@ -65,7 +65,7 @@ class DocumentTypeController extends Controller
         $documentType->load(['campoTypes', 'groups', 'subgroups']);
 
         return Inertia::render('document_types/show', [
-            'documentType' => $documentType
+            'documentType' => $documentType,
         ]);
     }
 
@@ -76,10 +76,12 @@ class DocumentTypeController extends Controller
     {
         try {
             $this->service->update($request, $documentType);
+
             return redirect()->back()->with('message', 'Tipo de documento actualizado correctamente.');
         } catch (\Throwable $e) {
-            Log::error('Error al actualizar tipo de documento: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Ocurrió un error al actualizar el tipo de documento.');    
+            Log::error('Error al actualizar tipo de documento: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Ocurrió un error al actualizar el tipo de documento.');
         }
     }
 
@@ -89,6 +91,7 @@ class DocumentTypeController extends Controller
     public function destroy(DocumentType $documentType): RedirectResponse
     {
         $this->service->delete($documentType);
+
         return redirect()->back()->with('message', 'Tipo de documento eliminado correctamente.');
     }
 }

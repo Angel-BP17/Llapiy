@@ -21,6 +21,7 @@ export interface Role {
   id: number;
   name: string;
   label?: string;
+  users_count?: number;
   permissions?: Permission[];
   permission_list?: string[]; // Para la vista de edición
 }
@@ -46,6 +47,7 @@ export interface AreaGroupType {
   group_type_id: number;
   groups?: Group[];
   area?: Area;
+  group_type?: GroupType;
 }
 
 export interface GroupType {

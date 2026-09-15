@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Security;
 
-use App\Models\User;
-use App\Models\Document;
-use App\Models\Group;
 use App\Models\Area;
 use App\Models\AreaGroupType;
+use App\Models\Document;
+use App\Models\Group;
 use App\Models\GroupType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -23,7 +23,7 @@ class SuperAdminBypassTest extends TestCase
         $area = Area::factory()->create();
         $gt = GroupType::factory()->create();
         $agt = AreaGroupType::create(['area_id' => $area->id, 'group_type_id' => $gt->id]);
-        
+
         $groupA = Group::factory()->create(['area_group_type_id' => $agt->id, 'descripcion' => 'Grupo A']);
         $groupB = Group::factory()->create(['area_group_type_id' => $agt->id, 'descripcion' => 'Grupo B']);
 

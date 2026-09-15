@@ -21,6 +21,7 @@ class PermissionService
     public function update(Permission $permission, string $name): Permission
     {
         $permission->update(['name' => $name]);
+
         return $permission->fresh();
     }
 

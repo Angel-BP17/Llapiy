@@ -43,13 +43,11 @@ describe('Inbox Index Page', () => {
     },
     areas: [{ id: 1, descripcion: 'Area 1' }],
     sections: [],
-    andamios: [],
-    boxes: [],
-    attendedBlocksCount: 5,
-    unattendedBlocksCount: 2,
-    filters: { search: '', area_id: '', periodo: '' },
+    documentarySeriesList: [],
+    stats: { total: 1, sinUbicacion: 1, ubicarHoy: 0, ubicadosHoy: 0, retiradosHoy: 0 },
+    filters: { search: '' },
     periodos: ['2024', '2025'],
-  };
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -68,8 +66,8 @@ describe('Inbox Index Page', () => {
     render(<Index {...mockProps} />);
     expect(screen.getByText('Bandeja de Entrada')).toBeInTheDocument();
     expect(screen.getByText('Doc Test')).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument(); // attendedCount
-    expect(screen.getByText('2')).toBeInTheDocument(); // unattendedCount
+    expect(screen.getByText('Bloques digitalizados')).toBeInTheDocument();
+    expect(screen.getByText('Pendientes de ubicación')).toBeInTheDocument();
   });
 
   it('debe filtrar por termino de busqueda', () => {

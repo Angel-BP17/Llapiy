@@ -2,20 +2,21 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
-use App\Models\DocumentarySeries;
 use App\Models\Block;
+use App\Models\DocumentarySeries;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class DocumentarySeriesControllerTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $adminUser;
+
     protected $regularUser;
 
     protected function setUp(): void

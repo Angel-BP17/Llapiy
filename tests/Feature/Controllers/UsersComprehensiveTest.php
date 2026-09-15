@@ -2,18 +2,18 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
 use App\Models\Area;
+use App\Models\AreaGroupType;
 use App\Models\Group;
 use App\Models\GroupType;
-use App\Models\AreaGroupType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class UsersComprehensiveTest extends TestCase
 {
@@ -24,9 +24,9 @@ class UsersComprehensiveTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
-        
+
         // Crear permisos necesarios para el nuevo sistema
         Permission::firstOrCreate(['name' => 'users.view', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'users.create', 'guard_name' => 'web']);
@@ -70,7 +70,7 @@ class UsersComprehensiveTest extends TestCase
         Role::create(['name' => 'EXISTENTE', 'guard_name' => 'web']);
 
         $response = $this->actingAs($this->adminUser)->post('/roles', [
-            'name' => 'EXISTENTE'
+            'name' => 'EXISTENTE',
         ]);
 
         $response->assertSessionHasErrors(['name']);
@@ -101,7 +101,7 @@ class UsersComprehensiveTest extends TestCase
             'dni' => '12345678',
             'email' => 'test@example.com',
             'password' => 'password123',
-            'group_id' => 99999 // ID inexistente
+            'group_id' => 99999, // ID inexistente
         ]);
 
         $response->assertSessionHasErrors(['group_id']);
@@ -112,7 +112,7 @@ class UsersComprehensiveTest extends TestCase
      */
     public function test_user_can_upload_profile_photo()
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $file = UploadedFile::fake()->image('avatar.jpg');
         $area = Area::factory()->create();
         $gt = GroupType::factory()->create();
@@ -130,13 +130,13 @@ class UsersComprehensiveTest extends TestCase
             'password' => 'password123',
             'foto_perfil' => $file,
             'role_id' => $role->id,
-            'group_id' => $group->id
+            'group_id' => $group->id,
         ]);
 
         $response->assertRedirect();
         $user = User::where('user_name', 'photouser')->first();
         $this->assertNotNull($user->foto_perfil);
-        Storage::disk('public')->assertExists($user->foto_perfil);
+        Storage::disk('local')->assertExists($user->getRawOriginal('foto_perfil'));
     }
 
     /**
@@ -159,7 +159,7 @@ class UsersComprehensiveTest extends TestCase
             'email' => 'roles@test.com',
             'password' => 'password123',
             'group_id' => $group->id,
-            'roles' => ['OPERADOR']
+            'roles' => ['OPERADOR'],
         ]);
 
         $response->assertRedirect();
@@ -174,8 +174,8 @@ class UsersComprehensiveTest extends TestCase
     public function test_user_search_handles_complex_names()
     {
         User::factory()->create(['name' => 'André', 'last_name' => 'Muñoz Ñandú']);
-        
-        $response = $this->actingAs($this->adminUser)->get('/usuarios?search=' . urlencode('Muñoz Ñ'));
+
+        $response = $this->actingAs($this->adminUser)->get('/usuarios?search='.urlencode('Muñoz Ñ'));
         $response->assertStatus(200);
         $response->assertInertia(fn (Assert $page) => $page
             ->has('users', 1)
@@ -190,7 +190,7 @@ class UsersComprehensiveTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             Role::create(['name' => "Role_{$i}", 'guard_name' => 'web']);
         }
-        
+
         \DB::enableQueryLog();
         $this->actingAs($this->adminUser)->get('/roles');
         $queries = \DB::getQueryLog();

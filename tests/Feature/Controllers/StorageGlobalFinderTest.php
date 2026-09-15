@@ -2,15 +2,15 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
-use App\Models\Section;
 use App\Models\Andamio;
-use App\Models\Box;
 use App\Models\Block;
+use App\Models\Box;
+use App\Models\Section;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class StorageGlobalFinderTest extends TestCase
 {
@@ -21,9 +21,9 @@ class StorageGlobalFinderTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
-        
+
         Permission::firstOrCreate(['name' => 'sections.view', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'andamios.view', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'boxes.view', 'guard_name' => 'web']);
@@ -39,11 +39,11 @@ class StorageGlobalFinderTest extends TestCase
         $section = Section::factory()->create(['n_section' => 'SEC-FIND']);
         $andamio = Andamio::factory()->create(['section_id' => $section->id, 'n_andamio' => 'AND-FIND']);
         $box = Box::factory()->create(['andamio_id' => $andamio->id, 'n_box' => 'BOX-FIND']);
-        
+
         Block::factory()->create([
             'box_id' => $box->id,
             'n_bloque' => 'B-FIND-123',
-            'asunto' => 'Expediente Confidencial'
+            'asunto' => 'Expediente Confidencial',
         ]);
 
         // Buscar en /sections

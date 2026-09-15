@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -12,6 +11,7 @@ class NewBlockNotification extends Notification
     use Queueable;
 
     public $block;
+
     /**
      * Create a new notification instance.
      */
@@ -49,7 +49,7 @@ class NewBlockNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => 'Se ha añadido un nuevo archivo: ' . $this->block->asunto,
+            'message' => 'Se ha añadido un nuevo archivo: '.$this->block->asunto,
             'block_id' => $this->block->id,
             'created_at' => now()->toDateTimeString(),
         ];

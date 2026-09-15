@@ -31,7 +31,7 @@ class UpdateCampoRequest extends FormRequest
             'allow_negative' => 'nullable|boolean',
             'allow_zero' => 'nullable|boolean',
             'enum_values' => [
-                Rule::requiredIf(fn() => $this->input('data_type') === 'enum'),
+                Rule::requiredIf(fn () => $this->input('data_type') === 'enum'),
                 'nullable',
                 'string',
                 'max:5000',
@@ -39,4 +39,3 @@ class UpdateCampoRequest extends FormRequest
         ];
     }
 }
-

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use DB;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class BoxSeeder extends Seeder
@@ -18,7 +17,7 @@ class BoxSeeder extends Seeder
                 'n_box' => 1,
                 'andamio_id' => 1,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
         ]);
     }

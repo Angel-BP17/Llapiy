@@ -31,8 +31,8 @@ class HomeService
                 ->where('group_id', $user->group_id)
                 ->where('subgroup_id', $user->subgroup_id);
         } else {
-            $docBaseQuery = Document::query()->when(!$isAdmin, fn($q) => $q->where('user_id', $user->id));
-            $blockBaseQuery = Block::query()->when(!$isAdmin, fn($q) => $q->where('user_id', $user->id));
+            $docBaseQuery = Document::query()->when(! $isAdmin, fn ($q) => $q->where('user_id', $user->id));
+            $blockBaseQuery = Block::query()->when(! $isAdmin, fn ($q) => $q->where('user_id', $user->id));
         }
 
         // 2. RESUMEN DE CONTADORES
@@ -41,10 +41,10 @@ class HomeService
         $totalNoAlmacenados = (clone $blockBaseQuery)->whereNull('box_id')->count();
 
         // Lógica de tipos de documentos permitidos (coherente con DocumentService)
-        $documentTypeCount = $isAdmin 
-            ? DocumentType::count() 
-            : DocumentType::whereHas('groups', fn($q) => $q->where('groups.id', $user->group_id))
-                ->orWhereHas('subgroups', fn($q) => $q->where('subgroups.id', $user->subgroup_id))
+        $documentTypeCount = $isAdmin
+            ? DocumentType::count()
+            : DocumentType::whereHas('groups', fn ($q) => $q->where('groups.id', $user->group_id))
+                ->orWhereHas('subgroups', fn ($q) => $q->where('subgroups.id', $user->subgroup_id))
                 ->count();
 
         // 3. GRÁFICO: DOCUMENTOS RECIENTES (ÚLTIMOS 17 DÍAS)
@@ -64,7 +64,7 @@ class HomeService
             ->get();
 
         $totalDocs = $documentosPorTipoRaw->sum('cantidad');
-        $documentosPorTipo = $documentosPorTipoRaw->map(fn($doc) => [
+        $documentosPorTipo = $documentosPorTipoRaw->map(fn ($doc) => [
             'tipo' => $doc->tipo ?? 'Sin Tipo',
             'porcentaje' => $totalDocs > 0 ? round(($doc->cantidad / $totalDocs) * 100, 2) : 0,
         ]);
@@ -101,7 +101,7 @@ class HomeService
         if ($isColaborador) {
             $activityQuery->whereHas('user', function ($q) use ($user) {
                 $q->where('group_id', $user->group_id)
-                  ->where('subgroup_id', $user->subgroup_id);
+                    ->where('subgroup_id', $user->subgroup_id);
             });
         }
 
@@ -109,9 +109,9 @@ class HomeService
             ->orderBy('total', 'desc')
             ->take(5)
             ->get()
-            ->map(fn($log) => [
+            ->map(fn ($log) => [
                 'name' => $log->user?->name ?? 'Sistema',
-                'actividad' => $log->total
+                'actividad' => $log->total,
             ]);
 
         return compact(

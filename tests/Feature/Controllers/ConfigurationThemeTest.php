@@ -3,7 +3,6 @@
 namespace Tests\Feature\Controllers;
 
 use App\Models\User;
-use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -25,28 +24,28 @@ class ConfigurationThemeTest extends TestCase
     public function admin_can_update_their_theme_setting()
     {
         $response = $this->actingAs($this->admin)->post('/configuracion/theme', [
-            'theme' => 'dark'
+            'theme' => 'dark',
         ]);
 
         $response->assertRedirect();
-        
+
         $this->assertDatabaseHas('settings', [
             'user_id' => $this->admin->id,
             'key' => 'theme',
-            'value' => 'dark'
+            'value' => 'dark',
         ]);
 
         // Toggle back to light
         $response = $this->actingAs($this->admin)->post('/configuracion/theme', [
-            'theme' => 'light'
+            'theme' => 'light',
         ]);
 
         $response->assertRedirect();
-        
+
         $this->assertDatabaseHas('settings', [
             'user_id' => $this->admin->id,
             'key' => 'theme',
-            'value' => 'light'
+            'value' => 'light',
         ]);
     }
 
@@ -54,7 +53,7 @@ class ConfigurationThemeTest extends TestCase
     public function theme_validation_requires_valid_theme()
     {
         $response = $this->actingAs($this->admin)->post('/configuracion/theme', [
-            'theme' => 'invalid-theme'
+            'theme' => 'invalid-theme',
         ]);
 
         $response->assertSessionHasErrors(['theme']);

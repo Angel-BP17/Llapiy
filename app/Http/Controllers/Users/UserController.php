@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Users;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\User\IndexUserRequest;
 use App\Http\Requests\User\CreateUserRequest;
+use App\Http\Requests\User\IndexUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\Area;
 use App\Models\User;
@@ -12,15 +12,14 @@ use App\Services\User\UserService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct(protected UserService $service)
-    {
-    }
+    public function __construct(protected UserService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -32,7 +31,7 @@ class UserController extends Controller
         return Inertia::render('users/index', [
             'users' => $resources['users']->items(),
             'areas' => $resources['areas'],
-            'roles' => Role::query()->orderBy('name')->get()->map(fn($role) => [
+            'roles' => Role::query()->orderBy('name')->get()->map(fn ($role) => [
                 'id' => $role->id,
                 'name' => $role->name,
                 'label' => ucfirst($role->name),
@@ -93,6 +92,28 @@ class UserController extends Controller
         $this->service->delete($user);
 
         return redirect()->back()->with('message', 'Usuario eliminado correctamente.');
+    }
+
+    /**
+     * View/Download user profile photo from private storage.
+     */
+    public function photo(User $user)
+    {
+        $rawPath = $user->getRawOriginal('foto_perfil') ?? $user->foto_perfil;
+
+        if (! $rawPath) {
+            abort(404, 'Foto de perfil no encontrada.');
+        }
+
+        if (Storage::disk('local')->exists($rawPath)) {
+            return Storage::disk('local')->response($rawPath);
+        }
+
+        if (Storage::disk('public')->exists($rawPath)) {
+            return Storage::disk('public')->response($rawPath);
+        }
+
+        abort(404, 'Archivo de foto de perfil no encontrado.');
     }
 
     /**

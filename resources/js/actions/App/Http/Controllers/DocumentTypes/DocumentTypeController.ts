@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::index
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:26
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:24
  * @route '/tipos-documentos'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::index
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:26
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:24
  * @route '/tipos-documentos'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::index
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:26
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:24
  * @route '/tipos-documentos'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::index
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:26
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:24
  * @route '/tipos-documentos'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::store
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:49
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:47
  * @route '/tipos-documentos'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::store
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:49
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:47
  * @route '/tipos-documentos'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::store
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:49
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:47
  * @route '/tipos-documentos'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -81,7 +81,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:63
  * @route '/tipos-documentos/{documentType}'
  */
-export const show = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -96,7 +96,7 @@ show.definition = {
  * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:63
  * @route '/tipos-documentos/{documentType}'
  */
-show.url = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+show.url = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { documentType: args }
     }
@@ -129,7 +129,7 @@ show.url = (args: { documentType: number | { id: number } } | [documentType: num
  * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:63
  * @route '/tipos-documentos/{documentType}'
  */
-show.get = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -138,7 +138,7 @@ show.get = (args: { documentType: number | { id: number } } | [documentType: num
  * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:63
  * @route '/tipos-documentos/{documentType}'
  */
-show.head = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -148,7 +148,7 @@ show.head = (args: { documentType: number | { id: number } } | [documentType: nu
  * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:75
  * @route '/tipos-documentos/{documentType}'
  */
-export const update = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -163,7 +163,7 @@ update.definition = {
  * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:75
  * @route '/tipos-documentos/{documentType}'
  */
-update.url = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+update.url = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { documentType: args }
     }
@@ -196,17 +196,17 @@ update.url = (args: { documentType: number | { id: number } } | [documentType: n
  * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:75
  * @route '/tipos-documentos/{documentType}'
  */
-update.put = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
 
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::destroy
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:89
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:91
  * @route '/tipos-documentos/{documentType}'
  */
-export const destroy = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -218,10 +218,10 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::destroy
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:89
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:91
  * @route '/tipos-documentos/{documentType}'
  */
-destroy.url = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { documentType: args }
     }
@@ -251,10 +251,10 @@ destroy.url = (args: { documentType: number | { id: number } } | [documentType: 
 
 /**
 * @see \App\Http\Controllers\DocumentTypes\DocumentTypeController::destroy
- * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:89
+ * @see app/Http/Controllers/DocumentTypes/DocumentTypeController.php:91
  * @route '/tipos-documentos/{documentType}'
  */
-destroy.delete = (args: { documentType: number | { id: number } } | [documentType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { documentType: string | number | { id: string | number } } | [documentType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })

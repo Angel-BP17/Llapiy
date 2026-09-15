@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\Users\UserController::index
- * @see app/Http/Controllers/Users/UserController.php:28
+ * @see app/Http/Controllers/Users/UserController.php:27
  * @route '/usuarios'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::index
- * @see app/Http/Controllers/Users/UserController.php:28
+ * @see app/Http/Controllers/Users/UserController.php:27
  * @route '/usuarios'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::index
- * @see app/Http/Controllers/Users/UserController.php:28
+ * @see app/Http/Controllers/Users/UserController.php:27
  * @route '/usuarios'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Users\UserController::index
- * @see app/Http/Controllers/Users/UserController.php:28
+ * @see app/Http/Controllers/Users/UserController.php:27
  * @route '/usuarios'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Users\UserController::store
- * @see app/Http/Controllers/Users/UserController.php:59
+ * @see app/Http/Controllers/Users/UserController.php:58
  * @route '/usuarios'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::store
- * @see app/Http/Controllers/Users/UserController.php:59
+ * @see app/Http/Controllers/Users/UserController.php:58
  * @route '/usuarios'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::store
- * @see app/Http/Controllers/Users/UserController.php:59
+ * @see app/Http/Controllers/Users/UserController.php:58
  * @route '/usuarios'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -78,7 +78,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\Users\UserController::pdf
- * @see app/Http/Controllers/Users/UserController.php:101
+ * @see app/Http/Controllers/Users/UserController.php:122
  * @route '/usuarios/pdf'
  */
 export const pdf = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -93,7 +93,7 @@ pdf.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::pdf
- * @see app/Http/Controllers/Users/UserController.php:101
+ * @see app/Http/Controllers/Users/UserController.php:122
  * @route '/usuarios/pdf'
  */
 pdf.url = (options?: RouteQueryOptions) => {
@@ -102,7 +102,7 @@ pdf.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::pdf
- * @see app/Http/Controllers/Users/UserController.php:101
+ * @see app/Http/Controllers/Users/UserController.php:122
  * @route '/usuarios/pdf'
  */
 pdf.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -111,7 +111,7 @@ pdf.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Users\UserController::pdf
- * @see app/Http/Controllers/Users/UserController.php:101
+ * @see app/Http/Controllers/Users/UserController.php:122
  * @route '/usuarios/pdf'
  */
 pdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -120,11 +120,78 @@ pdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
+* @see \App\Http\Controllers\Users\UserController::photo
+ * @see app/Http/Controllers/Users/UserController.php:100
+ * @route '/usuarios/{user}/photo'
+ */
+export const photo = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: photo.url(args, options),
+    method: 'get',
+})
+
+photo.definition = {
+    methods: ["get","head"],
+    url: '/usuarios/{user}/photo',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Users\UserController::photo
+ * @see app/Http/Controllers/Users/UserController.php:100
+ * @route '/usuarios/{user}/photo'
+ */
+photo.url = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { user: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { user: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    user: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        user: typeof args.user === 'object'
+                ? args.user.id
+                : args.user,
+                }
+
+    return photo.definition.url
+            .replace('{user}', parsedArgs.user.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Users\UserController::photo
+ * @see app/Http/Controllers/Users/UserController.php:100
+ * @route '/usuarios/{user}/photo'
+ */
+photo.get = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: photo.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Users\UserController::photo
+ * @see app/Http/Controllers/Users/UserController.php:100
+ * @route '/usuarios/{user}/photo'
+ */
+photo.head = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: photo.url(args, options),
+    method: 'head',
+})
+
+/**
 * @see \App\Http\Controllers\Users\UserController::show
- * @see app/Http/Controllers/Users/UserController.php:69
+ * @see app/Http/Controllers/Users/UserController.php:68
  * @route '/usuarios/{user}'
  */
-export const show = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -136,10 +203,10 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::show
- * @see app/Http/Controllers/Users/UserController.php:69
+ * @see app/Http/Controllers/Users/UserController.php:68
  * @route '/usuarios/{user}'
  */
-show.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+show.url = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { user: args }
     }
@@ -169,29 +236,29 @@ show.url = (args: { user: number | { id: number } } | [user: number | { id: numb
 
 /**
 * @see \App\Http\Controllers\Users\UserController::show
- * @see app/Http/Controllers/Users/UserController.php:69
+ * @see app/Http/Controllers/Users/UserController.php:68
  * @route '/usuarios/{user}'
  */
-show.get = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
 /**
 * @see \App\Http\Controllers\Users\UserController::show
- * @see app/Http/Controllers/Users/UserController.php:69
+ * @see app/Http/Controllers/Users/UserController.php:68
  * @route '/usuarios/{user}'
  */
-show.head = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
 
 /**
 * @see \App\Http\Controllers\Users\UserController::update
- * @see app/Http/Controllers/Users/UserController.php:81
+ * @see app/Http/Controllers/Users/UserController.php:80
  * @route '/usuarios/{user}'
  */
-export const update = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -203,10 +270,10 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::update
- * @see app/Http/Controllers/Users/UserController.php:81
+ * @see app/Http/Controllers/Users/UserController.php:80
  * @route '/usuarios/{user}'
  */
-update.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+update.url = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { user: args }
     }
@@ -236,20 +303,20 @@ update.url = (args: { user: number | { id: number } } | [user: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\Users\UserController::update
- * @see app/Http/Controllers/Users/UserController.php:81
+ * @see app/Http/Controllers/Users/UserController.php:80
  * @route '/usuarios/{user}'
  */
-update.put = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
 
 /**
 * @see \App\Http\Controllers\Users\UserController::destroy
- * @see app/Http/Controllers/Users/UserController.php:91
+ * @see app/Http/Controllers/Users/UserController.php:90
  * @route '/usuarios/{user}'
  */
-export const destroy = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -261,10 +328,10 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Users\UserController::destroy
- * @see app/Http/Controllers/Users/UserController.php:91
+ * @see app/Http/Controllers/Users/UserController.php:90
  * @route '/usuarios/{user}'
  */
-destroy.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { user: args }
     }
@@ -294,10 +361,10 @@ destroy.url = (args: { user: number | { id: number } } | [user: number | { id: n
 
 /**
 * @see \App\Http\Controllers\Users\UserController::destroy
- * @see app/Http/Controllers/Users/UserController.php:91
+ * @see app/Http/Controllers/Users/UserController.php:90
  * @route '/usuarios/{user}'
  */
-destroy.delete = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -305,6 +372,7 @@ const users = {
     index: Object.assign(index, index),
 store: Object.assign(store, store),
 pdf: Object.assign(pdf, pdf),
+photo: Object.assign(photo, photo),
 show: Object.assign(show, show),
 update: Object.assign(update, update),
 destroy: Object.assign(destroy, destroy),

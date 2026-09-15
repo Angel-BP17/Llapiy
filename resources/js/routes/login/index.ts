@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\Home\AuthController::store
- * @see app/Http/Controllers/Home/AuthController.php:29
+ * @see app/Http/Controllers/Home/AuthController.php:27
  * @route '/login'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Home\AuthController::store
- * @see app/Http/Controllers/Home/AuthController.php:29
+ * @see app/Http/Controllers/Home/AuthController.php:27
  * @route '/login'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Home\AuthController::store
- * @see app/Http/Controllers/Home/AuthController.php:29
+ * @see app/Http/Controllers/Home/AuthController.php:27
  * @route '/login'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

@@ -2,19 +2,14 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
-use App\Models\Block;
-use App\Models\Area;
-use App\Models\Group;
-use App\Models\Subgroup;
-use App\Models\Section;
 use App\Models\Andamio;
+use App\Models\Block;
 use App\Models\Box;
-use App\Models\GroupType;
-use App\Models\AreaGroupType;
+use App\Models\Section;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class BlocksFilterTest extends TestCase
@@ -28,7 +23,7 @@ class BlocksFilterTest extends TestCase
         parent::setUp();
 
         $adminRole = Role::firstOrCreate(['name' => 'ADMINISTRADOR', 'guard_name' => 'web']);
-        
+
         Permission::firstOrCreate(['name' => 'view-blocks', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'blocks.view.all', 'guard_name' => 'web']);
 
@@ -98,7 +93,7 @@ class BlocksFilterTest extends TestCase
     public function test_can_create_block_with_documentary_series()
     {
         $series = \App\Models\DocumentarySeries::factory()->create();
-        
+
         $data = [
             'asunto' => 'Test block with series',
             'folios' => '10',

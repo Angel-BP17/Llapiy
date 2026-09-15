@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::index
- * @see app/Http/Controllers/Storage/ArchivoController.php:21
+ * @see app/Http/Controllers/Storage/ArchivoController.php:19
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos'
  */
 export const index = (args: { section: string | number, andamio: string | number, box: string | number } | [section: string | number, andamio: string | number, box: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::index
- * @see app/Http/Controllers/Storage/ArchivoController.php:21
+ * @see app/Http/Controllers/Storage/ArchivoController.php:19
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos'
  */
 index.url = (args: { section: string | number, andamio: string | number, box: string | number } | [section: string | number, andamio: string | number, box: string | number ], options?: RouteQueryOptions) => {
@@ -45,7 +45,7 @@ index.url = (args: { section: string | number, andamio: string | number, box: st
 
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::index
- * @see app/Http/Controllers/Storage/ArchivoController.php:21
+ * @see app/Http/Controllers/Storage/ArchivoController.php:19
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos'
  */
 index.get = (args: { section: string | number, andamio: string | number, box: string | number } | [section: string | number, andamio: string | number, box: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.get = (args: { section: string | number, andamio: string | number, box: st
 })
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::index
- * @see app/Http/Controllers/Storage/ArchivoController.php:21
+ * @see app/Http/Controllers/Storage/ArchivoController.php:19
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos'
  */
 index.head = (args: { section: string | number, andamio: string | number, box: string | number } | [section: string | number, andamio: string | number, box: string | number ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -64,7 +64,7 @@ index.head = (args: { section: string | number, andamio: string | number, box: s
 
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::move
- * @see app/Http/Controllers/Storage/ArchivoController.php:45
+ * @see app/Http/Controllers/Storage/ArchivoController.php:43
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos/{block}/move'
  */
 export const move = (args: { section: string | number, andamio: string | number, box: string | number, block: string | number } | [section: string | number, andamio: string | number, box: string | number, block: string | number ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -79,7 +79,7 @@ move.definition = {
 
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::move
- * @see app/Http/Controllers/Storage/ArchivoController.php:45
+ * @see app/Http/Controllers/Storage/ArchivoController.php:43
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos/{block}/move'
  */
 move.url = (args: { section: string | number, andamio: string | number, box: string | number, block: string | number } | [section: string | number, andamio: string | number, box: string | number, block: string | number ], options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ move.url = (args: { section: string | number, andamio: string | number, box: str
 
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::move
- * @see app/Http/Controllers/Storage/ArchivoController.php:45
+ * @see app/Http/Controllers/Storage/ArchivoController.php:43
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos/{block}/move'
  */
 move.post = (args: { section: string | number, andamio: string | number, box: string | number, block: string | number } | [section: string | number, andamio: string | number, box: string | number, block: string | number ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({

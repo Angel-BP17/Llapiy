@@ -5,6 +5,7 @@ import Navbar from './Parts/Navbar';
 import { defaultSections } from '@/Config/Navigation';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { usePermissions } from '@/hooks/use-permissions';
+import { Toast } from '@/components/ui/Toast';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,18 @@ export default function DashboardLayout({ children, title = "Inicio", brand = "L
   const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
   const { props } = usePage();
   const theme = (props.auth as any)?.theme || 'light';
+  const flash = (props as any)?.flash || {};
+  const [flashMsg, setFlashMsg] = useState<string | null>(null);
+  const [flashErr, setFlashErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (flash.message || flash.success) {
+      setFlashMsg(flash.message || flash.success);
+    }
+    if (flash.error) {
+      setFlashErr(flash.error);
+    }
+  }, [flash.message, flash.success, flash.error]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -80,6 +93,7 @@ export default function DashboardLayout({ children, title = "Inicio", brand = "L
   return (
     <div className="bg-app-bg text-foreground min-h-screen">
       <Head title={title} />
+      <Toast message={flashMsg} error={flashErr} onClose={() => { setFlashMsg(null); setFlashErr(null); }} />
       
       <div id="app-shell" className="relative min-h-screen flex flex-col">
         <Sidebar 

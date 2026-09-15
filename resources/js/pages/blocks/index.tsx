@@ -14,10 +14,12 @@ import {
     Plus,
     Trash2,
     AlertCircle,
+    AlertTriangle,
     Filter,
     X,
     Search,
     SlidersHorizontal,
+    Loader2,
 } from "lucide-react";
 import { MONTHS } from "@/constants";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -90,6 +92,8 @@ export default function Index({
         andamio_id: filters.andamio_id || "",
         box_id: filters.box_id || "",
     });
+
+    const [isFiltering, setIsFiltering] = useState(false);
 
     const filteredGroups = useMemo(() => {
         if (!f.area_id) return [];
@@ -200,7 +204,13 @@ export default function Index({
             if (field === "andamio_id") {
                 updated.box_id = "";
             }
-            router.get("/bloques", updated, { preserveState: true });
+            setIsFiltering(true);
+            router.get("/bloques", updated, {
+                preserveState: true,
+                preserveScroll: true,
+                only: ["blocks", "stats", "pagination", "filters"],
+                onFinish: () => setIsFiltering(false),
+            });
             return updated;
         });
     };
@@ -219,13 +229,27 @@ export default function Index({
             box_id: "",
         };
         setF(cleared);
-        router.get("/bloques", cleared, { preserveState: true });
+        setIsFiltering(true);
+        router.get("/bloques", cleared, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ["blocks", "stats", "pagination", "filters"],
+            onFinish: () => setIsFiltering(false),
+        });
     };
 
     const [createOpen, setCreateOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [showOpen, setShowOpen] = useState(false);
     const [selectedBlock, setSelectedBlock] = useState<any>(null);
+
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [blockToDelete, setBlockToDelete] = useState<any>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const [pdfModalOpen, setPdfModalOpen] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState("");
+    const [pdfTitle, setPdfTitle] = useState("");
 
     const [form, setForm] = useState<BlockForm>(emptyForm);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -251,8 +275,15 @@ export default function Index({
         }
     };
 
-    const handleFilter = () =>
-        router.get("/bloques", f, { preserveState: true });
+    const handleFilter = () => {
+        setIsFiltering(true);
+        router.get("/bloques", f, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ["blocks", "stats", "pagination", "filters"],
+            onFinish: () => setIsFiltering(false),
+        });
+    };
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -262,12 +293,12 @@ export default function Index({
         const data: any = { ...form };
 
         if (editOpen) {
-            // Para actualización con archivos, usamos POST con _method PUT
             router.post(
                 `/bloques/${selectedBlock.id}`,
                 { ...data, _method: "PUT" },
                 {
                     forceFormData: true,
+                    preserveScroll: true,
                     onSuccess: () => {
                         setEditOpen(false);
                         setForm(emptyForm);
@@ -279,6 +310,7 @@ export default function Index({
             );
         } else {
             router.post("/bloques", data, {
+                preserveScroll: true,
                 onSuccess: () => {
                     setCreateOpen(false);
                     setForm(emptyForm);
@@ -290,8 +322,23 @@ export default function Index({
         }
     };
 
-    const handleViewFile = (id: number) => {
-        window.open(`/bloques/${id}/file`, "_blank");
+    const handleDeleteBlock = () => {
+        if (!blockToDelete) return;
+        setIsDeleting(true);
+        router.delete(`/bloques/${blockToDelete.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setDeleteModalOpen(false);
+                setBlockToDelete(null);
+            },
+            onFinish: () => setIsDeleting(false),
+        });
+    };
+
+    const handleViewFile = (block: any) => {
+        setPdfUrl(`/bloques/${block.id}/file`);
+        setPdfTitle(`Documento Digital - Bloque Nº ${block.n_bloque}`);
+        setPdfModalOpen(true);
     };
 
     const openEdit = (block: any) => {
@@ -560,13 +607,20 @@ export default function Index({
                         <div className="flex gap-2">
                             <button
                                 onClick={handleFilter}
-                                className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 shadow-md shadow-primary/10 flex items-center gap-1.5"
+                                disabled={isFiltering}
+                                className="h-10 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 shadow-md shadow-primary/10 flex items-center gap-1.5 disabled:opacity-50"
                             >
-                                <Filter className="h-4 w-4" /> Aplicar filtros
+                                {isFiltering ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Filter className="h-4 w-4" />
+                                )}
+                                {isFiltering ? "Filtrando..." : "Aplicar filtros"}
                             </button>
                             <button
                                 onClick={handleClearAllFilters}
-                                className="h-10 rounded-lg border border-border bg-background px-5 text-sm font-semibold text-foreground hover:bg-muted transition flex items-center gap-1.5"
+                                disabled={isFiltering}
+                                className="h-10 rounded-lg border border-border bg-background px-5 text-sm font-semibold text-foreground hover:bg-muted transition flex items-center gap-1.5 disabled:opacity-50"
                             >
                                 Limpiar Filtros
                             </button>
@@ -590,7 +644,9 @@ export default function Index({
                                     Object.entries(f).forEach(([key, val]) => {
                                         if (val) params.append(key, String(val));
                                     });
-                                    window.open(`/bloques/pdf?${params.toString()}`);
+                                    setPdfUrl(`/bloques/pdf?${params.toString()}`);
+                                    setPdfTitle("Reporte PDF - Bloques Físicos");
+                                    setPdfModalOpen(true);
                                 }}
                                 disabled={!pagination.total}
                                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-background px-5 text-sm font-semibold text-foreground hover:bg-muted transition disabled:cursor-not-allowed disabled:opacity-60"
@@ -635,6 +691,7 @@ export default function Index({
                                     <th className="px-4 py-3">Asunto</th>
                                     <th className="px-4 py-3">Serie</th>
                                     <th className="px-4 py-3">Folios</th>
+                                    <th className="px-4 py-3">Rango</th>
                                     <th className="px-4 py-3">Area</th>
                                     <th className="px-4 py-3 text-right">
                                         Acciones
@@ -644,7 +701,7 @@ export default function Index({
                             <tbody>
                                 {blocks.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-16 text-center">
+                                        <td colSpan={8} className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center justify-center max-w-md mx-auto">
                                                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 mb-4 animate-bounce">
                                                     <Archive className="h-8 w-8" />
@@ -662,17 +719,14 @@ export default function Index({
                                             key={b.id}
                                             className="border-t border-border transition-colors hover:bg-muted/30"
                                         >
-                                            <td className="px-4 py-3">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {((pagination.current_page - 1) * 10) + i + 1}
                                             </td>
                                             <td className="px-4 py-3 font-semibold text-foreground">
                                                 {b.n_bloque}
                                             </td>
-                                            <td className="px-4 py-3 max-w-xs truncate">
+                                            <td className="px-4 py-3 max-w-xs truncate" title={b.asunto}>
                                                 {b.asunto}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {b.folios || "-"}
                                             </td>
                                             <td className="px-4 py-3">
                                                 {(() => {
@@ -682,9 +736,15 @@ export default function Index({
                                                             {ds.codigo}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-muted-foreground italic text-xs">-</span>
+                                                        <span className="text-muted-foreground italic text-xs">Sin serie</span>
                                                     );
                                                 })()}
+                                            </td>
+                                            <td className="px-4 py-3 font-medium text-foreground">
+                                                {b.folios || "-"}
+                                            </td>
+                                            <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-700">
+                                                {b.rango_inicial && b.rango_final ? `${b.rango_inicial} - ${b.rango_final}` : "-"}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
@@ -704,28 +764,43 @@ export default function Index({
                                                         <Eye className="h-3.5 w-3.5" />{" "}
                                                         Ver
                                                     </button>
-                                                    <button
-                                                        onClick={() => openEdit(b)}
-                                                        className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600"
-                                                    >
-                                                        <Pencil className="h-3.5 w-3.5" />{" "}
-                                                        Editar
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            if (
-                                                                confirm(
-                                                                    "¿Eliminar bloque?",
-                                                                )
-                                                            )
-                                                                router.delete(
-                                                                    `/bloques/${b.id}`,
-                                                                );
-                                                        }}
-                                                        className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </button>
+                                                    {b.can?.update ? (
+                                                        <button
+                                                            onClick={() => openEdit(b)}
+                                                            className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 transition"
+                                                        >
+                                                            <Pencil className="h-3.5 w-3.5" />{" "}
+                                                            Editar
+                                                        </button>
+                                                    ) : b.root ? (
+                                                        <button
+                                                            disabled
+                                                            title="No se puede editar ni eliminar el bloque porque ya fue digitalizado por Archivo Central."
+                                                            className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/40 px-3 py-1.5 text-xs font-semibold text-white/70 cursor-not-allowed"
+                                                        >
+                                                            <Pencil className="h-3.5 w-3.5" />{" "}
+                                                            Editar
+                                                        </button>
+                                                    ) : null}
+                                                    {b.can?.delete ? (
+                                                        <button
+                                                            onClick={() => {
+                                                                setBlockToDelete(b);
+                                                                setDeleteModalOpen(true);
+                                                            }}
+                                                            className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    ) : b.root ? (
+                                                        <button
+                                                            disabled
+                                                            title="No se puede editar ni eliminar el bloque porque ya fue digitalizado por Archivo Central."
+                                                            className="inline-flex items-center gap-1.5 rounded-md bg-red-600/40 px-3 py-1.5 text-xs font-semibold text-white/70 cursor-not-allowed"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    ) : null}
                                                 </div>
                                             </td>
                                         </tr>
@@ -738,7 +813,7 @@ export default function Index({
 
                 <Pagination 
                     {...pagination}
-                    onPageChange={(page) => router.get("/bloques", { ...f, page }, { preserveState: true })}
+                    onPageChange={(page) => router.get("/bloques", { ...f, page }, { preserveState: true, preserveScroll: true, only: ["blocks", "stats", "pagination", "filters"] })}
                     label="bloques"
                 />
 
@@ -747,8 +822,10 @@ export default function Index({
                     open={createOpen || editOpen}
                     title={editOpen ? "Editar Bloque" : "Ingresar Bloque"}
                     onClose={() => {
-                        setCreateOpen(false);
-                        setEditOpen(false);
+                        if (!isSubmitting) {
+                            setCreateOpen(false);
+                            setEditOpen(false);
+                        }
                     }}
                 >
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -765,85 +842,207 @@ export default function Index({
                                     <span className="font-semibold text-foreground">{form.n_bloque}</span>
                                 </div>
                             )}
-                            <input
-                                value={form.folios}
-                                onChange={(e) =>
-                                    setForm({ ...form, folios: e.target.value })
-                                }
-                                placeholder="Folios"
-                                className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-                            />
-                            <select
-                                value={form.documentary_series_id}
-                                onChange={(e) =>
-                                    setForm({ ...form, documentary_series_id: e.target.value })
-                                }
-                                className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                            >
-                                <option value="">Seleccione Serie Documental (Opcional)...</option>
-                                {documentarySeries.map((ds: any) => (
-                                    <option key={ds.id} value={String(ds.id)}>
-                                        {ds.codigo} - {ds.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                value={form.asunto}
-                                onChange={(e) =>
-                                    setForm({ ...form, asunto: e.target.value })
-                                }
-                                placeholder="Asunto"
-                                className="h-10 rounded-lg border border-border bg-background px-3 text-sm md:col-span-2"
-                                required
-                            />
-                            <input
-                                type="number"
-                                value={form.rango_inicial}
-                                onChange={(e) =>
-                                    setForm({
-                                        ...form,
-                                        rango_inicial: e.target.value,
-                                    })
-                                }
-                                placeholder="Rango inicial"
-                                className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-                                required
-                            />
-                            <input
-                                type="number"
-                                value={form.rango_final}
-                                onChange={(e) =>
-                                    setForm({
-                                        ...form,
-                                        rango_final: e.target.value,
-                                    })
-                                }
-                                placeholder="Rango final"
-                                className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-                                required
-                            />
-                            <input
-                                type="date"
-                                value={form.fecha}
-                                onChange={(e) =>
-                                    setForm({ ...form, fecha: e.target.value })
-                                }
-                                className="h-10 rounded-lg border border-border bg-background px-3 text-sm md:col-span-2"
-                                required
-                            />
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-muted-foreground">Serie Documental</label>
+                                <select
+                                    value={form.documentary_series_id}
+                                    onChange={(e) =>
+                                        setForm({ ...form, documentary_series_id: e.target.value })
+                                    }
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                                >
+                                    <option value="">Seleccione Serie Documental (Opcional)...</option>
+                                    {documentarySeries.map((ds: any) => (
+                                        <option key={ds.id} value={String(ds.id)}>
+                                            {ds.codigo} - {ds.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-muted-foreground">Folios</label>
+                                <input
+                                    value={form.folios}
+                                    onChange={(e) =>
+                                        setForm({ ...form, folios: e.target.value })
+                                    }
+                                    placeholder="Folios"
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1 md:col-span-2">
+                                <label className="text-xs font-semibold text-muted-foreground">Asunto / Descripción</label>
+                                <input
+                                    value={form.asunto}
+                                    onChange={(e) =>
+                                        setForm({ ...form, asunto: e.target.value })
+                                    }
+                                    placeholder="Asunto"
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-muted-foreground">Rango Inicial</label>
+                                <input
+                                    type="number"
+                                    value={form.rango_inicial}
+                                    onChange={(e) => {
+                                        const newStart = e.target.value;
+                                        setForm((prev) => {
+                                            const startNum = parseInt(newStart);
+                                            const endNum = parseInt(prev.rango_final);
+                                            const calculatedFolios = (!isNaN(startNum) && !isNaN(endNum) && endNum >= startNum)
+                                                ? String(endNum - startNum + 1)
+                                                : prev.folios;
+                                            return { ...prev, rango_inicial: newStart, folios: calculatedFolios };
+                                        });
+                                    }}
+                                    placeholder="Rango inicial"
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-muted-foreground">Rango Final</label>
+                                <input
+                                    type="number"
+                                    value={form.rango_final}
+                                    onChange={(e) => {
+                                        const newEnd = e.target.value;
+                                        setForm((prev) => {
+                                            const startNum = parseInt(prev.rango_inicial);
+                                            const endNum = parseInt(newEnd);
+                                            const calculatedFolios = (!isNaN(startNum) && !isNaN(endNum) && endNum >= startNum)
+                                                ? String(endNum - startNum + 1)
+                                                : prev.folios;
+                                            return { ...prev, rango_final: newEnd, folios: calculatedFolios };
+                                        });
+                                    }}
+                                    placeholder="Rango final"
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1 md:col-span-2">
+                                <label className="text-xs font-semibold text-muted-foreground">Fecha</label>
+                                <input
+                                    type="date"
+                                    value={form.fecha}
+                                    onChange={(e) =>
+                                        setForm({ ...form, fecha: e.target.value })
+                                    }
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                                    required
+                                />
+                            </div>
                         </div>
-                        <div className="flex justify-end pt-2">
+                        <div className="flex justify-end gap-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setCreateOpen(false);
+                                    setEditOpen(false);
+                                }}
+                                disabled={isSubmitting}
+                                className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="rounded-lg bg-primary px-6 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50"
+                                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50 transition"
                             >
-                                {isSubmitting
-                                    ? "Guardando..."
-                                    : "Guardar Cambios"}
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" /> Guardando...
+                                    </>
+                                ) : (
+                                    "Guardar Cambios"
+                                )}
                             </button>
                         </div>
                     </form>
+                </Modal>
+
+                {/* MODAL CONFIRMAR ELIMINACIÓN */}
+                <Modal
+                    open={deleteModalOpen}
+                    title="Confirmar Eliminación"
+                    onClose={() => {
+                        if (!isDeleting) setDeleteModalOpen(false);
+                    }}
+                    maxWidth="max-w-md"
+                >
+                    <div className="space-y-4 text-center py-2">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400">
+                            <AlertTriangle className="h-7 w-7" />
+                        </div>
+                        <div>
+                            <h4 className="text-base font-semibold text-foreground">
+                                ¿Eliminar Bloque Nº {blockToDelete?.n_bloque}?
+                            </h4>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Esta acción eliminará permanentemente el registro del bloque y sus archivos asociados.
+                            </p>
+                        </div>
+                        <div className="flex justify-center gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setDeleteModalOpen(false)}
+                                disabled={isDeleting}
+                                className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDeleteBlock}
+                                disabled={isDeleting}
+                                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50 transition"
+                            >
+                                {isDeleting ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" /> Eliminando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="h-4 w-4" /> Eliminar Bloque
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
+
+                {/* MODAL PREVISUALIZADOR DE PDF IN-APP */}
+                <Modal
+                    open={pdfModalOpen}
+                    title={pdfTitle || "Previsualizador de Documentos"}
+                    onClose={() => setPdfModalOpen(false)}
+                    maxWidth="max-w-5xl"
+                >
+                    <div className="space-y-3">
+                        <div className="flex justify-end gap-2">
+                            <a
+                                href={pdfUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition"
+                            >
+                                <FileDown className="h-3.5 w-3.5" /> Abrir en pestaña nueva
+                            </a>
+                        </div>
+                        <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-border bg-slate-900 shadow-inner">
+                            <iframe
+                                src={pdfUrl}
+                                className="h-full w-full border-0"
+                                title="Previsualizador PDF"
+                            />
+                        </div>
+                    </div>
                 </Modal>
 
                 {/* MODAL DETALLE PREMIUM */}
@@ -997,7 +1196,7 @@ export default function Index({
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                handleViewFile(selectedBlock.id)
+                                                handleViewFile(selectedBlock)
                                             }
                                             className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
                                         >

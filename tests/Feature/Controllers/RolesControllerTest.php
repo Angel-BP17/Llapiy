@@ -5,8 +5,8 @@ namespace Tests\Feature\Controllers;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class RolesControllerTest extends TestCase
@@ -14,14 +14,15 @@ class RolesControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $adminUser;
+
     protected User $operatorUser;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->seed(\Database\Seeders\RolePermissionSeeder::class);
-        
+
         $this->adminUser = User::factory()->create();
         $this->adminUser->assignRole('ADMINISTRADOR');
 
@@ -58,14 +59,14 @@ class RolesControllerTest extends TestCase
 
         $data = [
             'name' => 'Nuevo Rol',
-            'permissions' => ['test.permission']
+            'permissions' => ['test.permission'],
         ];
 
         $response = $this->actingAs($this->adminUser)->post('/roles', $data);
 
         $response->assertRedirect();
         $response->assertSessionHas('message', 'Rol creado correctamente.');
-        
+
         $role = Role::where('name', 'Nuevo Rol')->first();
         $this->assertNotNull($role);
         $this->assertTrue($role->hasPermissionTo('test.permission'));
@@ -91,7 +92,7 @@ class RolesControllerTest extends TestCase
 
         $data = [
             'name' => 'Rol a Editar',
-            'permissions' => ['edit.perm']
+            'permissions' => ['edit.perm'],
         ];
 
         $response = $this->actingAs($this->adminUser)->put("/roles/{$role->id}", $data);

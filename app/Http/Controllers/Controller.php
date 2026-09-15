@@ -9,7 +9,7 @@ abstract class Controller
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data' => $data
+            'data' => $data,
         ], $status);
     }
 
@@ -17,7 +17,7 @@ abstract class Controller
     {
         return response()->json([
             'success' => false,
-            'message' => $message
+            'message' => $message,
         ], $status);
     }
 }

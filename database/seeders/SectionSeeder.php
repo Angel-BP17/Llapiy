@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use DB;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class SectionSeeder extends Seeder
@@ -16,7 +15,7 @@ class SectionSeeder extends Seeder
         DB::table('sections')->insert([
             [
                 'n_section' => 1,
-                'descripcion' => 'seccion 1'
+                'descripcion' => 'seccion 1',
             ],
         ]);
     }

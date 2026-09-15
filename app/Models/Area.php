@@ -33,9 +33,9 @@ class Area extends Model
     protected static function booted()
     {
         static::created(function ($area) {
-            // Crear carpeta en el almacenamiento con el nombre del área en el disco público
-            $folderName = 'documents/' . $area->descripcion;
-            Storage::disk('public')->makeDirectory($folderName);
+            // Crear carpeta en el almacenamiento privado con el nombre del área
+            $folderName = 'documents/'.$area->descripcion;
+            Storage::disk('local')->makeDirectory($folderName);
 
             // Opcional: Mensaje en logs para depuración
             \Log::info("Carpeta creada: {$folderName}");

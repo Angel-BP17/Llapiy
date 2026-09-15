@@ -2,16 +2,16 @@
 
 namespace Tests\Feature\Requests;
 
-use App\Models\User;
 use App\Models\Area;
+use App\Models\AreaGroupType;
 use App\Models\Group;
 use App\Models\GroupType;
-use App\Models\AreaGroupType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class UserRequestValidationTest extends TestCase
@@ -27,12 +27,12 @@ class UserRequestValidationTest extends TestCase
         $groupType = GroupType::create(['descripcion' => 'Tipo Test', 'abreviacion' => 'TT']);
         $areaGroupType = AreaGroupType::create([
             'area_id' => $area->id,
-            'group_type_id' => $groupType->id
+            'group_type_id' => $groupType->id,
         ]);
         $this->group = Group::create([
             'area_group_type_id' => $areaGroupType->id,
             'descripcion' => 'Grupo Test',
-            'abreviacion' => 'GT'
+            'abreviacion' => 'GT',
         ]);
 
         Permission::findOrCreate('users.create', 'web');
@@ -41,7 +41,7 @@ class UserRequestValidationTest extends TestCase
         Route::put('/test-user-update/{user}', function (\App\Http\Requests\User\UpdateUserRequest $request, User $user) {
             return response()->json(['validated' => $request->validated(), 'all' => $request->all()]);
         });
-        
+
         Route::post('/test-user-create', function (\App\Http\Requests\User\CreateUserRequest $request) {
             return response()->json(['validated' => $request->validated(), 'all' => $request->all()]);
         });
@@ -56,12 +56,12 @@ class UserRequestValidationTest extends TestCase
         $response = $this->postJson('/test-user-create', [
             'name' => 'Test',
             'last_name' => 'User',
-            'user_name' => 'test_user_unique_' . time(),
+            'user_name' => 'test_user_unique_'.time(),
             'dni' => '99999999',
-            'email' => 'test' . time() . '@example.com',
+            'email' => 'test'.time().'@example.com',
             'password' => 'password123',
             'roles' => ['administrador'], // Enviado en minúsculas
-            'group_id' => $this->group->id
+            'group_id' => $this->group->id,
         ]);
 
         $response->assertStatus(200);
