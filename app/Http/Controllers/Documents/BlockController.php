@@ -48,7 +48,7 @@ class BlockController extends Controller
         $paginatedBlocks = $query->paginate(10);
 
         $paginatedBlocks->getCollection()->transform(function ($block) {
-            $block->load(['user', 'group.areaGroupType.area', 'subgroup', 'box.andamio.section', 'documentarySeries']);
+            $block->load(['user', 'group.areaGroupType.area', 'subgroup', 'box.andamio.section', 'documentarySeries', 'periods']);
 
             $block->area = $block->group?->areaGroupType?->area?->descripcion ?? 'Sin área';
             $block->group_name = $block->group?->descripcion ?? 'Sin grupo';
@@ -134,6 +134,7 @@ class BlockController extends Controller
             'subgroup',
             'box.andamio.section',
             'documentarySeries',
+            'periods',
         ]);
 
         return Inertia::render('blocks/show', [

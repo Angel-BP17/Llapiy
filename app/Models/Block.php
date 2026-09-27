@@ -70,4 +70,40 @@ class Block extends Model
     {
         return $this->belongsTo(DocumentarySeries::class, 'documentary_series_id');
     }
+
+    public function periods()
+    {
+        return $this->hasMany(BlockPeriod::class, 'block_id')->orderBy('rango_inicial');
+    }
+
+    public static function getAvailableYears(): \Illuminate\Support\Collection
+    {
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $yearExpression = match ($driver) {
+            'pgsql' => 'EXTRACT(YEAR FROM fecha)::int as year',
+            'sqlite' => "strftime('%Y', fecha) as year",
+            default => 'YEAR(fecha) as year',
+        };
+
+        $yearsFromDates = self::selectRaw($yearExpression)
+            ->whereNotNull('fecha')
+            ->distinct()
+            ->pluck('year')
+            ->filter();
+
+        $yearsFromPeriodField = self::whereNotNull('periodo')
+            ->distinct()
+            ->pluck('periodo');
+
+        $yearsFromPeriods = BlockPeriod::distinct()->pluck('periodo');
+
+        return $yearsFromDates
+            ->merge($yearsFromPeriodField)
+            ->merge($yearsFromPeriods)
+            ->map(fn ($y) => (int) $y)
+            ->filter(fn ($y) => $y > 0)
+            ->unique()
+            ->sortDesc()
+            ->values();
+    }
 }

@@ -10,7 +10,7 @@ class AndamioService
     /**
      * Obtiene los andamios de una sección específica con optimización de columnas.
      */
-    public function getBySection(Section $section, ?string $search = null)
+    public function getBySection(Section $section, ?string $search = null, ?int $periodo = null)
     {
         return $section->andamios()
             ->select(['id', 'n_andamio', 'descripcion', 'section_id', 'created_at'])
@@ -21,8 +21,19 @@ class AndamioService
                         ->orWhere('descripcion', 'like', "%{$search}%")
                         ->orWhereHas('boxes.blocks', function ($q) use ($search) {
                             $q->where('n_bloque', 'like', "%{$search}%")
-                                ->orWhere('asunto', 'like', "%{$search}%");
+                                ->orWhere('asunto', 'like', "%{$search}%")
+                                ->orWhere('periodo', 'like', "%{$search}%")
+                                ->orWhereHas('periods', fn ($p) => $p->where('periodo', 'like', "%{$search}%"));
                         });
+                });
+            })
+            ->when($periodo, function ($query) use ($periodo) {
+                $query->whereHas('boxes.blocks', function ($q) use ($periodo) {
+                    $q->where(function ($sub) use ($periodo) {
+                        $sub->where('periodo', $periodo)
+                            ->orWhereYear('fecha', $periodo)
+                            ->orWhereHas('periods', fn ($p) => $p->where('periodo', $periodo));
+                    });
                 });
             })
             ->orderBy('n_andamio')

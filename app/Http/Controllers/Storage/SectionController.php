@@ -22,18 +22,30 @@ class SectionController extends Controller
     public function index(IndexSectionRequest $request): Response
     {
         $search = $request->input('search');
-        $sections = $this->service->getAll($search);
+        $periodo = $request->filled('periodo') ? (int) $request->input('periodo') : null;
+        $sections = $this->service->getAll($search, $periodo);
         $stats = $this->service->getStorageStats();
 
         $searchedBlocks = [];
-        if ($search) {
+        if ($search || $periodo) {
             $searchedBlocks = \App\Models\Block::query()
                 ->select(['id', 'n_bloque', 'asunto', 'folios', 'periodo', 'box_id'])
-                ->where(function ($q) use ($search) {
-                    $q->where('n_bloque', 'like', "%{$search}%")
-                        ->orWhere('asunto', 'like', "%{$search}%");
+                ->when($search, function ($q) use ($search) {
+                    $q->where(function ($inner) use ($search) {
+                        $inner->where('n_bloque', 'like', "%{$search}%")
+                            ->orWhere('asunto', 'like', "%{$search}%")
+                            ->orWhere('periodo', 'like', "%{$search}%")
+                            ->orWhereHas('periods', fn ($p) => $p->where('periodo', 'like', "%{$search}%"));
+                    });
                 })
-                ->with(['box.andamio.section'])
+                ->when($periodo, function ($q) use ($periodo) {
+                    $q->where(function ($inner) use ($periodo) {
+                        $inner->where('periodo', $periodo)
+                            ->orWhereYear('fecha', $periodo)
+                            ->orWhereHas('periods', fn ($p) => $p->where('periodo', $periodo));
+                    });
+                })
+                ->with(['box.andamio.section', 'periods'])
                 ->whereNotNull('box_id')
                 ->limit(5)
                 ->get()
@@ -44,6 +56,7 @@ class SectionController extends Controller
                         'asunto' => $block->asunto,
                         'folios' => $block->folios,
                         'periodo' => $block->periodo,
+                        'periods' => $block->periods,
                         'path' => [
                             'section' => $block->box?->andamio?->section?->only(['id', 'n_section', 'descripcion']),
                             'andamio' => $block->box?->andamio?->only(['id', 'n_andamio', 'descripcion']),
@@ -65,7 +78,11 @@ class SectionController extends Controller
                 'to' => $sections->lastItem(),
             ],
             'level' => 'sections',
-            'filters' => $request->only(['search']),
+            'filters' => [
+                'search' => $search ?? '',
+                'periodo' => $periodo ? (string) $periodo : '',
+            ],
+            'years' => \App\Models\Block::getAvailableYears(),
         ]);
     }
 

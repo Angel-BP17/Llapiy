@@ -7,6 +7,7 @@ use App\Models\Area;
 use App\Models\Block;
 use App\Models\Box;
 use App\Models\Section;
+use App\Support\PhpIniHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -76,6 +77,8 @@ class InboxService
             'boxes' => $boxes,
             'attendedBlocksCount' => $attendedBlocksCount,
             'unattendedBlocksCount' => $unattendedBlocksCount,
+            'maxUploadSize' => PhpIniHelper::getMaxUploadFileSize(),
+            'maxUploadSizeFormatted' => PhpIniHelper::getMaxUploadFileSizeFormatted(),
         ];
     }
 

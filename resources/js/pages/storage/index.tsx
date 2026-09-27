@@ -19,7 +19,11 @@ interface StorageIndexProps {
   activeSection: any;
   activeAndamio: any;
   activeBox: any;
-  filters: any;
+  filters: {
+    search?: string;
+    periodo?: string | number;
+  };
+  years?: number[];
   counts: any; 
   searchedBlocks?: any[];
   stats?: {
@@ -37,10 +41,11 @@ export default function Index({
   level, sections, andamios, boxes, archivos, 
   activeSection, activeAndamio, activeBox, 
   filters, counts, searchedBlocks = [],
-  stats
+  stats, years = []
 }: StorageIndexProps) {
   const { auth } = usePage().props as any;
   const [search, setSearch] = useState(filters?.search || "");
+  const [periodo, setPeriodo] = useState(filters?.periodo ? String(filters.periodo) : "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [error, setError] = useState("");
@@ -62,9 +67,14 @@ export default function Index({
 
   const can = (p: string) => auth.permissions?.includes(p) || auth.roles?.some((r: any) => (typeof r === 'string' ? r : r?.name || '').toUpperCase() === 'ADMINISTRADOR');
 
-  const handleSearch = () => {
+  const handleSearch = (overridePeriodo?: string) => {
     setIsFiltering(true);
-    router.get(window.location.pathname, { search }, {
+    const pVal = overridePeriodo !== undefined ? overridePeriodo : periodo;
+    const queryParams: Record<string, string> = {};
+    if (search.trim()) queryParams.search = search.trim();
+    if (pVal) queryParams.periodo = pVal;
+
+    router.get(window.location.pathname, queryParams, {
       preserveState: true,
       preserveScroll: true,
       onFinish: () => setIsFiltering(false),
@@ -73,6 +83,7 @@ export default function Index({
 
   const handleClearSearch = () => {
     setSearch("");
+    setPeriodo("");
     setIsFiltering(true);
     router.get(window.location.pathname, {}, {
       preserveState: true,
@@ -239,29 +250,106 @@ export default function Index({
         </nav>
 
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <div className="grid gap-3 md:grid-cols-2">
-            <input 
-              id="storage-search"
-              value={search} 
-              onChange={(e) => setSearch(e.target.value)} 
-              className="h-10 rounded-lg border border-border bg-background px-3 text-sm" 
-              placeholder={`Buscar en ${level}... (o por código de bloque)`} 
-            />
-            <div className="flex gap-2">
-              <button onClick={handleSearch} className="h-10 flex-1 rounded-lg bg-primary text-sm font-semibold text-primary-foreground">Filtrar</button>
-              <button onClick={() => { setSearch(""); router.get(window.location.pathname); }} className="h-10 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted">Limpiar</button>
-              <a
-                href={sectionsRoutes.report ? sectionsRoutes.report.url() : "/sections/report"}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-10 px-4 items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-semibold text-white transition hover:bg-red-700 whitespace-nowrap shadow-sm shrink-0"
-                title="Generar Reporte PDF"
+          <div className="grid gap-3 sm:grid-cols-12 items-center">
+            {/* Buscador de texto */}
+            <div className="sm:col-span-6 lg:col-span-5">
+              <input 
+                id="storage-search"
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" 
+                placeholder={`Buscar en ${level}... (o por código/asunto)`} 
+              />
+            </div>
+
+            {/* Filtro manual de periodo */}
+            <div className="sm:col-span-3 lg:col-span-3">
+              <input
+                id="storage-periodo"
+                type="number"
+                list="storage-years-list"
+                value={periodo}
+                onChange={(e) => setPeriodo(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="Periodo (año ej. 2026)..."
+                min="1900"
+                max="2100"
+              />
+              {years && years.length > 0 && (
+                <datalist id="storage-years-list">
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      Periodo {y}
+                    </option>
+                  ))}
+                </datalist>
+              )}
+            </div>
+
+            {/* Acciones */}
+            <div className="sm:col-span-3 lg:col-span-4 flex items-center gap-2">
+              <button 
+                onClick={() => handleSearch()} 
+                disabled={isFiltering}
+                className="h-10 flex-1 rounded-lg bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition flex items-center justify-center gap-1.5"
               >
-                <Printer className="h-4 w-4" />
-                <span>Reporte PDF</span>
-              </a>
+                {isFiltering ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                <span>Filtrar</span>
+              </button>
+              {(search || periodo) && (
+                <button 
+                  onClick={handleClearSearch} 
+                  className="h-10 rounded-lg border border-border bg-card px-3 text-sm font-semibold text-foreground hover:bg-muted transition"
+                  title="Limpiar filtros"
+                >
+                  Limpiar
+                </button>
+              )}
+              {level === 'sections' && (
+                <a
+                  href={sectionsRoutes.report ? sectionsRoutes.report.url() : "/sections/report"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-10 px-3 items-center justify-center gap-1.5 rounded-lg bg-red-600 text-sm font-semibold text-white transition hover:bg-red-700 whitespace-nowrap shadow-sm shrink-0"
+                  title="Generar Reporte PDF"
+                >
+                  <Printer className="h-4 w-4" />
+                  <span className="hidden lg:inline">Reporte PDF</span>
+                </a>
+              )}
             </div>
           </div>
+
+          {/* Badges de filtros activos */}
+          {(search || periodo) && (
+            <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-muted-foreground font-medium">Filtros activos:</span>
+              {search && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 text-primary px-2 py-0.5 font-semibold">
+                  Texto: "{search}"
+                  <button 
+                    onClick={() => { setSearch(""); handleSearch(); }}
+                    className="ml-1 hover:text-red-500 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {periodo && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 font-semibold">
+                  Periodo: {periodo}
+                  <button 
+                    onClick={() => { setPeriodo(""); handleSearch(""); }}
+                    className="ml-1 hover:text-red-500 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* BLOQUES ENCONTRADOS */}
@@ -276,6 +364,20 @@ export default function Index({
                   <div>
                     <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Código de Bloque / Asunto</h4>
                     <p className="text-sm font-semibold text-foreground mt-0.5">{b.n_bloque} - {b.asunto}</p>
+                    {/* Periodos del bloque */}
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {b.periods && b.periods.length > 0 ? (
+                        b.periods.map((p: any) => (
+                          <span key={p.id || `${p.rango_inicial}-${p.periodo}`} className="inline-flex items-center rounded bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-800 dark:text-indigo-200 border border-indigo-200/80 dark:border-indigo-800">
+                            {p.rango_inicial}-{p.rango_final} ({p.periodo})
+                          </span>
+                        ))
+                      ) : b.periodo ? (
+                        <span className="inline-flex items-center rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                          Año {b.periodo}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   <div>
                     <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Ubicación Física</h4>
@@ -439,10 +541,36 @@ export default function Index({
                       <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                       <td className="px-4 py-3">
                         <p className="font-bold text-foreground">{a.asunto}</p>
-                        <p className="text-[10px] text-muted-foreground">Nº Bloque: <span className="font-mono font-bold text-foreground">{a.n_bloque}</span></p>
+                        <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                          <p className="text-[10px] text-muted-foreground">Nº Bloque: <span className="font-mono font-bold text-foreground">{a.n_bloque}</span></p>
+                          {a.periods && a.periods.length > 1 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {a.periods.map((p: any, pIdx: number) => (
+                                <span key={pIdx} className="rounded bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 text-[9px] font-mono font-semibold text-indigo-800 dark:text-indigo-200 border border-indigo-200/80 dark:border-indigo-800" title={`Folios ${p.rango_inicial}-${p.rango_final}`}>
+                                  {p.periodo}: {p.rango_inicial}-{p.rango_final}
+                                </span>
+                              ))}
+                            </div>
+                          ) : a.periods && a.periods.length === 1 ? (
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-mono text-muted-foreground border border-border">
+                              Periodo {a.periods[0].periodo}
+                            </span>
+                          ) : a.periodo ? (
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-mono text-muted-foreground border border-border">
+                              Periodo {a.periodo}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-xs font-medium text-foreground">{a.documentary_series?.codigo || 'Sin Serie'}</p>
+                        {(() => {
+                          const ds = a.documentary_series || a.documentarySeries;
+                          return (
+                            <p className="text-xs font-medium text-foreground" title={ds ? `${ds.codigo} - ${ds.nombre}` : undefined}>
+                              {ds ? `${ds.codigo} - ${ds.nombre}` : <span className="text-muted-foreground italic text-xs">Sin serie</span>}
+                            </p>
+                          );
+                        })()}
                         <p className="text-[10px] text-muted-foreground">{a.folios || 0} folios</p>
                       </td>
                       <td className="px-4 py-3 text-right">

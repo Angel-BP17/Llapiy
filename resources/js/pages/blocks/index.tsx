@@ -20,6 +20,7 @@ import {
     Search,
     SlidersHorizontal,
     Loader2,
+    Calendar,
 } from "lucide-react";
 import { MONTHS } from "@/constants";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -44,6 +45,13 @@ interface BlocksIndexProps {
     documentarySeries: any[];
 }
 
+export type BlockPeriodItem = {
+    id?: number;
+    rango_inicial: string;
+    rango_final: string;
+    periodo: string;
+};
+
 type BlockForm = {
     n_bloque: string;
     asunto: string;
@@ -52,6 +60,7 @@ type BlockForm = {
     rango_final: string;
     fecha: string;
     documentary_series_id: string;
+    periods: BlockPeriodItem[];
 };
 
 const emptyForm: BlockForm = {
@@ -62,6 +71,7 @@ const emptyForm: BlockForm = {
     rango_final: "",
     fecha: "",
     documentary_series_id: "",
+    periods: [{ rango_inicial: "", rango_final: "", periodo: "" }],
 };
 
 export default function Index({
@@ -292,6 +302,27 @@ export default function Index({
 
         const data: any = { ...form };
 
+        if (form.periods && form.periods.length > 0) {
+            for (let i = 0; i < form.periods.length; i++) {
+                const p = form.periods[i];
+                if (!p.rango_inicial || !p.rango_final || !p.periodo) {
+                    setError(`Completa el rango y año del periodo #${i + 1}`);
+                    setIsSubmitting(false);
+                    return;
+                }
+                if (parseInt(p.rango_final) < parseInt(p.rango_inicial)) {
+                    setError(`En el periodo #${i + 1}, el folio final (${p.rango_final}) no puede ser menor al inicial (${p.rango_inicial})`);
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+            data.periods = form.periods.map((p) => ({
+                rango_inicial: parseInt(p.rango_inicial),
+                rango_final: parseInt(p.rango_final),
+                periodo: parseInt(p.periodo),
+            }));
+        }
+
         if (editOpen) {
             router.post(
                 `/bloques/${selectedBlock.id}`,
@@ -341,9 +372,66 @@ export default function Index({
         setPdfModalOpen(true);
     };
 
+    const handleAddPeriod = () => {
+        setForm((prev) => {
+            const last = prev.periods[prev.periods.length - 1];
+            const nextStart = last && !isNaN(parseInt(last.rango_final))
+                ? String(parseInt(last.rango_final) + 1)
+                : "";
+            const nextYear = last && !isNaN(parseInt(last.periodo))
+                ? String(parseInt(last.periodo) + 1)
+                : (prev.fecha ? prev.fecha.split("-")[0] : "");
+
+            return {
+                ...prev,
+                periods: [
+                    ...prev.periods,
+                    {
+                        rango_inicial: nextStart,
+                        rango_final: prev.rango_final || "",
+                        periodo: nextYear,
+                    },
+                ],
+            };
+        });
+    };
+
+    const handleRemovePeriod = (index: number) => {
+        setForm((prev) => ({
+            ...prev,
+            periods: prev.periods.filter((_, i) => i !== index),
+        }));
+    };
+
+    const handlePeriodChange = (
+        index: number,
+        field: "rango_inicial" | "rango_final" | "periodo",
+        value: string,
+    ) => {
+        setForm((prev) => {
+            const nextPeriods = [...prev.periods];
+            nextPeriods[index] = { ...nextPeriods[index], [field]: value };
+            return { ...prev, periods: nextPeriods };
+        });
+    };
+
     const openEdit = (block: any) => {
         const ds = block.documentary_series || block.documentarySeries;
         setSelectedBlock(block);
+
+        const existingPeriods = (block.periods && block.periods.length > 0)
+            ? block.periods.map((p: any) => ({
+                id: p.id,
+                rango_inicial: String(p.rango_inicial || ""),
+                rango_final: String(p.rango_final || ""),
+                periodo: String(p.periodo || ""),
+            }))
+            : [{
+                rango_inicial: String(block.rango_inicial || ""),
+                rango_final: String(block.rango_final || ""),
+                periodo: String(block.periodo || (block.fecha ? extractISODate(block.fecha).split("-")[0] : "")),
+            }];
+
         setForm({
             n_bloque: block.n_bloque,
             asunto: block.asunto,
@@ -351,7 +439,8 @@ export default function Index({
             rango_inicial: String(block.rango_inicial || ""),
             rango_final: String(block.rango_final || ""),
             fecha: extractISODate(block.fecha),
-            documentary_series_id: ds ? String(ds.id) : "",
+            documentary_series_id: ds ? String(ds.id) : (block.documentary_series_id ? String(block.documentary_series_id) : ""),
+            periods: existingPeriods,
         });
         setEditOpen(true);
     };
@@ -743,8 +832,24 @@ export default function Index({
                                             <td className="px-4 py-3 font-medium text-foreground">
                                                 {b.folios || "-"}
                                             </td>
-                                            <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-700">
-                                                {b.rango_inicial && b.rango_final ? `${b.rango_inicial} - ${b.rango_final}` : "-"}
+                                            <td className="px-4 py-3 text-xs">
+                                                <div className="font-mono font-semibold text-slate-700">
+                                                    {b.rango_inicial && b.rango_final ? `${b.rango_inicial} - ${b.rango_final}` : "-"}
+                                                </div>
+                                                {b.periods && b.periods.length > 1 && (
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        {b.periods.map((p: any) => (
+                                                            <span
+                                                                key={p.id || `${p.rango_inicial}-${p.periodo}`}
+                                                                className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 px-1.5 py-0.5 text-[10px] font-mono text-indigo-700 dark:text-indigo-300"
+                                                                title={`Folios ${p.rango_inicial} al ${p.rango_final} del año ${p.periodo}`}
+                                                            >
+                                                                <Calendar className="h-2.5 w-2.5" />
+                                                                {p.rango_inicial}-{p.rango_final} ({p.periodo})
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
@@ -896,7 +1001,15 @@ export default function Index({
                                             const calculatedFolios = (!isNaN(startNum) && !isNaN(endNum) && endNum >= startNum)
                                                 ? String(endNum - startNum + 1)
                                                 : prev.folios;
-                                            return { ...prev, rango_inicial: newStart, folios: calculatedFolios };
+                                            const updatedPeriods = prev.periods.length <= 1
+                                                ? [{
+                                                    ...prev.periods[0],
+                                                    rango_inicial: newStart,
+                                                    rango_final: prev.rango_final,
+                                                    periodo: prev.periods[0]?.periodo || (prev.fecha ? prev.fecha.split("-")[0] : ""),
+                                                }]
+                                                : prev.periods;
+                                            return { ...prev, rango_inicial: newStart, folios: calculatedFolios, periods: updatedPeriods };
                                         });
                                     }}
                                     placeholder="Rango inicial"
@@ -917,7 +1030,15 @@ export default function Index({
                                             const calculatedFolios = (!isNaN(startNum) && !isNaN(endNum) && endNum >= startNum)
                                                 ? String(endNum - startNum + 1)
                                                 : prev.folios;
-                                            return { ...prev, rango_final: newEnd, folios: calculatedFolios };
+                                            const updatedPeriods = prev.periods.length <= 1
+                                                ? [{
+                                                    ...prev.periods[0],
+                                                    rango_inicial: prev.rango_inicial,
+                                                    rango_final: newEnd,
+                                                    periodo: prev.periods[0]?.periodo || (prev.fecha ? prev.fecha.split("-")[0] : ""),
+                                                }]
+                                                : prev.periods;
+                                            return { ...prev, rango_final: newEnd, folios: calculatedFolios, periods: updatedPeriods };
                                         });
                                     }}
                                     placeholder="Rango final"
@@ -930,12 +1051,103 @@ export default function Index({
                                 <input
                                     type="date"
                                     value={form.fecha}
-                                    onChange={(e) =>
-                                        setForm({ ...form, fecha: e.target.value })
-                                    }
+                                    onChange={(e) => {
+                                        const newDate = e.target.value;
+                                        const newYear = newDate ? newDate.split("-")[0] : "";
+                                        setForm((prev) => {
+                                            const updatedPeriods = (prev.periods.length <= 1 && (!prev.periods[0]?.periodo || prev.periods[0]?.periodo === prev.fecha?.split("-")[0]))
+                                                ? [{
+                                                    rango_inicial: prev.periods[0]?.rango_inicial || prev.rango_inicial,
+                                                    rango_final: prev.periods[0]?.rango_final || prev.rango_final,
+                                                    periodo: newYear,
+                                                }]
+                                                : prev.periods;
+                                            return { ...prev, fecha: newDate, periods: updatedPeriods };
+                                        });
+                                    }}
                                     className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
                                     required
                                 />
+                            </div>
+
+                            {/* SECCIÓN DE PERIODOS Y SUB-RANGOS */}
+                            <div className="space-y-3 md:col-span-2 rounded-xl border border-border/80 bg-muted/20 p-3.5">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                    <div>
+                                        <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                            <Calendar className="h-3.5 w-3.5 text-primary" />
+                                            Distribución de Folios por Periodo (Años)
+                                        </h4>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Si el bloque contiene documentos de distintos años, divide los folios por periodo aquí.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddPeriod}
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition self-start sm:self-auto"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Dividir / Agregar periodo
+                                    </button>
+                                </div>
+
+                                <div className="space-y-2 pt-1">
+                                    {form.periods.map((p, pIdx) => (
+                                        <div
+                                            key={pIdx}
+                                            className="grid grid-cols-12 gap-2 items-center rounded-lg border border-border bg-background p-2.5 shadow-sm"
+                                        >
+                                            <div className="col-span-4 sm:col-span-3 space-y-1">
+                                                <label className="text-[10px] font-bold text-muted-foreground uppercase">Desde</label>
+                                                <input
+                                                    type="number"
+                                                    value={p.rango_inicial}
+                                                    onChange={(e) => handlePeriodChange(pIdx, "rango_inicial", e.target.value)}
+                                                    placeholder="Ej. 1"
+                                                    className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs font-mono"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="col-span-4 sm:col-span-3 space-y-1">
+                                                <label className="text-[10px] font-bold text-muted-foreground uppercase">Hasta</label>
+                                                <input
+                                                    type="number"
+                                                    value={p.rango_final}
+                                                    onChange={(e) => handlePeriodChange(pIdx, "rango_final", e.target.value)}
+                                                    placeholder="Ej. 60"
+                                                    className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs font-mono"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="col-span-4 sm:col-span-4 space-y-1">
+                                                <label className="text-[10px] font-bold text-muted-foreground uppercase">Periodo (Año)</label>
+                                                <input
+                                                    type="number"
+                                                    value={p.periodo}
+                                                    onChange={(e) => handlePeriodChange(pIdx, "periodo", e.target.value)}
+                                                    placeholder="Ej. 2006"
+                                                    className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs font-mono font-bold"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="col-span-12 sm:col-span-2 flex justify-end items-end pt-2 sm:pt-0">
+                                                {form.periods.length > 1 ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemovePeriod(pIdx)}
+                                                        className="inline-flex items-center gap-1 rounded-md p-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                                                        title="Eliminar este periodo"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                        <span className="sm:hidden text-xs">Quitar</span>
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-[10px] text-muted-foreground italic hidden sm:inline">Único</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <div className="flex justify-end gap-2 pt-2">
@@ -1108,6 +1320,27 @@ export default function Index({
                                     {selectedBlock.asunto}
                                 </p>
                             </div>
+
+                            {selectedBlock.periods && selectedBlock.periods.length > 0 && (
+                                <div className="rounded-xl border border-border bg-background p-4 space-y-2.5">
+                                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
+                                        <Calendar className="h-3.5 w-3.5 text-primary" /> Distribución de Folios por Periodo
+                                    </p>
+                                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                        {selectedBlock.periods.map((p: any, pIdx: number) => (
+                                            <div key={p.id || pIdx} className="rounded-lg border border-border/70 bg-muted/20 p-2.5 flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-xs font-semibold text-foreground">Folios {p.rango_inicial} - {p.rango_final}</span>
+                                                    <p className="text-[10px] text-muted-foreground">({p.rango_final - p.rango_inicial + 1} folios)</p>
+                                                </div>
+                                                <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold text-primary">
+                                                    Año {p.periodo}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="rounded-xl border border-border bg-background p-3">
                                     <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground font-bold">

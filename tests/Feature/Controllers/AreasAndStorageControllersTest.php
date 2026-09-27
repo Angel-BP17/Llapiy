@@ -4,7 +4,9 @@ namespace Tests\Feature\Controllers;
 
 use App\Models\Andamio;
 use App\Models\Area;
+use App\Models\Block;
 use App\Models\Box;
+use App\Models\DocumentarySeries;
 use App\Models\Section;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -165,5 +167,127 @@ class AreasAndStorageControllersTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_cajas_archivos_index_loads_documentary_series_for_blocks(): void
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+        $series = DocumentarySeries::create([
+            'codigo' => 'SER-TEST',
+            'nombre' => 'Serie de Prueba',
+            'descripcion' => 'Descripción de prueba',
+            'retencion_anios' => 5,
+        ]);
+
+        $block = Block::factory()->create([
+            'box_id' => $box->id,
+            'documentary_series_id' => $series->id,
+            'asunto' => 'Bloque con Serie Documental',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos");
+
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block->id)
+                ->where('archivos.0.documentary_series_id', $series->id)
+                ->where('archivos.0.documentary_series.codigo', 'SER-TEST')
+                ->where('archivos.0.documentary_series.nombre', 'Serie de Prueba')
+            );
+    }
+
+    public function test_storage_levels_filter_by_periodo_successfully(): void
+    {
+        // Sección 1 con bloque de 2006
+        $section1 = Section::factory()->create(['n_section' => 'S1']);
+        $andamio1 = Andamio::factory()->create(['section_id' => $section1->id, 'n_andamio' => 101]);
+        $box1 = Box::factory()->create(['andamio_id' => $andamio1->id, 'n_box' => 'B-01']);
+        $block1 = Block::factory()->create([
+            'box_id' => $box1->id,
+            'rango_inicial' => 1,
+            'rango_final' => 60,
+            'periodo' => 2006,
+        ]);
+        $block1->periods()->create([
+            'rango_inicial' => 1,
+            'rango_final' => 60,
+            'periodo' => 2006,
+        ]);
+
+        // Sección 2 con bloque de 2007
+        $section2 = Section::factory()->create(['n_section' => 'S2']);
+        $andamio2 = Andamio::factory()->create(['section_id' => $section2->id, 'n_andamio' => 201]);
+        $box2 = Box::factory()->create(['andamio_id' => $andamio2->id, 'n_box' => 'B-02']);
+        $block2 = Block::factory()->create([
+            'box_id' => $box2->id,
+            'rango_inicial' => 61,
+            'rango_final' => 195,
+            'periodo' => 2007,
+        ]);
+        $block2->periods()->create([
+            'rango_inicial' => 61,
+            'rango_final' => 195,
+            'periodo' => 2007,
+        ]);
+
+        // 1. Nivel /sections?periodo=2006
+        $responseSections = $this->actingAs($this->adminUser)->get('/sections?periodo=2006');
+        $responseSections->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'sections')
+                ->has('sections', 1)
+                ->where('sections.0.id', $section1->id)
+                ->where('filters.periodo', '2006')
+                ->has('years')
+            );
+
+        // 2. Nivel /sections/{section1}/andamios?periodo=2006
+        $responseAndamios = $this->actingAs($this->adminUser)->get("/sections/{$section1->id}/andamios?periodo=2006");
+        $responseAndamios->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'andamios')
+                ->has('andamios', 1)
+                ->where('andamios.0.id', $andamio1->id)
+                ->where('filters.periodo', '2006')
+            );
+
+        // 3. Nivel /sections/{section1}/andamios/{andamio1}/boxes?periodo=2006
+        $responseBoxes = $this->actingAs($this->adminUser)->get("/sections/{$section1->id}/andamios/{$andamio1->id}/boxes?periodo=2006");
+        $responseBoxes->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'boxes')
+                ->has('boxes', 1)
+                ->where('boxes.0.id', $box1->id)
+                ->where('filters.periodo', '2006')
+            );
+
+        // 4. Nivel /sections/{section1}/andamios/{andamio1}/boxes/{box1}/archivos?periodo=2006
+        $responseArchivos = $this->actingAs($this->adminUser)->get("/sections/{$section1->id}/andamios/{$andamio1->id}/boxes/{$box1->id}/archivos?periodo=2006");
+        $responseArchivos->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block1->id)
+                ->where('filters.periodo', '2006')
+            );
+
+        // Nivel archivos con periodo no existente en esa caja debe devolver 0
+        $responseArchivosEmpty = $this->actingAs($this->adminUser)->get("/sections/{$section1->id}/andamios/{$andamio1->id}/boxes/{$box1->id}/archivos?periodo=2007");
+        $responseArchivosEmpty->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 0)
+            );
     }
 }

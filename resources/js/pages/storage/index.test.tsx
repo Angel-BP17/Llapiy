@@ -87,11 +87,24 @@ describe('Storage Index Page', () => {
 
   it('debe permitir buscar en el nivel actual', () => {
     render(<Index {...mockProps} />);
-    const input = screen.getByPlaceholderText('Buscar en sections... (o por código de bloque)');
+    const input = screen.getByPlaceholderText('Buscar en sections... (o por código/asunto)');
     fireEvent.change(input, { target: { value: '99' } });
     fireEvent.click(screen.getByText('Filtrar'));
     
     expect(router.get).toHaveBeenCalled();
+  });
+
+  it('debe permitir filtrar ingresando un periodo manualmente', () => {
+    render(<Index {...mockProps} />);
+    const periodoInput = screen.getByPlaceholderText('Periodo (año ej. 2026)...');
+    fireEvent.change(periodoInput, { target: { value: '2026' } });
+    fireEvent.click(screen.getByText('Filtrar'));
+
+    expect(router.get).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ periodo: '2026' }),
+      expect.any(Object)
+    );
   });
 
   it('debe llamar a router.post al guardar un nuevo item', () => {

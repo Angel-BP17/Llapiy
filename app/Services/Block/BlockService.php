@@ -25,6 +25,7 @@ class BlockService
             'user:id,name,last_name',
             'box.andamio.section',
             'documentarySeries:id,codigo,nombre',
+            'periods',
         ]);
 
         return compact('block');
@@ -67,6 +68,7 @@ class BlockService
                 'box.andamio:id,n_andamio,section_id',
                 'box.andamio.section:id,n_section',
                 'documentarySeries:id,codigo,nombre',
+                'periods',
             ])
             ->when(
                 $data->n_bloque,
@@ -98,7 +100,10 @@ class BlockService
             )
             ->when(
                 $data->year,
-                fn ($q, $year) => $q->whereYear('fecha', $year)
+                fn ($q, $year) => $q->where(function ($sub) use ($year) {
+                    $sub->whereYear('fecha', $year)
+                        ->orWhereHas('periods', fn ($p) => $p->where('periodo', $year));
+                })
             )
             ->when(
                 $data->month,
@@ -117,18 +122,7 @@ class BlockService
                 fn ($q, $sectionId) => $q->whereHas('box.andamio', fn ($q) => $q->where('section_id', $sectionId))
             );
 
-        $driver = DB::connection()->getDriverName();
-        $yearExpression = match ($driver) {
-            'pgsql' => 'EXTRACT(YEAR FROM fecha)::int as year',
-            'sqlite' => "strftime('%Y', fecha) as year",
-            default => 'YEAR(fecha) as year',
-        };
-
-        $years = Block::selectRaw($yearExpression)
-            ->whereNotNull('fecha')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year');
+        $years = Block::getAvailableYears();
 
         return [
             'blocks' => $query,
@@ -168,6 +162,22 @@ class BlockService
                 'documentary_series_id' => ! empty($data['documentary_series_id']) ? $data['documentary_series_id'] : null,
             ]);
 
+            if (! empty($data['periods']) && is_array($data['periods'])) {
+                foreach ($data['periods'] as $period) {
+                    $block->periods()->create([
+                        'rango_inicial' => (int) $period['rango_inicial'],
+                        'rango_final' => (int) $period['rango_final'],
+                        'periodo' => (int) $period['periodo'],
+                    ]);
+                }
+            } else {
+                $block->periods()->create([
+                    'rango_inicial' => (int) $data['rango_inicial'],
+                    'rango_final' => (int) $data['rango_final'],
+                    'periodo' => Carbon::parse($data['fecha'])->year,
+                ]);
+            }
+
             return $block;
         });
     }
@@ -202,6 +212,25 @@ class BlockService
                     ? (! empty($data['documentary_series_id']) ? $data['documentary_series_id'] : null)
                     : $block->documentary_series_id,
             ]);
+
+            if (array_key_exists('periods', $data)) {
+                $block->periods()->delete();
+                if (! empty($data['periods']) && is_array($data['periods'])) {
+                    foreach ($data['periods'] as $period) {
+                        $block->periods()->create([
+                            'rango_inicial' => (int) $period['rango_inicial'],
+                            'rango_final' => (int) $period['rango_final'],
+                            'periodo' => (int) $period['periodo'],
+                        ]);
+                    }
+                } else {
+                    $block->periods()->create([
+                        'rango_inicial' => (int) $block->rango_inicial,
+                        'rango_final' => (int) $block->rango_final,
+                        'periodo' => (int) $block->periodo,
+                    ]);
+                }
+            }
 
             return $block;
         });
@@ -247,7 +276,7 @@ class BlockService
 
     public function report($data)
     {
-        return Block::query()->with(['group.areaGroupType.area', 'subgroup', 'user', 'box.andamio.section', 'documentarySeries'])
+        return Block::query()->with(['group.areaGroupType.area', 'subgroup', 'user', 'box.andamio.section', 'documentarySeries', 'periods'])
             ->when(
                 $data->asunto,
                 fn ($q, $asunto) => $q->where('asunto', 'like', "%{$asunto}%")
@@ -274,7 +303,10 @@ class BlockService
             )
             ->when(
                 $data->year,
-                fn ($q, $year) => $q->whereYear('fecha', $year)
+                fn ($q, $year) => $q->where(function ($sub) use ($year) {
+                    $sub->whereYear('fecha', $year)
+                        ->orWhereHas('periods', fn ($p) => $p->where('periodo', $year));
+                })
             )
             ->when(
                 $data->month,

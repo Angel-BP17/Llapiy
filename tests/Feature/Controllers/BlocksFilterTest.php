@@ -111,4 +111,127 @@ class BlocksFilterTest extends TestCase
             'documentary_series_id' => $series->id,
         ]);
     }
+
+    public function test_can_create_and_filter_block_with_multiple_period_ranges(): void
+    {
+        $data = [
+            'asunto' => 'Bloque Multi Periodo 2006-2007',
+            'folios' => '195',
+            'fecha' => '2006-05-10',
+            'rango_inicial' => 1,
+            'rango_final' => 195,
+            'periods' => [
+                [
+                    'rango_inicial' => 1,
+                    'rango_final' => 60,
+                    'periodo' => 2006,
+                ],
+                [
+                    'rango_inicial' => 61,
+                    'rango_final' => 195,
+                    'periodo' => 2007,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->adminUser)->post('/bloques', $data);
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('blocks', [
+            'asunto' => 'Bloque Multi Periodo 2006-2007',
+            'rango_inicial' => '1',
+            'rango_final' => '195',
+        ]);
+
+        $block = Block::where('asunto', 'Bloque Multi Periodo 2006-2007')->firstOrFail();
+
+        $this->assertDatabaseHas('block_periods', [
+            'block_id' => $block->id,
+            'rango_inicial' => 1,
+            'rango_final' => 60,
+            'periodo' => 2006,
+        ]);
+
+        $this->assertDatabaseHas('block_periods', [
+            'block_id' => $block->id,
+            'rango_inicial' => 61,
+            'rango_final' => 195,
+            'periodo' => 2007,
+        ]);
+
+        // 1. Filtrar por 2006 -> Debe encontrarlo
+        $res2006 = $this->actingAs($this->adminUser)->get('/bloques?year=2006');
+        $res2006->assertStatus(200);
+        $res2006->assertInertia(fn ($page) => $page
+            ->component('blocks/index')
+            ->has('blocks', 1)
+            ->where('blocks.0.id', $block->id)
+            ->has('blocks.0.periods', 2)
+        );
+
+        // 2. Filtrar por 2007 -> Debe encontrarlo también gracias a su sub-rango
+        $res2007 = $this->actingAs($this->adminUser)->get('/bloques?year=2007');
+        $res2007->assertStatus(200);
+        $res2007->assertInertia(fn ($page) => $page
+            ->component('blocks/index')
+            ->has('blocks', 1)
+            ->where('blocks.0.id', $block->id)
+        );
+
+        // 3. Filtrar por 2008 -> NO debe encontrarlo
+        $res2008 = $this->actingAs($this->adminUser)->get('/bloques?year=2008');
+        $res2008->assertStatus(200);
+        $res2008->assertInertia(fn ($page) => $page
+            ->component('blocks/index')
+            ->has('blocks', 0)
+        );
+    }
+
+    public function test_storage_box_and_global_search_finds_block_by_range_period(): void
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+
+        $block = Block::factory()->create([
+            'box_id' => $box->id,
+            'asunto' => 'Bloque en Almacen con dos anios',
+            'rango_inicial' => 1,
+            'rango_final' => 195,
+            'periodo' => 2006,
+        ]);
+
+        $block->periods()->delete();
+        $block->periods()->create([
+            'rango_inicial' => 1,
+            'rango_final' => 60,
+            'periodo' => 2006,
+        ]);
+        $block->periods()->create([
+            'rango_inicial' => 61,
+            'rango_final' => 195,
+            'periodo' => 2007,
+        ]);
+
+        // Buscar en la caja por 2007
+        $response = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=2007");
+
+        $response->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block->id)
+            );
+
+        // Buscar en el buscador general de secciones por 2007
+        $searchResponse = $this->actingAs($this->adminUser)->get('/sections?search=2007');
+        $searchResponse->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->component('storage/index')
+                ->has('searchedBlocks', 1)
+                ->where('searchedBlocks.0.id', $block->id)
+            );
+    }
 }

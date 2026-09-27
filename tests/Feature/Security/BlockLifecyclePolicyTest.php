@@ -3,6 +3,7 @@
 namespace Tests\Feature\Security;
 
 use App\Models\Block;
+use App\Models\DocumentarySeries;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -158,5 +159,120 @@ class BlockLifecyclePolicyTest extends TestCase
 
         $response->assertStatus(302);
         $response->assertSessionHas('error', 'El archivo adjunto excede el tamaño máximo permitido por el servidor.');
+    }
+
+    public function test_block_creation_and_update_persists_documentary_series(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('ADMINISTRADOR');
+
+        $seriesA = DocumentarySeries::create([
+            'codigo' => 'SER-A',
+            'nombre' => 'Serie A',
+            'descripcion' => 'Descripción A',
+            'retencion_anios' => 5,
+        ]);
+
+        $seriesB = DocumentarySeries::create([
+            'codigo' => 'SER-B',
+            'nombre' => 'Serie B',
+            'descripcion' => 'Descripción B',
+            'retencion_anios' => 10,
+        ]);
+
+        // 1. Crear bloque con serie documental
+        $createResponse = $this->actingAs($admin)->post('/bloques', [
+            'asunto' => 'Bloque con Serie A',
+            'folios' => '50',
+            'rango_inicial' => 1,
+            'rango_final' => 50,
+            'fecha' => '2026-09-19',
+            'documentary_series_id' => (string) $seriesA->id,
+        ]);
+
+        $createResponse->assertSessionHas('message', 'Bloque creado correctamente.');
+        $this->assertDatabaseHas('blocks', [
+            'asunto' => 'Bloque con Serie A',
+            'documentary_series_id' => $seriesA->id,
+        ]);
+
+        $block = Block::where('asunto', 'Bloque con Serie A')->firstOrFail();
+
+        // 2. Actualizar cambiando a otra serie documental
+        $updateResponse = $this->actingAs($admin)->put("/bloques/{$block->id}", [
+            'asunto' => 'Bloque con Serie B',
+            'folios' => '50',
+            'rango_inicial' => 1,
+            'rango_final' => 50,
+            'fecha' => '2026-09-19',
+            'documentary_series_id' => (string) $seriesB->id,
+        ]);
+
+        $updateResponse->assertSessionHas('message', 'Bloque actualizado correctamente.');
+        $this->assertDatabaseHas('blocks', [
+            'id' => $block->id,
+            'asunto' => 'Bloque con Serie B',
+            'documentary_series_id' => $seriesB->id,
+        ]);
+
+        // 3. Actualizar desvinculando serie documental (enviando vacío/null)
+        $clearResponse = $this->actingAs($admin)->put("/bloques/{$block->id}", [
+            'asunto' => 'Bloque Sin Serie',
+            'folios' => '50',
+            'rango_inicial' => 1,
+            'rango_final' => 50,
+            'fecha' => '2026-09-19',
+            'documentary_series_id' => '',
+        ]);
+
+        $clearResponse->assertSessionHas('message', 'Bloque actualizado correctamente.');
+        $this->assertDatabaseHas('blocks', [
+            'id' => $block->id,
+            'asunto' => 'Bloque Sin Serie',
+            'documentary_series_id' => null,
+        ]);
+    }
+
+    public function test_block_update_can_modify_period_ranges(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('ADMINISTRADOR');
+
+        $block = Block::factory()->create([
+            'asunto' => 'Bloque Inicial 2005',
+            'folios' => '100',
+            'rango_inicial' => 1,
+            'rango_final' => 100,
+            'fecha' => '2005-01-01',
+            'periodo' => 2005,
+        ]);
+
+        $updateResponse = $this->actingAs($admin)->put("/bloques/{$block->id}", [
+            'asunto' => 'Bloque Actualizado con 2 Periodos',
+            'folios' => '100',
+            'rango_inicial' => 1,
+            'rango_final' => 100,
+            'fecha' => '2005-01-01',
+            'periods' => [
+                ['rango_inicial' => 1, 'rango_final' => 40, 'periodo' => 2005],
+                ['rango_inicial' => 41, 'rango_final' => 100, 'periodo' => 2006],
+            ],
+        ]);
+
+        $updateResponse->assertSessionHas('message', 'Bloque actualizado correctamente.');
+
+        $this->assertDatabaseHas('block_periods', [
+            'block_id' => $block->id,
+            'rango_inicial' => 1,
+            'rango_final' => 40,
+            'periodo' => 2005,
+        ]);
+
+        $this->assertDatabaseHas('block_periods', [
+            'block_id' => $block->id,
+            'rango_inicial' => 41,
+            'rango_final' => 100,
+            'periodo' => 2006,
+        ]);
     }
 }

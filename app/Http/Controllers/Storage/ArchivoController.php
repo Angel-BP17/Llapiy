@@ -18,7 +18,9 @@ class ArchivoController extends Controller
      */
     public function index(IndexArchivoRequest $request, $section, $andamio, $box): Response
     {
-        $resources = $this->service->getBoxWithBlocks((int) $box, $request->input('search'));
+        $search = $request->input('search');
+        $periodo = $request->filled('periodo') ? (int) $request->input('periodo') : null;
+        $resources = $this->service->getBoxWithBlocks((int) $box, $search, $periodo);
 
         return Inertia::render('storage/index', [
             'activeSection' => ['id' => (int) $section],
@@ -33,7 +35,11 @@ class ArchivoController extends Controller
                 'to' => $resources['blocks']->lastItem(),
             ],
             'level' => 'archivos',
-            'filters' => $request->only(['search']),
+            'filters' => [
+                'search' => $search ?? '',
+                'periodo' => $periodo ? (string) $periodo : '',
+            ],
+            'years' => \App\Models\Block::getAvailableYears(),
         ]);
     }
 

@@ -64,7 +64,7 @@ index.head = (args: { section: string | number, andamio: string | number, box: s
 
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::move
- * @see app/Http/Controllers/Storage/ArchivoController.php:43
+ * @see app/Http/Controllers/Storage/ArchivoController.php:49
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos/{block}/move'
  */
 export const move = (args: { section: string | number, andamio: string | number, box: string | number, block: string | number } | [section: string | number, andamio: string | number, box: string | number, block: string | number ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -79,7 +79,7 @@ move.definition = {
 
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::move
- * @see app/Http/Controllers/Storage/ArchivoController.php:43
+ * @see app/Http/Controllers/Storage/ArchivoController.php:49
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos/{block}/move'
  */
 move.url = (args: { section: string | number, andamio: string | number, box: string | number, block: string | number } | [section: string | number, andamio: string | number, box: string | number, block: string | number ], options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ move.url = (args: { section: string | number, andamio: string | number, box: str
 
 /**
 * @see \App\Http\Controllers\Storage\ArchivoController::move
- * @see app/Http/Controllers/Storage/ArchivoController.php:43
+ * @see app/Http/Controllers/Storage/ArchivoController.php:49
  * @route '/sections/{section}/andamios/{andamio}/boxes/{box}/archivos/{block}/move'
  */
 move.post = (args: { section: string | number, andamio: string | number, box: string | number, block: string | number } | [section: string | number, andamio: string | number, box: string | number, block: string | number ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({

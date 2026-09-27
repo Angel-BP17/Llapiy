@@ -46,6 +46,8 @@ class InboxComprehensiveTest extends TestCase
                 ->has('documents')
                 ->has('areas')
                 ->has('sections')
+                ->has('maxUploadSize')
+                ->has('maxUploadSizeFormatted')
             );
     }
 
@@ -164,5 +166,98 @@ class InboxComprehensiveTest extends TestCase
         $block->refresh();
         $this->assertNull($block->root);
         \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($fakePath);
+    }
+
+    /**
+     * 9. Error al subir archivo que supera el tamaño máximo permitido por el entorno
+     */
+    public function test_inbox_update_storage_fails_when_file_exceeds_max_size()
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+        $block = Block::factory()->create(['box_id' => null]);
+
+        $maxKb = \App\Support\PhpIniHelper::getMaxUploadFileSizeInKilobytes();
+        $fakeFile = \Illuminate\Http\UploadedFile::fake()->create('document.pdf', $maxKb + 500, 'application/pdf');
+
+        $response = $this->actingAs($this->adminUser)->put("/inbox/update-storage/{$block->id}", [
+            'n_section' => $section->id,
+            'n_andamio' => $andamio->id,
+            'n_box' => $box->id,
+            'root' => $fakeFile,
+        ]);
+
+        $response->assertSessionHasErrors(['root']);
+        $errors = session('errors')->get('root');
+        $this->assertStringContainsString('supera el tamaño máximo permitido por el entorno', $errors[0]);
+    }
+
+    /**
+     * 10. Error cuando php.ini rechaza el archivo con UPLOAD_ERR_INI_SIZE
+     */
+    public function test_inbox_update_storage_fails_with_upload_err_ini_size()
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+        $block = Block::factory()->create(['box_id' => null]);
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'test_upload');
+        file_put_contents($tempFile, 'dummy content');
+
+        $fakeFile = new \Illuminate\Http\UploadedFile(
+            $tempFile,
+            'massive_file.pdf',
+            'application/pdf',
+            UPLOAD_ERR_INI_SIZE,
+            true
+        );
+
+        $response = $this->actingAs($this->adminUser)->put("/inbox/update-storage/{$block->id}", [
+            'n_section' => $section->id,
+            'n_andamio' => $andamio->id,
+            'n_box' => $box->id,
+            'root' => $fakeFile,
+        ]);
+
+        $response->assertSessionHasErrors(['root']);
+        $errors = session('errors')->get('root');
+        $this->assertStringContainsString('supera el tamaño máximo permitido por el entorno', $errors[0]);
+
+        if (file_exists($tempFile)) {
+            @unlink($tempFile);
+        }
+    }
+
+    /**
+     * 11. Éxito al actualizar almacenamiento con un archivo válido dentro del límite
+     */
+    public function test_inbox_update_storage_succeeds_with_valid_file()
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+        $block = Block::factory()->create(['box_id' => null]);
+
+        $fakeFile = \Illuminate\Http\UploadedFile::fake()->create('valid_document.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($this->adminUser)->put("/inbox/update-storage/{$block->id}", [
+            'n_section' => $section->id,
+            'n_andamio' => $andamio->id,
+            'n_box' => $box->id,
+            'root' => $fakeFile,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+        $response->assertSessionHas('message', 'Información de almacenamiento actualizada correctamente.');
+
+        $block->refresh();
+        $this->assertSame($box->id, $block->box_id);
+        $this->assertNotNull($block->root);
     }
 }

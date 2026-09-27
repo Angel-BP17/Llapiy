@@ -78,7 +78,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::pdf
- * @see app/Http/Controllers/Documents/BlockController.php:218
+ * @see app/Http/Controllers/Documents/BlockController.php:219
  * @route '/bloques/pdf'
  */
 export const pdf = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -93,7 +93,7 @@ pdf.definition = {
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::pdf
- * @see app/Http/Controllers/Documents/BlockController.php:218
+ * @see app/Http/Controllers/Documents/BlockController.php:219
  * @route '/bloques/pdf'
  */
 pdf.url = (options?: RouteQueryOptions) => {
@@ -102,7 +102,7 @@ pdf.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::pdf
- * @see app/Http/Controllers/Documents/BlockController.php:218
+ * @see app/Http/Controllers/Documents/BlockController.php:219
  * @route '/bloques/pdf'
  */
 pdf.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -111,7 +111,7 @@ pdf.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Documents\BlockController::pdf
- * @see app/Http/Controllers/Documents/BlockController.php:218
+ * @see app/Http/Controllers/Documents/BlockController.php:219
  * @route '/bloques/pdf'
  */
 pdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -124,7 +124,7 @@ pdf.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
  * @see app/Http/Controllers/Documents/BlockController.php:128
  * @route '/bloques/{block}'
  */
-export const show = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -139,7 +139,7 @@ show.definition = {
  * @see app/Http/Controllers/Documents/BlockController.php:128
  * @route '/bloques/{block}'
  */
-show.url = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { block: args }
     }
@@ -172,7 +172,7 @@ show.url = (args: { block: string | number | { id: string | number } } | [block:
  * @see app/Http/Controllers/Documents/BlockController.php:128
  * @route '/bloques/{block}'
  */
-show.get = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -181,17 +181,17 @@ show.get = (args: { block: string | number | { id: string | number } } | [block:
  * @see app/Http/Controllers/Documents/BlockController.php:128
  * @route '/bloques/{block}'
  */
-show.head = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::update
- * @see app/Http/Controllers/Documents/BlockController.php:147
+ * @see app/Http/Controllers/Documents/BlockController.php:148
  * @route '/bloques/{block}'
  */
-export const update = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -203,10 +203,10 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::update
- * @see app/Http/Controllers/Documents/BlockController.php:147
+ * @see app/Http/Controllers/Documents/BlockController.php:148
  * @route '/bloques/{block}'
  */
-update.url = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { block: args }
     }
@@ -236,20 +236,20 @@ update.url = (args: { block: string | number | { id: string | number } } | [bloc
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::update
- * @see app/Http/Controllers/Documents/BlockController.php:147
+ * @see app/Http/Controllers/Documents/BlockController.php:148
  * @route '/bloques/{block}'
  */
-update.put = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::destroy
- * @see app/Http/Controllers/Documents/BlockController.php:164
+ * @see app/Http/Controllers/Documents/BlockController.php:165
  * @route '/bloques/{block}'
  */
-export const destroy = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -261,10 +261,10 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::destroy
- * @see app/Http/Controllers/Documents/BlockController.php:164
+ * @see app/Http/Controllers/Documents/BlockController.php:165
  * @route '/bloques/{block}'
  */
-destroy.url = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { block: args }
     }
@@ -294,20 +294,20 @@ destroy.url = (args: { block: string | number | { id: string | number } } | [blo
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::destroy
- * @see app/Http/Controllers/Documents/BlockController.php:164
+ * @see app/Http/Controllers/Documents/BlockController.php:165
  * @route '/bloques/{block}'
  */
-destroy.delete = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::upload
- * @see app/Http/Controllers/Documents/BlockController.php:201
+ * @see app/Http/Controllers/Documents/BlockController.php:202
  * @route '/bloques/{block}/upload'
  */
-export const upload = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const upload = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: upload.url(args, options),
     method: 'put',
 })
@@ -319,10 +319,10 @@ upload.definition = {
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::upload
- * @see app/Http/Controllers/Documents/BlockController.php:201
+ * @see app/Http/Controllers/Documents/BlockController.php:202
  * @route '/bloques/{block}/upload'
  */
-upload.url = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+upload.url = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { block: args }
     }
@@ -352,20 +352,20 @@ upload.url = (args: { block: string | number | { id: string | number } } | [bloc
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::upload
- * @see app/Http/Controllers/Documents/BlockController.php:201
+ * @see app/Http/Controllers/Documents/BlockController.php:202
  * @route '/bloques/{block}/upload'
  */
-upload.put = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+upload.put = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: upload.url(args, options),
     method: 'put',
 })
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::file
- * @see app/Http/Controllers/Documents/BlockController.php:181
+ * @see app/Http/Controllers/Documents/BlockController.php:182
  * @route '/bloques/{block}/file'
  */
-export const file = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const file = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: file.url(args, options),
     method: 'get',
 })
@@ -377,10 +377,10 @@ file.definition = {
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::file
- * @see app/Http/Controllers/Documents/BlockController.php:181
+ * @see app/Http/Controllers/Documents/BlockController.php:182
  * @route '/bloques/{block}/file'
  */
-file.url = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+file.url = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { block: args }
     }
@@ -410,19 +410,19 @@ file.url = (args: { block: string | number | { id: string | number } } | [block:
 
 /**
 * @see \App\Http\Controllers\Documents\BlockController::file
- * @see app/Http/Controllers/Documents/BlockController.php:181
+ * @see app/Http/Controllers/Documents/BlockController.php:182
  * @route '/bloques/{block}/file'
  */
-file.get = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+file.get = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: file.url(args, options),
     method: 'get',
 })
 /**
 * @see \App\Http\Controllers\Documents\BlockController::file
- * @see app/Http/Controllers/Documents/BlockController.php:181
+ * @see app/Http/Controllers/Documents/BlockController.php:182
  * @route '/bloques/{block}/file'
  */
-file.head = (args: { block: string | number | { id: string | number } } | [block: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+file.head = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: file.url(args, options),
     method: 'head',
 })

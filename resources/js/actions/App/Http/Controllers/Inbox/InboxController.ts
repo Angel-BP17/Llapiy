@@ -97,7 +97,7 @@ updateStorage.put = (args: { id: string | number } | [id: string | number ] | st
 
 /**
 * @see \App\Http\Controllers\Inbox\InboxController::deleteFile
- * @see app/Http/Controllers/Inbox/InboxController.php:50
+ * @see app/Http/Controllers/Inbox/InboxController.php:43
  * @route '/inbox/delete-file/{id}'
  */
 export const deleteFile = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -112,7 +112,7 @@ deleteFile.definition = {
 
 /**
 * @see \App\Http\Controllers\Inbox\InboxController::deleteFile
- * @see app/Http/Controllers/Inbox/InboxController.php:50
+ * @see app/Http/Controllers/Inbox/InboxController.php:43
  * @route '/inbox/delete-file/{id}'
  */
 deleteFile.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -140,7 +140,7 @@ deleteFile.url = (args: { id: string | number } | [id: string | number ] | strin
 
 /**
 * @see \App\Http\Controllers\Inbox\InboxController::deleteFile
- * @see app/Http/Controllers/Inbox/InboxController.php:50
+ * @see app/Http/Controllers/Inbox/InboxController.php:43
  * @route '/inbox/delete-file/{id}'
  */
 deleteFile.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({

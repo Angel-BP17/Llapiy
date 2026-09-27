@@ -15,6 +15,7 @@ class IndexAndamioRequest extends FormRequest
     {
         return [
             'search' => 'nullable|string|max:100',
+            'periodo' => 'nullable|integer',
         ];
     }
 }

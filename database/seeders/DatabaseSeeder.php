@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             SectionSeeder::class,
             AndamioSeeder::class,
             BoxSeeder::class,
+           // DocumentarySeriesSeeder::class,
         ]);
     }
 }

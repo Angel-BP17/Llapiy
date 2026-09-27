@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Inbox;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inbox\IndexInboxRequest;
+use App\Http\Requests\Inbox\UpdateStorageInboxRequest;
 use App\Services\Inbox\InboxService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,15 +25,8 @@ class InboxController extends Controller
     /**
      * Update storage information for a block.
      */
-    public function updateStorage(Request $request, int $id, \App\Services\Block\BlockService $blockService): RedirectResponse
+    public function updateStorage(UpdateStorageInboxRequest $request, int $id, \App\Services\Block\BlockService $blockService): RedirectResponse
     {
-        $request->validate([
-            'n_box' => 'required|integer|exists:boxes,id',
-            'n_andamio' => 'required|integer|exists:andamios,id',
-            'n_section' => 'required|integer|exists:sections,id',
-            'root' => 'nullable|file|mimes:pdf|max:'.(50 * 1024),
-        ]);
-
         $this->service->updateBlockStorage($request, (int) $id);
 
         if ($request->hasFile('root')) {

@@ -38,6 +38,10 @@ class CreateBlockRequest extends FormRequest
             'rango_inicial' => 'required|integer',
             'rango_final' => 'required|integer',
             'documentary_series_id' => 'nullable|exists:documentary_series,id',
+            'periods' => 'nullable|array|min:1',
+            'periods.*.rango_inicial' => 'required_with:periods|integer|min:1',
+            'periods.*.rango_final' => 'required_with:periods|integer|gte:periods.*.rango_inicial',
+            'periods.*.periodo' => 'required_with:periods|integer|min:1900|max:'.(now()->year + 5),
         ];
     }
 }

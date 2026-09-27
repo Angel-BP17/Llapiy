@@ -81,7 +81,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/Areas/AreaController.php:65
  * @route '/areas/{area}'
  */
-export const show = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -96,7 +96,7 @@ show.definition = {
  * @see app/Http/Controllers/Areas/AreaController.php:65
  * @route '/areas/{area}'
  */
-show.url = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { area: args }
     }
@@ -129,7 +129,7 @@ show.url = (args: { area: string | number | { id: string | number } } | [area: s
  * @see app/Http/Controllers/Areas/AreaController.php:65
  * @route '/areas/{area}'
  */
-show.get = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -138,7 +138,7 @@ show.get = (args: { area: string | number | { id: string | number } } | [area: s
  * @see app/Http/Controllers/Areas/AreaController.php:65
  * @route '/areas/{area}'
  */
-show.head = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -148,7 +148,7 @@ show.head = (args: { area: string | number | { id: string | number } } | [area: 
  * @see app/Http/Controllers/Areas/AreaController.php:75
  * @route '/areas/{area}'
  */
-export const update = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -163,7 +163,7 @@ update.definition = {
  * @see app/Http/Controllers/Areas/AreaController.php:75
  * @route '/areas/{area}'
  */
-update.url = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { area: args }
     }
@@ -196,7 +196,7 @@ update.url = (args: { area: string | number | { id: string | number } } | [area:
  * @see app/Http/Controllers/Areas/AreaController.php:75
  * @route '/areas/{area}'
  */
-update.put = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -206,7 +206,7 @@ update.put = (args: { area: string | number | { id: string | number } } | [area:
  * @see app/Http/Controllers/Areas/AreaController.php:85
  * @route '/areas/{area}'
  */
-export const destroy = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -221,7 +221,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Areas/AreaController.php:85
  * @route '/areas/{area}'
  */
-destroy.url = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { area: args }
     }
@@ -254,7 +254,7 @@ destroy.url = (args: { area: string | number | { id: string | number } } | [area
  * @see app/Http/Controllers/Areas/AreaController.php:85
  * @route '/areas/{area}'
  */
-destroy.delete = (args: { area: string | number | { id: string | number } } | [area: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { area: number | { id: number } } | [area: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })

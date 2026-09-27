@@ -10,17 +10,26 @@ class ArchivoService
     /**
      * Obtiene una caja y sus bloques asociados con búsqueda y paginación.
      */
-    public function getBoxWithBlocks(int $boxId, ?string $search = null): array
+    public function getBoxWithBlocks(int $boxId, ?string $search = null, ?int $periodo = null): array
     {
         $box = Box::findOrFail($boxId);
 
         $blocks = $box->blocks()
-            ->select(['id', 'n_bloque', 'asunto', 'folios', 'periodo', 'box_id', 'root', 'created_at'])
+            ->select(['id', 'n_bloque', 'asunto', 'folios', 'periodo', 'box_id', 'root', 'created_at', 'documentary_series_id'])
+            ->with(['documentarySeries:id,codigo,nombre', 'periods'])
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($inner) use ($search) {
                     $inner->where('n_bloque', 'like', "%{$search}%")
                         ->orWhere('asunto', 'like', "%{$search}%")
-                        ->orWhere('periodo', 'like', "%{$search}%");
+                        ->orWhere('periodo', 'like', "%{$search}%")
+                        ->orWhereHas('periods', fn ($p) => $p->where('periodo', 'like', "%{$search}%"));
+                });
+            })
+            ->when($periodo, function ($q) use ($periodo) {
+                $q->where(function ($sub) use ($periodo) {
+                    $sub->where('periodo', $periodo)
+                        ->orWhereYear('fecha', $periodo)
+                        ->orWhereHas('periods', fn ($p) => $p->where('periodo', $periodo));
                 });
             })
             ->latest()

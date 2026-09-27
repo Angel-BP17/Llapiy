@@ -27,6 +27,8 @@ interface InboxIndexProps {
     periodo?: string;
   };
   periodos: string[];
+  maxUploadSize?: number;
+  maxUploadSizeFormatted?: string;
 }
 
 type StorageForm = { section_id: string; andamio_id: string; box_id: string; };
@@ -50,7 +52,9 @@ export default function Index({
   attendedBlocksCount = 0,
   unattendedBlocksCount = 0,
   filters = {}, 
-  periodos = [] 
+  periodos = [],
+  maxUploadSize = 50 * 1024 * 1024,
+  maxUploadSizeFormatted = "50 MB",
 }: InboxIndexProps) {
   const { can } = usePermissions();
   const [f, setF] = useState({
@@ -62,7 +66,7 @@ export default function Index({
   const [isFiltering, setIsFiltering] = useState(false);
   const [storageOpen, setStorageOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
+  const MAX_FILE_SIZE_BYTES = maxUploadSize;
   const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const [storageForm, setStorageForm] = useState<StorageForm>(emptyStorageForm);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -152,6 +156,11 @@ export default function Index({
         setUploadFile(null);
         setUploadFileName("");
         setFileError("");
+      },
+      onError: (errors: any) => {
+        if (errors?.root) {
+          setFileError(errors.root);
+        }
       },
       onFinish: () => setIsSubmitting(false)
     });
@@ -322,7 +331,19 @@ export default function Index({
                           </>
                         )}
                         {!b.box_id && (
-                          <button type="button" onClick={() => { setSelectedBlock(b); setStorageOpen(true); }} className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-colors">Archivar</button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedBlock(b);
+                              setFileError("");
+                              setUploadFile(null);
+                              setUploadFileName("");
+                              setStorageOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-colors"
+                          >
+                            Archivar
+                          </button>
                         )}
                       </div>
                     </td>
@@ -417,27 +438,35 @@ export default function Index({
               </div>
             ) : (canUpload) && (
               <div className="space-y-2 mt-4 pt-4 border-t border-border">
-                <label className="text-[10px] font-black uppercase text-muted-foreground pl-1">Archivo PDF del Bloque (Opcional)</label>
+                <div className="flex items-center justify-between pl-1">
+                  <label className="text-[10px] font-black uppercase text-muted-foreground">Archivo PDF del Bloque (Opcional)</label>
+                  <span className="text-[10px] text-muted-foreground font-semibold">Máximo en php.ini: {maxUploadSizeFormatted}</span>
+                </div>
                 {fileError && (
-                  <div className="flex items-center gap-2 p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-center gap-2 p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl" role="alert">
                     <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
                     <span>{fileError}</span>
                   </div>
                 )}
                 <div className="relative group/file">
-                  <input type="file" accept=".pdf,application/pdf" onChange={e => {
-                    const file = e.target.files?.[0] || null;
-                    if (file && file.size > MAX_FILE_SIZE_BYTES) {
-                      setFileError(`El archivo supera el límite de 50 MB (${(file.size / (1024 * 1024)).toFixed(1)} MB). Por favor selecciona un PDF más liviano.`);
-                      e.target.value = "";
-                      setUploadFile(null);
-                      setUploadFileName("");
-                      return;
-                    }
-                    setFileError("");
-                    setUploadFile(file);
-                    setUploadFileName(file?.name || "");
-                  }} className="block w-full rounded-xl border border-border bg-muted/20 px-4 py-8 text-xs focus:ring-2 focus:ring-primary/20 outline-none border-dashed group-hover/file:bg-muted/40 transition-all cursor-pointer" />
+                  <input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    onChange={e => {
+                      const file = e.target.files?.[0] || null;
+                      if (file && file.size > MAX_FILE_SIZE_BYTES) {
+                        setFileError(`El archivo supera el tamaño máximo permitido por el entorno (php.ini) de ${maxUploadSizeFormatted} (el archivo seleccionado pesa ${(file.size / (1024 * 1024)).toFixed(1)} MB). Por favor selecciona un PDF más liviano.`);
+                        e.target.value = "";
+                        setUploadFile(null);
+                        setUploadFileName("");
+                        return;
+                      }
+                      setFileError("");
+                      setUploadFile(file);
+                      setUploadFileName(file?.name || "");
+                    }}
+                    className="block w-full rounded-xl border border-border bg-muted/20 px-4 py-8 text-xs focus:ring-2 focus:ring-primary/20 outline-none border-dashed group-hover/file:bg-muted/40 transition-all cursor-pointer"
+                  />
                   {!uploadFile && <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-muted-foreground"><FileText className="h-8 w-8 mb-2 opacity-30" /><p className="font-medium">Arrastra o selecciona un archivo PDF</p></div>}
                 </div>
                 {uploadFileName && (

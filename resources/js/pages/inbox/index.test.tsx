@@ -95,4 +95,46 @@ describe('Inbox Index Page', () => {
     fireEvent.click(screen.getByText('Confirmar Eliminación'));
     expect(router.delete).toHaveBeenCalledWith('/inbox/delete-file/1', expect.anything());
   });
+
+  it('debe mostrar mensaje de error si el archivo supera el limite de php.ini', () => {
+    (usePage as any).mockReturnValue({
+      props: {
+        auth: {
+          user: { name: 'Admin' },
+          roles: ['ADMINISTRADOR'],
+          permissions: ['inbox.view', 'blocks.upload'],
+        },
+      },
+    });
+
+    const propsWithPendingBlock = {
+      ...mockProps,
+      documents: [{ id: 2, asunto: 'Doc Sin Archivo', folios: 5, root: null, box_id: null }],
+      maxUploadSize: 20 * 1024 * 1024,
+      maxUploadSizeFormatted: '20 MB',
+    };
+
+    render(<Index {...propsWithPendingBlock} />);
+
+    // Abrir modal de archivar
+    const archivarBtn = screen.getByText('Archivar');
+    fireEvent.click(archivarBtn);
+
+    // Debe mostrar la etiqueta con el límite de php.ini
+    expect(screen.getByText('Máximo en php.ini: 20 MB')).toBeInTheDocument();
+
+    // Seleccionar un archivo que supera el límite (25MB)
+    const largeFile = new File(['a'.repeat(100)], 'archivo_grande.pdf', { type: 'application/pdf' });
+    Object.defineProperty(largeFile, 'size', { value: 25 * 1024 * 1024 });
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { files: [largeFile] } });
+
+    // Debe mostrar el mensaje de error de php.ini
+    expect(
+      screen.getByText(/El archivo supera el tamaño máximo permitido por el entorno \(php\.ini\) de 20 MB/)
+    ).toBeInTheDocument();
+  });
 });

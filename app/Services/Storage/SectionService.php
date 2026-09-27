@@ -11,7 +11,7 @@ class SectionService
     /**
      * Obtiene todas las secciones con conteo de andamios, optimizado para listado.
      */
-    public function getAll(?string $search = null)
+    public function getAll(?string $search = null, ?int $periodo = null)
     {
         return Section::query()
             ->select(['id', 'n_section', 'descripcion', 'created_at'])
@@ -22,8 +22,19 @@ class SectionService
                         ->orWhere('descripcion', 'like', "%{$search}%")
                         ->orWhereHas('andamios.boxes.blocks', function ($q) use ($search) {
                             $q->where('n_bloque', 'like', "%{$search}%")
-                                ->orWhere('asunto', 'like', "%{$search}%");
+                                ->orWhere('asunto', 'like', "%{$search}%")
+                                ->orWhere('periodo', 'like', "%{$search}%")
+                                ->orWhereHas('periods', fn ($p) => $p->where('periodo', 'like', "%{$search}%"));
                         });
+                });
+            })
+            ->when($periodo, function ($query) use ($periodo) {
+                $query->whereHas('andamios.boxes.blocks', function ($q) use ($periodo) {
+                    $q->where(function ($sub) use ($periodo) {
+                        $sub->where('periodo', $periodo)
+                            ->orWhereYear('fecha', $periodo)
+                            ->orWhereHas('periods', fn ($p) => $p->where('periodo', $periodo));
+                    });
                 });
             })
             ->orderBy('n_section')

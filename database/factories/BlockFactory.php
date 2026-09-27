@@ -28,4 +28,17 @@ class BlockFactory extends Factory
             'documentary_series_id' => null,
         ];
     }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Block $block) {
+            if ($block->periods()->doesntExist()) {
+                $block->periods()->create([
+                    'rango_inicial' => is_numeric($block->rango_inicial) ? (int) $block->rango_inicial : 1,
+                    'rango_final' => is_numeric($block->rango_final) ? (int) $block->rango_final : 10,
+                    'periodo' => $block->periodo ?? ($block->fecha ? \Carbon\Carbon::parse($block->fecha)->year : now()->year),
+                ]);
+            }
+        });
+    }
 }
