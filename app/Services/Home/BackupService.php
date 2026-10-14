@@ -13,9 +13,18 @@ class BackupService
     protected $backupPath;
 
     protected $storagePaths = [
-        'documents' => 'app/public/documents',
-        'perfiles' => 'app/public/usuarios/perfiles',
-        'blocks' => 'app/public/blocks',
+        'documents' => [
+            'app/private/documents',
+            'app/public/documents',
+        ],
+        'perfiles' => [
+            'app/private/usuarios/perfiles',
+            'app/public/usuarios/perfiles',
+        ],
+        'blocks' => [
+            'app/private/blocks',
+            'app/public/blocks',
+        ],
     ];
 
     public function __construct()
@@ -47,12 +56,15 @@ class BackupService
             $zip->addFile($sqlFile, 'database.sql');
 
             // Añadir archivos físicos
-            foreach ($this->storagePaths as $folder => $relPath) {
-                $fullPath = storage_path($relPath);
-                if (File::exists($fullPath)) {
-                    $files = File::allFiles($fullPath);
-                    foreach ($files as $file) {
-                        $zip->addFile($file->getRealPath(), "storage/{$folder}/".$file->getRelativePathname());
+            foreach ($this->storagePaths as $folder => $relPaths) {
+                $paths = is_array($relPaths) ? $relPaths : [$relPaths];
+                foreach ($paths as $relPath) {
+                    $fullPath = storage_path($relPath);
+                    if (File::exists($fullPath)) {
+                        $files = File::allFiles($fullPath);
+                        foreach ($files as $file) {
+                            $zip->addFile($file->getRealPath(), "storage/{$folder}/".$file->getRelativePathname());
+                        }
                     }
                 }
             }
@@ -94,9 +106,10 @@ class BackupService
             }
 
             // 2. Restaurar Archivos
-            foreach ($this->storagePaths as $folder => $relPath) {
+            foreach ($this->storagePaths as $folder => $relPaths) {
                 $src = "{$tempPath}/storage/{$folder}";
-                $dest = storage_path($relPath);
+                $primaryRelPath = is_array($relPaths) ? $relPaths[0] : $relPaths;
+                $dest = storage_path($primaryRelPath);
 
                 if (File::exists($src)) {
                     if (! File::exists($dest)) {

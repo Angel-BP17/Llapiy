@@ -56,8 +56,6 @@ type BlockForm = {
     n_bloque: string;
     asunto: string;
     folios: string;
-    rango_inicial: string;
-    rango_final: string;
     fecha: string;
     documentary_series_id: string;
     periods: BlockPeriodItem[];
@@ -67,8 +65,6 @@ const emptyForm: BlockForm = {
     n_bloque: "",
     asunto: "",
     folios: "",
-    rango_inicial: "",
-    rango_final: "",
     fecha: "",
     documentary_series_id: "",
     periods: [{ rango_inicial: "", rango_final: "", periodo: "" }],
@@ -264,9 +260,12 @@ export default function Index({
     const [form, setForm] = useState<BlockForm>(emptyForm);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [editPdfFile, setEditPdfFile] = useState<File | null>(null);
+    const [editPdfFileName, setEditPdfFileName] = useState<string>("");
 
     const canCreate = can("blocks.create");
     const canUpload = can("blocks.upload");
+    const isArchivoCentral = is("ARCHIVO_CENTRAL") || is("ADMINISTRADOR");
 
     const extractISODate = (str: string) => {
         if (!str) return "";
@@ -300,7 +299,18 @@ export default function Index({
         setIsSubmitting(true);
         setError("");
 
+        if (editOpen && (!form.n_bloque || form.n_bloque.trim() === "")) {
+            setError("El número de bloque es obligatorio al editar.");
+            setIsSubmitting(false);
+            return;
+        }
+
         const data: any = { ...form };
+        if (form.n_bloque && form.n_bloque.trim() !== "") {
+            data.n_bloque = parseInt(form.n_bloque, 10);
+        } else {
+            data.n_bloque = null;
+        }
 
         if (form.periods && form.periods.length > 0) {
             for (let i = 0; i < form.periods.length; i++) {
@@ -324,6 +334,10 @@ export default function Index({
         }
 
         if (editOpen) {
+            if (isArchivoCentral && editPdfFile) {
+                data.root = editPdfFile;
+            }
+
             router.post(
                 `/bloques/${selectedBlock.id}`,
                 { ...data, _method: "PUT" },
@@ -333,6 +347,8 @@ export default function Index({
                     onSuccess: () => {
                         setEditOpen(false);
                         setForm(emptyForm);
+                        setEditPdfFile(null);
+                        setEditPdfFileName("");
                     },
                     onError: (err: any) =>
                         setError(Object.values(err)[0] as string),
@@ -340,11 +356,18 @@ export default function Index({
                 },
             );
         } else {
+            if (isArchivoCentral && editPdfFile) {
+                data.root = editPdfFile;
+            }
+
             router.post("/bloques", data, {
+                forceFormData: true,
                 preserveScroll: true,
                 onSuccess: () => {
                     setCreateOpen(false);
                     setForm(emptyForm);
+                    setEditPdfFile(null);
+                    setEditPdfFileName("");
                 },
                 onError: (err: any) =>
                     setError(Object.values(err)[0] as string),
@@ -372,14 +395,28 @@ export default function Index({
         setPdfModalOpen(true);
     };
 
+    const calculateTotalFolios = (periodsList: BlockPeriodItem[]): string => {
+        let total = 0;
+        let hasValid = false;
+        for (const p of periodsList) {
+            const start = parseInt(p.rango_inicial, 10);
+            const end = parseInt(p.rango_final, 10);
+            if (!isNaN(start) && !isNaN(end) && end >= start) {
+                total += (end - start + 1);
+                hasValid = true;
+            }
+        }
+        return hasValid ? String(total) : "";
+    };
+
     const handleAddPeriod = () => {
         setForm((prev) => {
             const last = prev.periods[prev.periods.length - 1];
-            const nextStart = last && !isNaN(parseInt(last.rango_final))
-                ? String(parseInt(last.rango_final) + 1)
+            const nextStart = last && !isNaN(parseInt(last.rango_final, 10))
+                ? String(parseInt(last.rango_final, 10) + 1)
                 : "";
-            const nextYear = last && !isNaN(parseInt(last.periodo))
-                ? String(parseInt(last.periodo) + 1)
+            const nextYear = last && !isNaN(parseInt(last.periodo, 10))
+                ? String(parseInt(last.periodo, 10) + 1)
                 : (prev.fecha ? prev.fecha.split("-")[0] : "");
 
             return {
@@ -388,7 +425,7 @@ export default function Index({
                     ...prev.periods,
                     {
                         rango_inicial: nextStart,
-                        rango_final: prev.rango_final || "",
+                        rango_final: "",
                         periodo: nextYear,
                     },
                 ],
@@ -397,10 +434,15 @@ export default function Index({
     };
 
     const handleRemovePeriod = (index: number) => {
-        setForm((prev) => ({
-            ...prev,
-            periods: prev.periods.filter((_, i) => i !== index),
-        }));
+        setForm((prev) => {
+            const nextPeriods = prev.periods.filter((_, i) => i !== index);
+            const autoFolios = calculateTotalFolios(nextPeriods);
+            return {
+                ...prev,
+                periods: nextPeriods,
+                folios: autoFolios || prev.folios,
+            };
+        });
     };
 
     const handlePeriodChange = (
@@ -411,33 +453,38 @@ export default function Index({
         setForm((prev) => {
             const nextPeriods = [...prev.periods];
             nextPeriods[index] = { ...nextPeriods[index], [field]: value };
-            return { ...prev, periods: nextPeriods };
+            const autoFolios = calculateTotalFolios(nextPeriods);
+            return {
+                ...prev,
+                periods: nextPeriods,
+                folios: autoFolios || prev.folios,
+            };
         });
     };
 
     const openEdit = (block: any) => {
         const ds = block.documentary_series || block.documentarySeries;
         setSelectedBlock(block);
+        setEditPdfFile(null);
+        setEditPdfFileName("");
 
         const existingPeriods = (block.periods && block.periods.length > 0)
             ? block.periods.map((p: any) => ({
                 id: p.id,
-                rango_inicial: String(p.rango_inicial || ""),
-                rango_final: String(p.rango_final || ""),
-                periodo: String(p.periodo || ""),
+                rango_inicial: String(p.rango_inicial ?? ""),
+                rango_final: String(p.rango_final ?? ""),
+                periodo: String(p.periodo ?? ""),
             }))
             : [{
-                rango_inicial: String(block.rango_inicial || ""),
-                rango_final: String(block.rango_final || ""),
+                rango_inicial: "",
+                rango_final: "",
                 periodo: String(block.periodo || (block.fecha ? extractISODate(block.fecha).split("-")[0] : "")),
             }];
 
         setForm({
-            n_bloque: block.n_bloque,
+            n_bloque: block.n_bloque !== undefined && block.n_bloque !== null ? String(block.n_bloque) : "",
             asunto: block.asunto,
             folios: block.folios || "",
-            rango_inicial: String(block.rango_inicial || ""),
-            rango_final: String(block.rango_final || ""),
             fecha: extractISODate(block.fecha),
             documentary_series_id: ds ? String(ds.id) : (block.documentary_series_id ? String(block.documentary_series_id) : ""),
             periods: existingPeriods,
@@ -720,6 +767,8 @@ export default function Index({
                                     onClick={() => {
                                         setForm(emptyForm);
                                         setError("");
+                                        setEditPdfFile(null);
+                                        setEditPdfFileName("");
                                         setCreateOpen(true);
                                     }}
                                     className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700 shadow-md shadow-emerald-600/10"
@@ -833,15 +882,12 @@ export default function Index({
                                                 {b.folios || "-"}
                                             </td>
                                             <td className="px-4 py-3 text-xs">
-                                                <div className="font-mono font-semibold text-slate-700">
-                                                    {b.rango_inicial && b.rango_final ? `${b.rango_inicial} - ${b.rango_final}` : "-"}
-                                                </div>
-                                                {b.periods && b.periods.length > 1 && (
-                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                {b.periods && b.periods.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1">
                                                         {b.periods.map((p: any) => (
                                                             <span
                                                                 key={p.id || `${p.rango_inicial}-${p.periodo}`}
-                                                                className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 px-1.5 py-0.5 text-[10px] font-mono text-indigo-700 dark:text-indigo-300"
+                                                                className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-indigo-700 dark:text-indigo-300"
                                                                 title={`Folios ${p.rango_inicial} al ${p.rango_final} del año ${p.periodo}`}
                                                             >
                                                                 <Calendar className="h-2.5 w-2.5" />
@@ -849,6 +895,8 @@ export default function Index({
                                                             </span>
                                                         ))}
                                                     </div>
+                                                ) : (
+                                                    <span className="font-mono text-muted-foreground">-</span>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3">
@@ -930,6 +978,8 @@ export default function Index({
                         if (!isSubmitting) {
                             setCreateOpen(false);
                             setEditOpen(false);
+                            setEditPdfFile(null);
+                            setEditPdfFileName("");
                         }
                     }}
                 >
@@ -941,12 +991,29 @@ export default function Index({
                             </div>
                         )}
                         <div className="grid gap-3 md:grid-cols-2">
-                            {editOpen && (
-                                <div className="rounded-lg border border-border bg-muted/40 p-2.5 text-sm md:col-span-2 flex items-center justify-between">
-                                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Número de Bloque</span>
-                                    <span className="font-semibold text-foreground">{form.n_bloque}</span>
-                                </div>
-                            )}
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-muted-foreground flex items-center justify-between">
+                                    <span>
+                                        Número de Bloque {editOpen && <span className="text-rose-500">*</span>}
+                                    </span>
+                                    {!editOpen && (
+                                        <span className="text-[10px] text-muted-foreground font-normal">
+                                            (Opcional, autogenerado)
+                                        </span>
+                                    )}
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={form.n_bloque}
+                                    onChange={(e) =>
+                                        setForm({ ...form, n_bloque: e.target.value })
+                                    }
+                                    placeholder={editOpen ? "Ej. 45" : "Autogenerado si se deja vacío"}
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                                    required={editOpen}
+                                />
+                            </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-semibold text-muted-foreground">Serie Documental</label>
                                 <select
@@ -976,6 +1043,29 @@ export default function Index({
                                     required
                                 />
                             </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-muted-foreground">Fecha</label>
+                                <input
+                                    type="date"
+                                    value={form.fecha}
+                                    onChange={(e) => {
+                                        const newDate = e.target.value;
+                                        const newYear = newDate ? newDate.split("-")[0] : "";
+                                        setForm((prev) => {
+                                            const updatedPeriods = (prev.periods.length <= 1 && (!prev.periods[0]?.periodo || prev.periods[0]?.periodo === prev.fecha?.split("-")[0]))
+                                                ? [{
+                                                    rango_inicial: prev.periods[0]?.rango_inicial || "",
+                                                    rango_final: prev.periods[0]?.rango_final || "",
+                                                    periodo: newYear,
+                                                }]
+                                                : prev.periods;
+                                            return { ...prev, fecha: newDate, periods: updatedPeriods };
+                                        });
+                                    }}
+                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                                    required
+                                />
+                            </div>
                             <div className="space-y-1 md:col-span-2">
                                 <label className="text-xs font-semibold text-muted-foreground">Asunto / Descripción</label>
                                 <input
@@ -988,87 +1078,6 @@ export default function Index({
                                     required
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-muted-foreground">Rango Inicial</label>
-                                <input
-                                    type="number"
-                                    value={form.rango_inicial}
-                                    onChange={(e) => {
-                                        const newStart = e.target.value;
-                                        setForm((prev) => {
-                                            const startNum = parseInt(newStart);
-                                            const endNum = parseInt(prev.rango_final);
-                                            const calculatedFolios = (!isNaN(startNum) && !isNaN(endNum) && endNum >= startNum)
-                                                ? String(endNum - startNum + 1)
-                                                : prev.folios;
-                                            const updatedPeriods = prev.periods.length <= 1
-                                                ? [{
-                                                    ...prev.periods[0],
-                                                    rango_inicial: newStart,
-                                                    rango_final: prev.rango_final,
-                                                    periodo: prev.periods[0]?.periodo || (prev.fecha ? prev.fecha.split("-")[0] : ""),
-                                                }]
-                                                : prev.periods;
-                                            return { ...prev, rango_inicial: newStart, folios: calculatedFolios, periods: updatedPeriods };
-                                        });
-                                    }}
-                                    placeholder="Rango inicial"
-                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-muted-foreground">Rango Final</label>
-                                <input
-                                    type="number"
-                                    value={form.rango_final}
-                                    onChange={(e) => {
-                                        const newEnd = e.target.value;
-                                        setForm((prev) => {
-                                            const startNum = parseInt(prev.rango_inicial);
-                                            const endNum = parseInt(newEnd);
-                                            const calculatedFolios = (!isNaN(startNum) && !isNaN(endNum) && endNum >= startNum)
-                                                ? String(endNum - startNum + 1)
-                                                : prev.folios;
-                                            const updatedPeriods = prev.periods.length <= 1
-                                                ? [{
-                                                    ...prev.periods[0],
-                                                    rango_inicial: prev.rango_inicial,
-                                                    rango_final: newEnd,
-                                                    periodo: prev.periods[0]?.periodo || (prev.fecha ? prev.fecha.split("-")[0] : ""),
-                                                }]
-                                                : prev.periods;
-                                            return { ...prev, rango_final: newEnd, folios: calculatedFolios, periods: updatedPeriods };
-                                        });
-                                    }}
-                                    placeholder="Rango final"
-                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-1 md:col-span-2">
-                                <label className="text-xs font-semibold text-muted-foreground">Fecha</label>
-                                <input
-                                    type="date"
-                                    value={form.fecha}
-                                    onChange={(e) => {
-                                        const newDate = e.target.value;
-                                        const newYear = newDate ? newDate.split("-")[0] : "";
-                                        setForm((prev) => {
-                                            const updatedPeriods = (prev.periods.length <= 1 && (!prev.periods[0]?.periodo || prev.periods[0]?.periodo === prev.fecha?.split("-")[0]))
-                                                ? [{
-                                                    rango_inicial: prev.periods[0]?.rango_inicial || prev.rango_inicial,
-                                                    rango_final: prev.periods[0]?.rango_final || prev.rango_final,
-                                                    periodo: newYear,
-                                                }]
-                                                : prev.periods;
-                                            return { ...prev, fecha: newDate, periods: updatedPeriods };
-                                        });
-                                    }}
-                                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-                                    required
-                                />
-                            </div>
 
                             {/* SECCIÓN DE PERIODOS Y SUB-RANGOS */}
                             <div className="space-y-3 md:col-span-2 rounded-xl border border-border/80 bg-muted/20 p-3.5">
@@ -1076,7 +1085,7 @@ export default function Index({
                                     <div>
                                         <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                             <Calendar className="h-3.5 w-3.5 text-primary" />
-                                            Distribución de Folios por Periodo (Años)
+                                            Distribución de Documentos por Periodo (Años)
                                         </h4>
                                         <p className="text-[11px] text-muted-foreground">
                                             Si el bloque contiene documentos de distintos años, divide los folios por periodo aquí.
@@ -1149,6 +1158,132 @@ export default function Index({
                                     ))}
                                 </div>
                             </div>
+                            {/* SECCIÓN EXCLUSIVA ARCHIVO CENTRAL: SUBIR / EDITAR / ACTUALIZAR ARCHIVO PDF */}
+                            {(createOpen || editOpen) && isArchivoCentral && (
+                                <div className="space-y-3 md:col-span-2 rounded-xl border border-indigo-200/90 dark:border-indigo-800/70 bg-indigo-50/40 dark:bg-indigo-950/20 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="rounded-lg bg-indigo-100 dark:bg-indigo-900/50 p-1.5 text-indigo-700 dark:text-indigo-300">
+                                                <FileText className="h-4 w-4" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                                    Expediente Digital (PDF)
+                                                    <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                                                        Archivo Central / Administrador
+                                                    </span>
+                                                </h4>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    {editOpen
+                                                        ? "Permite adjuntar, revisar o actualizar el archivo PDF digitalizado del bloque."
+                                                        : "Permite adjuntar el archivo PDF digitalizado del bloque al crearlo."}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {editOpen && selectedBlock?.root ? (
+                                        <div className="rounded-lg border border-border bg-background/80 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
+                                                    <CheckCircle2 className="h-5 w-5" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                                        Archivo PDF actualmente ingresado
+                                                    </p>
+                                                    <p className="text-[11px] text-muted-foreground truncate">
+                                                        {selectedBlock.root.split("/").pop()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setPdfUrl(`/bloques/${selectedBlock.id}/file`);
+                                                    setPdfTitle(`Expediente Digital - Bloque Nº ${selectedBlock.n_bloque || selectedBlock.id}`);
+                                                    setPdfModalOpen(true);
+                                                }}
+                                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition shrink-0"
+                                            >
+                                                <Eye className="h-3.5 w-3.5" />
+                                                Ver PDF Actual
+                                            </button>
+                                        </div>
+                                    ) : editOpen ? (
+                                        <div className="rounded-lg border border-dashed border-border bg-background/50 p-3 flex items-center gap-2.5 text-xs text-muted-foreground">
+                                            <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+                                            <span>Este bloque aún no tiene un archivo PDF digitalizado registrado.</span>
+                                        </div>
+                                    ) : null}
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between">
+                                            <span>
+                                                {editOpen && selectedBlock?.root
+                                                    ? "Reemplazar con nuevo archivo PDF (Opcional):"
+                                                    : "Adjuntar archivo PDF digitalizado (Opcional):"}
+                                            </span>
+                                            {editPdfFile && (
+                                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                                                    Nuevo archivo seleccionado
+                                                </span>
+                                            )}
+                                        </label>
+                                        <div className="flex items-center gap-2">
+                                            <label className="flex-1 cursor-pointer">
+                                                <div className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-xs hover:border-primary/50 transition">
+                                                    <span className="truncate text-muted-foreground">
+                                                        {editPdfFileName || "Seleccionar archivo PDF (máx. 50MB)..."}
+                                                    </span>
+                                                    <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground">
+                                                        Examinar
+                                                    </span>
+                                                </div>
+                                                <input
+                                                    type="file"
+                                                    accept="application/pdf"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            if (file.type !== "application/pdf") {
+                                                                setError("Solo se permiten archivos en formato PDF.");
+                                                                return;
+                                                            }
+                                                            if (file.size > 50 * 1024 * 1024) {
+                                                                setError("El archivo PDF no debe exceder los 50MB.");
+                                                                return;
+                                                            }
+                                                            setEditPdfFile(file);
+                                                            setEditPdfFileName(file.name);
+                                                            setError("");
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                            {editPdfFile && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditPdfFile(null);
+                                                        setEditPdfFileName("");
+                                                    }}
+                                                    className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition"
+                                                    title="Quitar archivo seleccionado"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {editPdfFile && (
+                                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                                ✓ El archivo <span className="font-semibold font-mono">{editPdfFileName}</span> se {editOpen ? "actualizará" : "guardará"} al procesar el bloque.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="flex justify-end gap-2 pt-2">
                             <button
@@ -1156,6 +1291,8 @@ export default function Index({
                                 onClick={() => {
                                     setCreateOpen(false);
                                     setEditOpen(false);
+                                    setEditPdfFile(null);
+                                    setEditPdfFileName("");
                                 }}
                                 disabled={isSubmitting}
                                 className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
@@ -1304,11 +1441,12 @@ export default function Index({
                                 </div>
                                 <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
                                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
-                                        Rango
+                                        Rangos y Periodos
                                     </p>
-                                    <p className="text-sm font-semibold text-foreground">
-                                        {selectedBlock.rango_inicial} -{" "}
-                                        {selectedBlock.rango_final}
+                                    <p className="text-xs font-semibold text-foreground">
+                                        {selectedBlock.periods && selectedBlock.periods.length > 0
+                                            ? selectedBlock.periods.map((p: any) => `${p.rango_inicial}-${p.rango_final} (${p.periodo})`).join(", ")
+                                            : "-"}
                                     </p>
                                 </div>
                             </div>
@@ -1324,7 +1462,7 @@ export default function Index({
                             {selectedBlock.periods && selectedBlock.periods.length > 0 && (
                                 <div className="rounded-xl border border-border bg-background p-4 space-y-2.5">
                                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
-                                        <Calendar className="h-3.5 w-3.5 text-primary" /> Distribución de Folios por Periodo
+                                        <Calendar className="h-3.5 w-3.5 text-primary" /> Distribución de Documentos por Periodo
                                     </p>
                                     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                         {selectedBlock.periods.map((p: any, pIdx: number) => (

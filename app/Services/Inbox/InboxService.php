@@ -15,17 +15,19 @@ class InboxService
 {
     public function getIndexData(Request $request): array
     {
+        $search = $request->input('search');
+        $periodo = $request->filled('periodo') ? (int) $request->input('periodo') : ($request->filled('fecha') ? (int) $request->input('fecha') : null);
+
         $query = Block::withoutBox()->with([
             'user:id,name,last_name,group_id',
             'user.group:id,area_group_type_id,descripcion',
             'user.group.areaGroupType:id,area_id',
             'user.group.areaGroupType.area:id,descripcion',
             'documentarySeries:id,codigo,nombre',
+            'periods',
         ]);
 
-        if ($request->has('search') && ! empty($request->search)) {
-            $query->where('asunto', 'like', '%'.$request->search.'%');
-        }
+        $query->searchStorage($search, $periodo);
 
         if ($request->has('area_id') && ! empty($request->area_id)) {
             $query->whereHas('group.areaGroupType', function ($inner) use ($request) {
@@ -33,11 +35,7 @@ class InboxService
             });
         }
 
-        if ($request->has('fecha') && ! empty($request->fecha)) {
-            $query->whereYear('fecha', (int) $request->fecha);
-        }
-
-        $paginatedDocuments = $query->latest()->paginate(10);
+        $paginatedDocuments = $query->latest()->paginate(10)->withQueryString();
 
         $totalBlocks = Block::count();
         $attendedBlocksCount = Block::query()
@@ -50,11 +48,8 @@ class InboxService
 
         $areas = Area::select('id', 'descripcion')->get();
 
-        $fechas = Block::select('fecha')->distinct()->pluck('fecha');
-
-        $periodos = $fechas->map(function ($fecha) {
-            return \Carbon\Carbon::parse($fecha)->year;
-        })->unique()->values();
+        $fechas = Block::whereNotNull('fecha')->distinct()->pluck('fecha');
+        $periodos = Block::getAvailableYears()->map(fn ($y) => (string) $y)->values();
 
         $sections = Section::select('id', 'n_section', 'descripcion')->get();
         $andamios = Andamio::select('id', 'n_andamio', 'section_id')->get();
@@ -68,6 +63,11 @@ class InboxService
                 'last_page' => $paginatedDocuments->lastPage(),
                 'from' => $paginatedDocuments->firstItem(),
                 'to' => $paginatedDocuments->lastItem(),
+            ],
+            'filters' => [
+                'search' => $search ?? '',
+                'area_id' => $request->area_id ? (string) $request->area_id : '',
+                'periodo' => $periodo ? (string) $periodo : '',
             ],
             'areas' => $areas,
             'fechas' => $fechas,

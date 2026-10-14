@@ -72,11 +72,35 @@ describe('Inbox Index Page', () => {
 
   it('debe filtrar por termino de busqueda', () => {
     render(<Index {...mockProps} />);
-    const input = screen.getByPlaceholderText('Nº bloque o asunto');
+    const input = screen.getByPlaceholderText('Buscar por código, serie, asunto, rango o periodo...');
     fireEvent.change(input, { target: { value: 'Memo' } });
     fireEvent.click(screen.getByText('Aplicar filtros'));
     
     expect(router.get).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ search: 'Memo' }), expect.anything());
+  });
+
+  it('debe renderizar la serie documental y rangos de periodos en la tabla', () => {
+    const propsWithDetails = {
+      ...mockProps,
+      documents: [
+        {
+          id: 99,
+          asunto: 'Contratos Anuales',
+          n_bloque: '77',
+          documentary_series: { id: 1, codigo: 'SER-CON', nombre: 'Contratos' },
+          periods: [
+            { id: 1, rango_inicial: 1, rango_final: 50, periodo: 2026 },
+          ],
+          root: null,
+          box_id: null,
+        },
+      ],
+    };
+
+    render(<Index {...propsWithDetails} />);
+    expect(screen.getByText('Contratos Anuales')).toBeInTheDocument();
+    expect(screen.getByText('SER-CON - Contratos')).toBeInTheDocument();
+    expect(screen.getByText('1 - 50 (Año 2026)')).toBeInTheDocument();
   });
 
   it('debe abrir el modal de confirmacion y eliminar el archivo adjunto', () => {

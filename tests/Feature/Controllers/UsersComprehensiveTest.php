@@ -199,4 +199,32 @@ class UsersComprehensiveTest extends TestCase
         // No debería haber consultas N+1 para cargar los permisos de cada rol
         $this->assertLessThan(20, count($queries));
     }
+
+    /**
+     * 9. Etapa de Validación de Formularios
+     */
+    public function test_user_creation_validates_required_fields(): void
+    {
+        $response = $this->actingAs($this->adminUser)->post('/usuarios', []);
+
+        $response->assertSessionHasErrors(['name', 'last_name', 'user_name', 'dni', 'password', 'role_id']);
+    }
+
+    public function test_user_creation_fails_when_password_confirmation_does_not_match(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'OPERADOR', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($this->adminUser)->post('/usuarios', [
+            'name' => 'Carlos',
+            'last_name' => 'Gomez',
+            'user_name' => 'cgomez',
+            'dni' => '12345678',
+            'email' => 'cgomez@test.com',
+            'password' => 'secret123',
+            'password_confirmation' => 'diferente456',
+            'role_id' => $role->id,
+        ]);
+
+        $response->assertSessionHasErrors(['password']);
+    }
 }

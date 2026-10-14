@@ -11,6 +11,7 @@ use App\Models\Subgroup;
 use Auth;
 use Carbon\Carbon;
 use DB;
+use Illuminate\Support\Facades\Cache;
 use Storage;
 use Str;
 
@@ -39,7 +40,7 @@ class DocumentService
                 'id', 'n_documento', 'asunto', 'folios', 'root', 'fecha', 'periodo',
                 'user_id', 'document_type_id', 'group_id', 'subgroup_id', 'created_at',
             ])
-            ->when(! $user->hasRole('ADMINISTRADOR'), function ($q) use ($user) {
+            ->when($user && ! $user->hasRole('ADMINISTRADOR'), function ($q) use ($user) {
                 if ($user->can('documents.view.all')) {
                     return $q;
                 }
@@ -106,15 +107,18 @@ class DocumentService
         $driver = DB::connection()->getDriverName();
         $yearExpression = match ($driver) {
             'pgsql' => 'EXTRACT(YEAR FROM fecha)::int as year',
-            'sqlite' => "strftime('%Y', fecha) as year",
+            'sqlite' => "CAST(strftime('%Y', fecha) AS INTEGER) as year",
             default => 'YEAR(fecha) as year',
         };
 
-        $years = Document::selectRaw($yearExpression)
-            ->whereNotNull('fecha')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year');
+        $years = Cache::remember('documents_available_years', 3600, function () use ($yearExpression) {
+            return Document::selectRaw($yearExpression)
+                ->whereNotNull('fecha')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->map(fn ($y) => (int) $y);
+        });
 
         return [
             'documents' => $query,

@@ -109,9 +109,10 @@ export default function Index({
     boxes.filter(b => String(b.andamio_id) === storageForm.andamio_id), 
   [boxes, storageForm.andamio_id]);
 
-  const handleFilter = () => {
+  const handleFilter = (customFilters?: Partial<typeof f>) => {
     setIsFiltering(true);
-    router.get(inboxRoutes.index.url(), f, {
+    const newFilters = customFilters ? { ...f, ...customFilters } : f;
+    router.get(inboxRoutes.index.url(), newFilters, {
       preserveState: true,
       preserveScroll: true,
       only: ['documents', 'pagination', 'filters'],
@@ -212,7 +213,13 @@ export default function Index({
 
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="grid gap-3 md:grid-cols-3">
-            <input value={f.search} onChange={e => setF({...f, search: e.target.value})} placeholder="Nº bloque o asunto" className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+            <input 
+              value={f.search} 
+              onChange={e => setF({...f, search: e.target.value})} 
+              onKeyDown={e => { if (e.key === 'Enter') handleFilter(); }}
+              placeholder="Buscar por código, serie, asunto, rango o periodo..." 
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" 
+            />
             <select value={f.area_id} onChange={e => setF({...f, area_id: e.target.value})} className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
               <option value="">Todas las áreas</option>
               {areas.map(a => <option key={a.id} value={String(a.id)}>{a.descripcion}</option>)}
@@ -225,7 +232,7 @@ export default function Index({
           <div className="mt-4 flex gap-2">
             <button 
               type="button" 
-              onClick={handleFilter} 
+              onClick={() => handleFilter()} 
               disabled={isFiltering}
               className="h-10 px-6 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition hover:opacity-90 inline-flex items-center gap-2 disabled:opacity-50"
             >
@@ -241,9 +248,68 @@ export default function Index({
               Limpiar
             </button>
           </div>
+
+          {/* Badges de filtros activos */}
+          {(f.search || f.area_id || f.periodo) && (
+            <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-muted-foreground font-medium">Filtros activos:</span>
+              {f.search && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 text-primary px-2 py-0.5 font-semibold">
+                  Texto: "{f.search}"
+                  <button 
+                    onClick={() => {
+                      setF(prev => ({ ...prev, search: "" }));
+                      handleFilter({ search: "" });
+                    }}
+                    className="ml-1 hover:text-red-500 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {f.area_id && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2 py-0.5 font-semibold">
+                  Área: {areas.find(a => String(a.id) === String(f.area_id))?.descripcion || f.area_id}
+                  <button 
+                    onClick={() => {
+                      setF(prev => ({ ...prev, area_id: "" }));
+                      handleFilter({ area_id: "" });
+                    }}
+                    className="ml-1 hover:text-red-500 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {f.periodo && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 font-semibold">
+                  Periodo: {f.periodo}
+                  <button 
+                    onClick={() => {
+                      setF(prev => ({ ...prev, periodo: "" }));
+                      handleFilter({ periodo: "" });
+                    }}
+                    className="ml-1 hover:text-red-500 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2.5 text-xs">
+            <span className="font-semibold text-foreground">
+              Bloques pendientes: <span className="font-bold text-primary">{pagination.total}</span>
+            </span>
+            {(f.search || f.area_id || f.periodo) && (
+              <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                Filtrando por criterios activos
+              </span>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/60">
@@ -274,8 +340,8 @@ export default function Index({
                       {(() => {
                         const ds = b.documentary_series || b.documentarySeries;
                         return ds ? (
-                          <span className="font-mono text-xs font-bold text-indigo-600">
-                            {ds.codigo}
+                          <span className="inline-flex items-center rounded bg-purple-50 dark:bg-purple-950/70 px-1.5 py-0.5 text-xs font-semibold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" title={`Serie: ${ds.codigo} - ${ds.nombre}`}>
+                            {ds.codigo} - {ds.nombre}
                           </span>
                         ) : (
                           <span className="text-muted-foreground italic text-xs">Sin serie</span>
@@ -283,7 +349,17 @@ export default function Index({
                       })()}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-700">
-                      {b.rango_inicial && b.rango_final ? `${b.rango_inicial} - ${b.rango_final}` : "-"}
+                      {b.periods && b.periods.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {b.periods.map((p: any, pIdx: number) => (
+                            <span key={pIdx} className="rounded bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 text-[9px] font-mono font-semibold text-indigo-800 dark:text-indigo-200 border border-indigo-200/80 dark:border-indigo-800" title={`Folios ${p.rango_inicial}-${p.rango_final}`}>
+                              {p.rango_inicial} - {p.rango_final} (Año {p.periodo})
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">-</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col">
@@ -356,9 +432,13 @@ export default function Index({
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 mb-4 animate-bounce">
                           <InboxIcon className="h-8 w-8" />
                         </div>
-                        <h3 className="text-lg font-semibold text-foreground">Bandeja de entrada vacía</h3>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {f.search || f.area_id || f.periodo ? "Sin resultados" : "Bandeja de entrada vacía"}
+                        </h3>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          No hay bloques de documentos pendientes de procesar en esta área.
+                          {f.search || f.area_id || f.periodo
+                            ? "No se encontraron bloques pendientes que coincidan con los criterios de búsqueda."
+                            : "No hay bloques de documentos pendientes de procesar en esta área."}
                         </p>
                       </div>
                     </td>

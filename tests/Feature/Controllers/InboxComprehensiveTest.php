@@ -260,4 +260,124 @@ class InboxComprehensiveTest extends TestCase
         $this->assertSame($box->id, $block->box_id);
         $this->assertNotNull($block->root);
     }
+
+    /**
+     * 12. Búsqueda avanzada por serie documental, n_bloque, rango de folios y periodo
+     */
+    public function test_inbox_can_filter_by_documentary_series_code_and_name(): void
+    {
+        $series1 = \App\Models\DocumentarySeries::create([
+            'codigo' => 'SER-CONTRATOS',
+            'nombre' => 'Contratos de Personal',
+        ]);
+        $series2 = \App\Models\DocumentarySeries::create([
+            'codigo' => 'SER-PLANILLAS',
+            'nombre' => 'Planillas de Remuneraciones',
+        ]);
+
+        $block1 = Block::factory()->create([
+            'box_id' => null,
+            'n_bloque' => 101,
+            'documentary_series_id' => $series1->id,
+            'asunto' => 'Expediente A',
+        ]);
+        $block1->periods()->create([
+            'rango_inicial' => 1,
+            'rango_final' => 10,
+            'periodo' => 2024,
+        ]);
+
+        $block2 = Block::factory()->create([
+            'box_id' => null,
+            'n_bloque' => 102,
+            'documentary_series_id' => $series2->id,
+            'asunto' => 'Expediente B',
+        ]);
+        $block2->periods()->create([
+            'rango_inicial' => 11,
+            'rango_final' => 20,
+            'periodo' => 2025,
+        ]);
+
+        // Filtro por código de serie
+        $response = $this->actingAs($this->adminUser)->get('/bandeja?search=CONTRATOS');
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('documents', 1)
+                ->where('documents.0.id', $block1->id)
+            );
+
+        // Filtro por nombre de serie
+        $response2 = $this->actingAs($this->adminUser)->get('/bandeja?search=Planillas');
+        $response2->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('documents', 1)
+                ->where('documents.0.id', $block2->id)
+            );
+    }
+
+    public function test_inbox_can_filter_by_n_bloque_and_numeric_folio_ranges(): void
+    {
+        $block1 = Block::factory()
+            ->withPeriods([
+                ['rango_inicial' => 1, 'rango_final' => 20, 'periodo' => 2006],
+            ])
+            ->create([
+                'box_id' => null,
+                'n_bloque' => 905,
+                'asunto' => 'Bloque A',
+                'periodo' => 2006,
+            ]);
+
+        $block2 = Block::factory()
+            ->withPeriods([
+                ['rango_inicial' => 51, 'rango_final' => 100, 'periodo' => 2026],
+            ])
+            ->create([
+                'box_id' => null,
+                'n_bloque' => 999,
+                'asunto' => 'Bloque B',
+                'periodo' => 2026,
+            ]);
+
+        // 1. Filtrar por n_bloque
+        $response1 = $this->actingAs($this->adminUser)->get('/bandeja?search=905');
+        $response1->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('documents', 1)
+                ->where('documents.0.id', $block1->id)
+            );
+
+        // 2. Filtrar por número que cae dentro del rango de folios (2 cae en 1-20 y periodo 2006)
+        $response2 = $this->actingAs($this->adminUser)->get('/bandeja?search=2');
+        $response2->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('documents', 1)
+                ->where('documents.0.id', $block1->id)
+            );
+
+        // 3. Filtrar por búsqueda combinada de folio y periodo: search=2 y periodo=2006
+        $responseCombined = $this->actingAs($this->adminUser)->get('/bandeja?search=2&periodo=2006');
+        $responseCombined->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('documents', 1)
+                ->where('documents.0.id', $block1->id)
+            );
+
+        // 4. Filtrar por texto combinado "2 2006"
+        $responseCombinedText = $this->actingAs($this->adminUser)->get('/bandeja?search=2 2006');
+        $responseCombinedText->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('documents', 1)
+                ->where('documents.0.id', $block1->id)
+            );
+
+        // 5. Filtrar por periodo
+        $response3 = $this->actingAs($this->adminUser)->get('/bandeja?periodo=2026');
+        $response3->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('documents', 1)
+                ->where('documents.0.id', $block2->id)
+            );
+    }
 }

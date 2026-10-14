@@ -210,8 +210,6 @@ class AreasAndStorageControllersTest extends TestCase
         $box1 = Box::factory()->create(['andamio_id' => $andamio1->id, 'n_box' => 'B-01']);
         $block1 = Block::factory()->create([
             'box_id' => $box1->id,
-            'rango_inicial' => 1,
-            'rango_final' => 60,
             'periodo' => 2006,
         ]);
         $block1->periods()->create([
@@ -226,8 +224,6 @@ class AreasAndStorageControllersTest extends TestCase
         $box2 = Box::factory()->create(['andamio_id' => $andamio2->id, 'n_box' => 'B-02']);
         $block2 = Block::factory()->create([
             'box_id' => $box2->id,
-            'rango_inicial' => 61,
-            'rango_final' => 195,
             'periodo' => 2007,
         ]);
         $block2->periods()->create([
@@ -288,6 +284,242 @@ class AreasAndStorageControllersTest extends TestCase
                 ->component('storage/index')
                 ->where('level', 'archivos')
                 ->has('archivos', 0)
+            );
+    }
+
+    public function test_cajas_archivos_can_filter_by_documentary_series_code_and_name(): void
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+
+        $series1 = DocumentarySeries::create([
+            'codigo' => 'SER-CONTRATOS',
+            'nombre' => 'Contratos de Personal',
+        ]);
+        $series2 = DocumentarySeries::create([
+            'codigo' => 'SER-PLANILLAS',
+            'nombre' => 'Planillas de Remuneraciones',
+        ]);
+
+        $block1 = Block::factory()->create([
+            'box_id' => $box->id,
+            'n_bloque' => 101,
+            'documentary_series_id' => $series1->id,
+            'asunto' => 'Expediente A',
+        ]);
+        $block1->periods()->create([
+            'rango_inicial' => 1,
+            'rango_final' => 10,
+            'periodo' => 2024,
+        ]);
+        $block2 = Block::factory()->create([
+            'box_id' => $box->id,
+            'n_bloque' => 102,
+            'documentary_series_id' => $series2->id,
+            'asunto' => 'Expediente B',
+        ]);
+        $block2->periods()->create([
+            'rango_inicial' => 11,
+            'rango_final' => 20,
+            'periodo' => 2024,
+        ]);
+
+        // Búsqueda por código de serie
+        $response = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=CONTRATOS");
+
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block1->id)
+            );
+
+        // Búsqueda por nombre de serie
+        $response2 = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=Planillas");
+
+        $response2->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block2->id)
+            );
+    }
+
+    public function test_cajas_archivos_can_filter_by_asunto(): void
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+
+        $block1 = Block::factory()->create([
+            'box_id' => $box->id,
+            'n_bloque' => 201,
+            'asunto' => 'Adquisición de Equipos de Cómputo',
+        ]);
+        $block2 = Block::factory()->create([
+            'box_id' => $box->id,
+            'n_bloque' => 202,
+            'asunto' => 'Liquidación Financiera Anual',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=Equipos");
+
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block1->id)
+            );
+    }
+
+    public function test_cajas_archivos_can_filter_by_n_bloque(): void
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+
+        $block1 = Block::factory()->create([
+            'box_id' => $box->id,
+            'n_bloque' => 905,
+            'asunto' => 'Bloque A',
+        ]);
+        $block2 = Block::factory()->create([
+            'box_id' => $box->id,
+            'n_bloque' => 1102,
+            'asunto' => 'Bloque B',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=905");
+
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block1->id)
+            );
+    }
+
+    public function test_cajas_archivos_can_filter_by_periodo_and_folio_ranges(): void
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+
+        $block1 = Block::factory()
+            ->withPeriods([
+                ['rango_inicial' => 1, 'rango_final' => 20, 'periodo' => 2006],
+            ])
+            ->create([
+                'box_id' => $box->id,
+                'n_bloque' => 905,
+                'asunto' => 'Bloque Folios A',
+                'periodo' => 2006,
+            ]);
+
+        $block2 = Block::factory()
+            ->withPeriods([
+                ['rango_inicial' => 101, 'rango_final' => 200, 'periodo' => 2025],
+            ])
+            ->create([
+                'box_id' => $box->id,
+                'n_bloque' => 999,
+                'asunto' => 'Bloque Folios B',
+                'periodo' => 2025,
+            ]);
+
+        // 1. Filtrar por un número que cae dentro del rango de folios (ej. 2 cae dentro de 1-20 y periodo 2006)
+        $responseRange = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=2");
+
+        $responseRange->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block1->id)
+            );
+
+        // 2. Filtrar por combinación de folio 2 y periodo 2006
+        $responseCombined = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=2&periodo=2006");
+
+        $responseCombined->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block1->id)
+            );
+
+        // 3. Filtrar por texto combinado "2 2006"
+        $responseText = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=2 2006");
+
+        $responseText->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block1->id)
+            );
+
+        // 4. Filtrar por el año de periodo del periodo asociado
+        $responsePeriod = $this->actingAs($this->adminUser)
+            ->get("/sections/{$section->id}/andamios/{$andamio->id}/boxes/{$box->id}/archivos?search=2025");
+
+        $responsePeriod->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'archivos')
+                ->has('archivos', 1)
+                ->where('archivos.0.id', $block2->id)
+            );
+    }
+
+    public function test_global_search_returns_searched_blocks_with_documentary_series_and_path(): void
+    {
+        $section = Section::factory()->create();
+        $andamio = Andamio::factory()->create(['section_id' => $section->id]);
+        $box = Box::factory()->create(['andamio_id' => $andamio->id]);
+
+        $series = DocumentarySeries::create([
+            'codigo' => 'SER-EXP',
+            'nombre' => 'Expedientes Judiciales',
+        ]);
+
+        $block = Block::factory()->create([
+            'box_id' => $box->id,
+            'documentary_series_id' => $series->id,
+            'n_bloque' => 333,
+            'asunto' => 'Caso Demanda 2024',
+        ]);
+        $block->periods()->create([
+            'rango_inicial' => 10,
+            'rango_final' => 50,
+            'periodo' => 2024,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get('/sections?search=Judiciales');
+
+        $response->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('storage/index')
+                ->where('level', 'sections')
+                ->has('searchedBlocks', 1)
+                ->where('searchedBlocks.0.id', $block->id)
+                ->where('searchedBlocks.0.n_bloque', 333)
+                ->where('searchedBlocks.0.documentary_series.codigo', 'SER-EXP')
+                ->where('searchedBlocks.0.documentary_series.nombre', 'Expedientes Judiciales')
             );
     }
 }

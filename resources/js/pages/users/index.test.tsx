@@ -77,4 +77,43 @@ describe('Users Index Page', () => {
     
     expect(router.get).toHaveBeenCalledWith(expect.any(String), { search: 'Juan' }, expect.anything());
   });
+
+  it('debe mostrar mensaje de error si las contraseñas no coinciden al crear usuario', () => {
+    render(<Index {...mockProps} />);
+    fireEvent.click(screen.getByText('Nuevo Usuario'));
+
+    // Llenar campos con contraseñas no coincidentes
+    fireEvent.change(screen.getByPlaceholderText('Mínimo 6 caracteres'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByPlaceholderText('Repetir contraseña'), { target: { value: 'password456' } });
+
+    // Intentar enviar mediante submit del formulario
+    const submitBtn = screen.getByText('Crear Usuario');
+    fireEvent.submit(submitBtn.closest('form')!);
+
+    expect(screen.getAllByText('Las contraseñas no coinciden.').length).toBeGreaterThan(0);
+    expect(router.post).not.toHaveBeenCalled();
+  });
+
+  it('debe mostrar los errores de validación retornados por el servidor', () => {
+    (router.post as any).mockImplementation((_url: string, _data: any, options: any) => {
+      if (options?.onError) {
+        options.onError({
+          dni: 'Este DNI ya está registrado por otro usuario.',
+          user_name: 'Este nombre de usuario ya se encuentra registrado.',
+        });
+      }
+    });
+
+    render(<Index {...mockProps} />);
+    fireEvent.click(screen.getByText('Nuevo Usuario'));
+
+    // Enviar formulario simulando respuesta con errores
+    const submitBtn = screen.getByText('Crear Usuario');
+    fireEvent.submit(submitBtn.closest('form')!);
+
+    // Verificar que se muestre la alerta general de errores y los mensajes en los campos
+    expect(screen.getByText('No se pudo guardar el usuario')).toBeInTheDocument();
+    expect(screen.getAllByText('Este DNI ya está registrado por otro usuario.').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Este nombre de usuario ya se encuentra registrado.').length).toBeGreaterThan(0);
+  });
 });

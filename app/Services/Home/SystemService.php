@@ -41,11 +41,20 @@ class SystemService
 
             Schema::enableForeignKeyConstraints();
 
-            // Limpieza de directorios físicos de documentos y perfiles
+            // Limpieza de directorios físicos de documentos, bloques y perfiles (tanto en storage privado como público)
             $paths = [
+                // Almacenamiento privado (disco local predeterminado de la app)
+                storage_path('app/private/documents'),
+                storage_path('app/private/blocks'),
+                storage_path('app/private/usuarios/perfiles'),
+                storage_path('app/private/usuarios'),
+                storage_path('app/private/temp'),
+
+                // Almacenamiento público (disco public)
                 storage_path('app/public/documents'),
-                storage_path('app/public/usuarios/perfiles'),
                 storage_path('app/public/blocks'),
+                storage_path('app/public/usuarios/perfiles'),
+                storage_path('app/public/usuarios'),
             ];
 
             foreach ($paths as $path) {
@@ -54,6 +63,12 @@ class SystemService
                 } else {
                     File::makeDirectory($path, 0755, true);
                 }
+            }
+
+            // Limpieza de residuos temporales de restauración
+            $tempRestore = storage_path('app/temp_restore');
+            if (File::exists($tempRestore)) {
+                File::deleteDirectory($tempRestore);
             }
 
             Artisan::call('db:seed', ['--force' => true]);

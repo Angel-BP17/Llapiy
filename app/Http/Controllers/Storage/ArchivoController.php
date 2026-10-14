@@ -22,6 +22,17 @@ class ArchivoController extends Controller
         $periodo = $request->filled('periodo') ? (int) $request->input('periodo') : null;
         $resources = $this->service->getBoxWithBlocks((int) $box, $search, $periodo);
 
+        $resources['blocks']->getCollection()->transform(function ($block) {
+            $block->can = [
+                'update' => auth()->user()?->can('update', $block) ?? false,
+                'upload' => auth()->user()?->can('blocks.upload') ?? false,
+                'delete' => auth()->user()?->can('delete', $block) ?? false,
+                'view' => auth()->user()?->can('view', $block) ?? false,
+            ];
+
+            return $block;
+        });
+
         return Inertia::render('storage/index', [
             'activeSection' => ['id' => (int) $section],
             'activeAndamio' => ['id' => (int) $andamio],
@@ -40,6 +51,7 @@ class ArchivoController extends Controller
                 'periodo' => $periodo ? (string) $periodo : '',
             ],
             'years' => \App\Models\Block::getAvailableYears(),
+            'documentarySeries' => \App\Models\DocumentarySeries::orderBy('codigo')->get(['id', 'codigo', 'nombre']),
         ]);
     }
 

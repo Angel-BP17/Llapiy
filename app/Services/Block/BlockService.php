@@ -148,12 +148,10 @@ class BlockService
             $filePath = $file ? $this->storeBlockFile($file, $data['asunto']) : null;
 
             $block = Block::create([
-                'n_bloque' => $data['n_bloque'] ?? null,
+                'n_bloque' => ! empty($data['n_bloque']) ? (int) $data['n_bloque'] : null,
                 'asunto' => $data['asunto'],
                 'folios' => $data['folios'],
                 'root' => $filePath,
-                'rango_inicial' => $data['rango_inicial'],
-                'rango_final' => $data['rango_final'],
                 'user_id' => Auth::id(),
                 'group_id' => Auth::user()?->group_id,
                 'subgroup_id' => Auth::user()?->subgroup_id,
@@ -170,7 +168,7 @@ class BlockService
                         'periodo' => (int) $period['periodo'],
                     ]);
                 }
-            } else {
+            } elseif (! empty($data['rango_inicial']) && ! empty($data['rango_final'])) {
                 $block->periods()->create([
                     'rango_inicial' => (int) $data['rango_inicial'],
                     'rango_final' => (int) $data['rango_final'],
@@ -198,11 +196,9 @@ class BlockService
             }
 
             $block->update([
-                'n_bloque' => $data['n_bloque'] ?? $block->n_bloque,
+                'n_bloque' => ! empty($data['n_bloque']) ? (int) $data['n_bloque'] : $block->n_bloque,
                 'asunto' => $data['asunto'] ?? $block->asunto,
                 'folios' => $data['folios'] ?? $block->folios,
-                'rango_inicial' => $data['rango_inicial'] ?? $block->rango_inicial,
-                'rango_final' => $data['rango_final'] ?? $block->rango_final,
                 'fecha' => $data['fecha'] ?? $block->fecha,
                 'root' => $data['root'] ?? $block->root,
                 'periodo' => isset($data['fecha']) ? Carbon::parse($data['fecha'])->year : $block->periodo,
@@ -223,12 +219,6 @@ class BlockService
                             'periodo' => (int) $period['periodo'],
                         ]);
                     }
-                } else {
-                    $block->periods()->create([
-                        'rango_inicial' => (int) $block->rango_inicial,
-                        'rango_final' => (int) $block->rango_final,
-                        'periodo' => (int) $block->periodo,
-                    ]);
                 }
             }
 

@@ -55,6 +55,11 @@ class GroupTypeController extends Controller
     public function destroy(string $id): RedirectResponse
     {
         $groupType = $this->service->find((int) $id);
+
+        if (! $groupType->canBeDeleted()) {
+            return redirect()->back()->with('error', 'No se puede eliminar este tipo de grupo porque tiene grupos asociados.');
+        }
+
         $this->service->delete($groupType);
 
         return redirect()->back()->with('message', 'Tipo de grupo eliminado correctamente.');

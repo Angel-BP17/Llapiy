@@ -58,6 +58,8 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
   
   const [createForm, setCreateForm] = useState<UserForm>(emptyForm);
   const [editForm, setEditForm] = useState<UserForm>(emptyForm);
+  const [createErrors, setCreateErrors] = useState<Record<string, string>>({});
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [search, setSearch] = useState(filters.search || "");
@@ -74,6 +76,13 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
 
   const handleCreateSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setCreateErrors({});
+
+    if (createForm.password && createForm.password_confirmation && createForm.password !== createForm.password_confirmation) {
+      setCreateErrors({ password_confirmation: 'Las contraseñas no coinciden.' });
+      return;
+    }
+
     setIsSubmitting(true);
     router.post('/usuarios', createForm as any, {
       forceFormData: true,
@@ -81,6 +90,10 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
       onSuccess: () => {
         setIsCreateOpen(false);
         setCreateForm(emptyForm);
+        setCreateErrors({});
+      },
+      onError: (errors) => {
+        setCreateErrors(errors);
       },
       onFinish: () => setIsSubmitting(false)
     });
@@ -89,6 +102,13 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
   const handleEditSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
+    setEditErrors({});
+
+    if (editForm.password && editForm.password_confirmation && editForm.password !== editForm.password_confirmation) {
+      setEditErrors({ password_confirmation: 'Las contraseñas no coinciden.' });
+      return;
+    }
+
     setIsSubmitting(true);
     router.post(`/usuarios/${selectedUser.id}`, {
       ...editForm,
@@ -99,6 +119,10 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
       onSuccess: () => {
         setIsEditOpen(false);
         setSelectedUser(null);
+        setEditErrors({});
+      },
+      onError: (errors) => {
+        setEditErrors(errors);
       },
       onFinish: () => setIsSubmitting(false)
     });
@@ -185,7 +209,16 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
                 <FileDown className="h-4 w-4" /> Exportar PDF
               </button>
               {can('users.create') && (
-                <button onClick={() => { setCreateForm(emptyForm); setIsCreateOpen(true); }} className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20"><UserPlus className="h-4 w-4" /> Nuevo Usuario</button>
+                <button 
+                  onClick={() => { 
+                    setCreateForm(emptyForm); 
+                    setCreateErrors({});
+                    setIsCreateOpen(true); 
+                  }} 
+                  className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20"
+                >
+                  <UserPlus className="h-4 w-4" /> Nuevo Usuario
+                </button>
               )}
             </div>
           </div>
@@ -225,6 +258,7 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
                 group_id: u.group_id?.toString() || '',
                 subgroup_id: u.subgroup_id?.toString() || ''
               });
+              setEditErrors({});
               setIsEditOpen(true); 
             }} 
             onDelete={(u: User) => {
@@ -244,16 +278,33 @@ export default function Index({ users, areas, roles, stats, pagination, filters 
         <div className="h-8" />
 
         {/* MODAL CREAR */}
-        <Modal open={isCreateOpen} title="Registrar Nuevo Colaborador" onClose={() => { if (!isSubmitting) setIsCreateOpen(false); }} maxWidth="max-w-4xl">
+        <Modal open={isCreateOpen} title="Registrar Nuevo Colaborador" onClose={() => { if (!isSubmitting) { setIsCreateOpen(false); setCreateErrors({}); } }} maxWidth="max-w-4xl">
           <form onSubmit={handleCreateSubmit} className="py-2">
-            <UserFormFields form={createForm} setForm={setCreateForm} areas={areas} roles={roles} isSubmitting={isSubmitting} submitLabel="Crear Usuario" />
+            <UserFormFields 
+              form={createForm} 
+              setForm={setCreateForm} 
+              areas={areas} 
+              roles={roles} 
+              errors={createErrors}
+              isSubmitting={isSubmitting} 
+              submitLabel="Crear Usuario" 
+            />
           </form>
         </Modal>
 
         {/* MODAL EDITAR */}
-        <Modal open={isEditOpen} title={`Editar Usuario: ${selectedUser?.name}`} onClose={() => { if (!isSubmitting) setIsEditOpen(false); }} maxWidth="max-w-4xl">
+        <Modal open={isEditOpen} title={`Editar Usuario: ${selectedUser?.name}`} onClose={() => { if (!isSubmitting) { setIsEditOpen(false); setEditErrors({}); } }} maxWidth="max-w-4xl">
           <form onSubmit={handleEditSubmit} className="py-2">
-            <UserFormFields form={editForm} setForm={setEditForm} areas={areas} roles={roles} isSubmitting={isSubmitting} isEdit submitLabel="Actualizar Información" />
+            <UserFormFields 
+              form={editForm} 
+              setForm={setEditForm} 
+              areas={areas} 
+              roles={roles} 
+              errors={editErrors}
+              isSubmitting={isSubmitting} 
+              isEdit 
+              submitLabel="Actualizar Información" 
+            />
           </form>
         </Modal>
 

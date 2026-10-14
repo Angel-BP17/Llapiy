@@ -3,6 +3,7 @@
 namespace App\Services\Storage;
 
 use App\Models\Andamio;
+use App\Models\Block;
 use App\Models\Section;
 
 class AndamioService
@@ -19,26 +20,25 @@ class AndamioService
                 $query->where(function ($q) use ($search) {
                     $q->where('n_andamio', 'like', "%{$search}%")
                         ->orWhere('descripcion', 'like', "%{$search}%")
-                        ->orWhereHas('boxes.blocks', function ($q) use ($search) {
-                            $q->where('n_bloque', 'like', "%{$search}%")
-                                ->orWhere('asunto', 'like', "%{$search}%")
-                                ->orWhere('periodo', 'like', "%{$search}%")
-                                ->orWhereHas('periods', fn ($p) => $p->where('periodo', 'like', "%{$search}%"));
-                        });
+                        ->orWhereHas('boxes.blocks', fn ($bq) => $bq->searchStorage($search));
                 });
             })
             ->when($periodo, function ($query) use ($periodo) {
-                $query->whereHas('boxes.blocks', function ($q) use ($periodo) {
-                    $q->where(function ($sub) use ($periodo) {
-                        $sub->where('periodo', $periodo)
-                            ->orWhereYear('fecha', $periodo)
-                            ->orWhereHas('periods', fn ($p) => $p->where('periodo', $periodo));
-                    });
-                });
+                $query->whereHas('boxes.blocks', fn ($bq) => $bq->searchStorage(null, $periodo));
             })
             ->orderBy('n_andamio')
             ->paginate(10)
             ->withQueryString();
+    }
+
+    /**
+     * Obtiene bloques buscados en todo el almacén para la barra de búsqueda global.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getSearchedBlocks(?string $search = null, int|string|null $periodo = null, int $limit = 5): array
+    {
+        return Block::getSearchedBlocks($search, $periodo, $limit);
     }
 
     public function create(Section $section, array $data): Andamio

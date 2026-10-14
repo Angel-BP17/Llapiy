@@ -74,7 +74,11 @@ class PerformanceOptimizationTest extends TestCase
         $this->assertCount(3, $document->campos);
 
         // Debería haber una sola consulta de INSERT para la tabla campos (batch insert)
-        $campoInserts = collect($queries)->filter(fn ($q) => str_contains($q['query'], 'insert into `campos`'))->count();
+        $campoInserts = collect($queries)->filter(function ($q) {
+            $query = strtolower($q['query']);
+
+            return str_contains($query, 'insert into') && str_contains($query, 'campos');
+        })->count();
         $this->assertEquals(1, $campoInserts, 'Se esperaba solo 1 consulta de inserción para múltiples campos.');
     }
 }

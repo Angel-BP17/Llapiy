@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\GroupType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -37,11 +38,14 @@ class SuperAdminBypassTest extends TestCase
 
         // 4. Act: El admin del Grupo A intenta ver el documento del Grupo B
         // Si la Policy funciona bien, el method before() del Admin debería dejarlo pasar.
-        $response = $this->actingAs($admin)->getJson("/api/documents/{$documentOfGroupB->id}");
+        $response = $this->actingAs($admin)->get("/documentos/{$documentOfGroupB->id}");
 
         // 5. Assert: Debe ser 200 OK (Bypass exitoso)
         $response->assertStatus(200);
-        $this->assertEquals($documentOfGroupB->id, $response->json('data.document.id'));
+        $response->assertInertia(fn ($page) => $page
+            ->component('documents/show')
+            ->where('document.id', $documentOfGroupB->id)
+        );
     }
 
     /** @test */
@@ -54,16 +58,18 @@ class SuperAdminBypassTest extends TestCase
         $groupA = Group::factory()->create(['area_group_type_id' => $agt->id]);
         $groupB = Group::factory()->create(['area_group_type_id' => $agt->id]);
 
-        // 2. Setup: Operador en Grupo A
+        // 2. Setup: Operador en Grupo A con permiso view.group
+        Permission::firstOrCreate(['name' => 'documents.view.group', 'guard_name' => 'web']);
         $operatorRole = Role::firstOrCreate(['name' => 'OPERADOR', 'guard_name' => 'web']);
         $operator = User::factory()->create(['group_id' => $groupA->id]);
         $operator->assignRole($operatorRole);
+        $operator->givePermissionTo('documents.view.group');
 
         // 3. Setup: Documento en Grupo B
         $documentOfGroupB = Document::factory()->create(['group_id' => $groupB->id]);
 
         // 4. Act: El operador intenta acceder (Debe fallar por Policy)
-        $response = $this->actingAs($operator)->getJson("/api/documents/{$documentOfGroupB->id}");
+        $response = $this->actingAs($operator)->get("/documentos/{$documentOfGroupB->id}");
 
         // 5. Assert: Debe ser 403 Forbidden (Seguridad activa)
         $response->assertStatus(403);

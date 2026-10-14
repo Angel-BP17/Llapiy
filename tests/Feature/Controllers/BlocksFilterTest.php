@@ -98,9 +98,14 @@ class BlocksFilterTest extends TestCase
             'asunto' => 'Test block with series',
             'folios' => '10',
             'fecha' => '2026-07-26',
-            'rango_inicial' => 1,
-            'rango_final' => 50,
             'documentary_series_id' => $series->id,
+            'periods' => [
+                [
+                    'rango_inicial' => 1,
+                    'rango_final' => 50,
+                    'periodo' => 2026,
+                ],
+            ],
         ];
 
         $response = $this->actingAs($this->adminUser)->post('/bloques', $data);
@@ -118,8 +123,6 @@ class BlocksFilterTest extends TestCase
             'asunto' => 'Bloque Multi Periodo 2006-2007',
             'folios' => '195',
             'fecha' => '2006-05-10',
-            'rango_inicial' => 1,
-            'rango_final' => 195,
             'periods' => [
                 [
                     'rango_inicial' => 1,
@@ -139,8 +142,6 @@ class BlocksFilterTest extends TestCase
 
         $this->assertDatabaseHas('blocks', [
             'asunto' => 'Bloque Multi Periodo 2006-2007',
-            'rango_inicial' => '1',
-            'rango_final' => '195',
         ]);
 
         $block = Block::where('asunto', 'Bloque Multi Periodo 2006-2007')->firstOrFail();
@@ -193,25 +194,16 @@ class BlocksFilterTest extends TestCase
         $andamio = Andamio::factory()->create(['section_id' => $section->id]);
         $box = Box::factory()->create(['andamio_id' => $andamio->id]);
 
-        $block = Block::factory()->create([
-            'box_id' => $box->id,
-            'asunto' => 'Bloque en Almacen con dos anios',
-            'rango_inicial' => 1,
-            'rango_final' => 195,
-            'periodo' => 2006,
-        ]);
-
-        $block->periods()->delete();
-        $block->periods()->create([
-            'rango_inicial' => 1,
-            'rango_final' => 60,
-            'periodo' => 2006,
-        ]);
-        $block->periods()->create([
-            'rango_inicial' => 61,
-            'rango_final' => 195,
-            'periodo' => 2007,
-        ]);
+        $block = Block::factory()
+            ->withPeriods([
+                ['rango_inicial' => 1, 'rango_final' => 60, 'periodo' => 2006],
+                ['rango_inicial' => 61, 'rango_final' => 195, 'periodo' => 2007],
+            ])
+            ->create([
+                'box_id' => $box->id,
+                'asunto' => 'Bloque en Almacen con dos anios',
+                'periodo' => 2006,
+            ]);
 
         // Buscar en la caja por 2007
         $response = $this->actingAs($this->adminUser)

@@ -40,8 +40,11 @@ class DocumentRequestValidationTest extends TestCase
             'periodo' => $periodo,
             'asunto' => 'Original',
             'folios' => '10',
+        ]);
+        $block->periods()->create([
             'rango_inicial' => 1,
             'rango_final' => 10,
+            'periodo' => $periodo,
         ]);
 
         // Intentar actualizar con el mismo n_bloque y la misma fecha (debería pasar por el ignore)
@@ -50,8 +53,9 @@ class DocumentRequestValidationTest extends TestCase
             'fecha' => $fecha,
             'asunto' => 'Editado',
             'folios' => '10',
-            'rango_inicial' => 1,
-            'rango_final' => 10,
+            'periods' => [
+                ['rango_inicial' => 1, 'rango_final' => 10, 'periodo' => $periodo],
+            ],
         ]);
 
         $response->assertStatus(200);
@@ -69,14 +73,17 @@ class DocumentRequestValidationTest extends TestCase
         $fecha = '2025-05-15';
         $periodo = Carbon::parse($fecha)->year;
 
-        Block::create([
+        $block1 = Block::create([
             'n_bloque' => 1,
             'fecha' => $fecha,
             'periodo' => $periodo,
             'asunto' => 'Ocupado',
             'folios' => '10',
+        ]);
+        $block1->periods()->create([
             'rango_inicial' => 1,
             'rango_final' => 10,
+            'periodo' => $periodo,
         ]);
 
         $anotherBlock = Block::create([
@@ -85,8 +92,11 @@ class DocumentRequestValidationTest extends TestCase
             'periodo' => $periodo,
             'asunto' => 'Libre',
             'folios' => '10',
+        ]);
+        $anotherBlock->periods()->create([
             'rango_inicial' => 11,
             'rango_final' => 20,
+            'periodo' => $periodo,
         ]);
 
         // Intentar cambiar B-OTRO a B-DUP en el mismo periodo
@@ -95,8 +105,9 @@ class DocumentRequestValidationTest extends TestCase
             'fecha' => $fecha,
             'asunto' => 'Intento duplicar',
             'folios' => '10',
-            'rango_inicial' => 11,
-            'rango_final' => 20,
+            'periods' => [
+                ['rango_inicial' => 11, 'rango_final' => 20, 'periodo' => $periodo],
+            ],
         ]);
 
         $response->assertStatus(422);

@@ -33,6 +33,7 @@ class ActivityLogComprehensiveTest extends TestCase
      */
     public function test_activity_log_index_returns_strict_contract()
     {
+        ActivityLog::query()->delete();
         ActivityLog::factory()->count(2)->create(['user_id' => $this->adminUser->id]);
 
         $response = $this->actingAs($this->adminUser)->get('/actividades');

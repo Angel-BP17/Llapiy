@@ -52,11 +52,14 @@ class DocumentViewSegmentationTest extends TestCase
         Document::factory()->create(['user_id' => $user->id, 'asunto' => 'Mi Documento']);
         Document::factory()->create(['asunto' => 'Documento Ajeno']);
 
-        $response = $this->actingAs($user)->getJson('/api/documents');
+        $response = $this->actingAs($user)->get('/documentos');
 
         $response->assertStatus(200);
-        $this->assertCount(1, $response->json('data.documents.data'));
-        $this->assertEquals('Mi Documento', $response->json('data.documents.data.0.asunto'));
+        $response->assertInertia(fn ($page) => $page
+            ->component('documents/index')
+            ->has('documents', 1)
+            ->where('documents.0.asunto', 'Mi Documento')
+        );
     }
 
     /** @test */
@@ -68,11 +71,14 @@ class DocumentViewSegmentationTest extends TestCase
         Document::factory()->create(['group_id' => $this->group->id, 'asunto' => 'Del Grupo']);
         Document::factory()->create(['asunto' => 'De Otro Grupo']);
 
-        $response = $this->actingAs($user)->getJson('/api/documents');
+        $response = $this->actingAs($user)->get('/documentos');
 
         $response->assertStatus(200);
-        $this->assertCount(1, $response->json('data.documents.data'));
-        $this->assertEquals('Del Grupo', $response->json('data.documents.data.0.asunto'));
+        $response->assertInertia(fn ($page) => $page
+            ->component('documents/index')
+            ->has('documents', 1)
+            ->where('documents.0.asunto', 'Del Grupo')
+        );
     }
 
     /** @test */
@@ -93,10 +99,13 @@ class DocumentViewSegmentationTest extends TestCase
             'asunto' => 'Del Grupo General',
         ]);
 
-        $response = $this->actingAs($user)->getJson('/api/documents');
+        $response = $this->actingAs($user)->get('/documentos');
 
         $response->assertStatus(200);
-        $this->assertCount(1, $response->json('data.documents.data'));
-        $this->assertEquals('Del Subgrupo', $response->json('data.documents.data.0.asunto'));
+        $response->assertInertia(fn ($page) => $page
+            ->component('documents/index')
+            ->has('documents', 1)
+            ->where('documents.0.asunto', 'Del Subgrupo')
+        );
     }
 }

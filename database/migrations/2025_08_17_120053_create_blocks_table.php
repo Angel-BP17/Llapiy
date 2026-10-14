@@ -16,8 +16,6 @@ return new class extends Migration
             $table->integer('n_bloque');
             $table->string('asunto');
             $table->string('folios');
-            $table->string('rango_inicial');
-            $table->string('rango_final');
             $table->string('root')->nullable();
             $table->date('fecha');
             $table->year('periodo');

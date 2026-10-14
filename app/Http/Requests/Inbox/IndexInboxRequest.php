@@ -13,6 +13,11 @@ class IndexInboxRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'search' => 'nullable|string|max:100',
+            'area_id' => 'nullable|integer',
+            'periodo' => 'nullable|integer',
+            'fecha' => 'nullable|integer',
+        ];
     }
 }

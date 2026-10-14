@@ -68,7 +68,7 @@ index.head = (args: { section: number | { id: number } } | [section: number | { 
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::store
- * @see app/Http/Controllers/Storage/AndamioController.php:91
+ * @see app/Http/Controllers/Storage/AndamioController.php:53
  * @route '/sections/{section}/andamios'
  */
 export const store = (args: { section: number | { id: number } } | [section: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -83,7 +83,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::store
- * @see app/Http/Controllers/Storage/AndamioController.php:91
+ * @see app/Http/Controllers/Storage/AndamioController.php:53
  * @route '/sections/{section}/andamios'
  */
 store.url = (args: { section: number | { id: number } } | [section: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -116,7 +116,7 @@ store.url = (args: { section: number | { id: number } } | [section: number | { i
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::store
- * @see app/Http/Controllers/Storage/AndamioController.php:91
+ * @see app/Http/Controllers/Storage/AndamioController.php:53
  * @route '/sections/{section}/andamios'
  */
 store.post = (args: { section: number | { id: number } } | [section: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -126,7 +126,7 @@ store.post = (args: { section: number | { id: number } } | [section: number | { 
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::update
- * @see app/Http/Controllers/Storage/AndamioController.php:106
+ * @see app/Http/Controllers/Storage/AndamioController.php:68
  * @route '/sections/{section}/andamios/{andamio}'
  */
 export const update = (args: { section: number | { id: number }, andamio: number | { id: number } } | [section: number | { id: number }, andamio: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -141,7 +141,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::update
- * @see app/Http/Controllers/Storage/AndamioController.php:106
+ * @see app/Http/Controllers/Storage/AndamioController.php:68
  * @route '/sections/{section}/andamios/{andamio}'
  */
 update.url = (args: { section: number | { id: number }, andamio: number | { id: number } } | [section: number | { id: number }, andamio: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -171,7 +171,7 @@ update.url = (args: { section: number | { id: number }, andamio: number | { id: 
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::update
- * @see app/Http/Controllers/Storage/AndamioController.php:106
+ * @see app/Http/Controllers/Storage/AndamioController.php:68
  * @route '/sections/{section}/andamios/{andamio}'
  */
 update.put = (args: { section: number | { id: number }, andamio: number | { id: number } } | [section: number | { id: number }, andamio: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -181,7 +181,7 @@ update.put = (args: { section: number | { id: number }, andamio: number | { id: 
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::destroy
- * @see app/Http/Controllers/Storage/AndamioController.php:121
+ * @see app/Http/Controllers/Storage/AndamioController.php:83
  * @route '/sections/{section}/andamios/{andamio}'
  */
 export const destroy = (args: { section: number | { id: number }, andamio: number | { id: number } } | [section: number | { id: number }, andamio: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -196,7 +196,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::destroy
- * @see app/Http/Controllers/Storage/AndamioController.php:121
+ * @see app/Http/Controllers/Storage/AndamioController.php:83
  * @route '/sections/{section}/andamios/{andamio}'
  */
 destroy.url = (args: { section: number | { id: number }, andamio: number | { id: number } } | [section: number | { id: number }, andamio: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -226,7 +226,7 @@ destroy.url = (args: { section: number | { id: number }, andamio: number | { id:
 
 /**
 * @see \App\Http\Controllers\Storage\AndamioController::destroy
- * @see app/Http/Controllers/Storage/AndamioController.php:121
+ * @see app/Http/Controllers/Storage/AndamioController.php:83
  * @route '/sections/{section}/andamios/{andamio}'
  */
 destroy.delete = (args: { section: number | { id: number }, andamio: number | { id: number } } | [section: number | { id: number }, andamio: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
